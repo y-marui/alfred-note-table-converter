@@ -1,0 +1,87 @@
+exclude: |
+  (?x)^(
+    node_modules/|
+    vendor/|
+    \.git/|
+    \.yarn/|
+    dist/|
+    build/|
+    \.next/|
+    __pycache__/|
+    .*\.min\.js$|
+    .*\.min\.css$|
+    go\.sum$|
+    package-lock\.json$|
+    yarn\.lock$|
+    Gemfile\.lock$|
+    Cargo\.lock$|
+    poetry\.lock$
+  )
+
+repos:
+  # ----------------------------------------------------------------
+  # Security (required — verified by global git hook)
+  # ----------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        args: ["--config=.gitleaks.toml"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Required: SSH private key detection
+      - id: detect-private-key
+
+      # Required: block .env files (.env.example / .env.sample / .env.template are allowed)
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-case-conflict
+
+  # Required: .env file check (hook id contains "detect-dotenv")
+  - repo: local
+    hooks:
+      - id: detect-dotenv
+        name: Block .env files
+        language: fail
+        entry: '.env ファイルはコミット禁止。ダミー値のみの .env.example を使うこと。'
+        files: '(^|/)\.env(\.[^.]+)?$'
+        exclude: '(^|/)\.env\.(example|sample|template)$'
+
+  # ----------------------------------------------------------------
+  # Hardcoded local absolute paths
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: no-hardcoded-local-paths
+        name: Block hardcoded local absolute paths
+        language: pygrep
+        entry: '(/Users/[A-Za-z0-9_.-]+/|/home/[A-Za-z0-9_.-]+/|C:\\Users\\)'
+        types_or: [text]
+        # Note: exclude はファイル「パス」に対するマッチ。
+        # 設定ファイル自身（allowlist パターンを含む）は除外する。
+        exclude: |
+          (?x)(
+            \.md$|
+            docs/|
+            \.github/|
+            \.gitleaks\.toml$|
+            \.pre-commit-config\.yaml$
+          )
+
+  # ----------------------------------------------------------------
+  # Shell scripts
+  # ----------------------------------------------------------------
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ["--severity=warning"]
+        exclude: '\.zsh$'

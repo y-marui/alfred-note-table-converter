@@ -1,0 +1,12 @@
+# Runtime dependencies vendored into workflow/vendor/ at build time.
+# Keep this list minimal - every package adds to the workflow download size.
+#
+# After adding a package:
+#   make vendor    (or: ./scripts/vendor.sh)
+#
+# Note: Python stdlib is available without vendoring.
+# Note: packages already available on macOS (e.g. requests via system Python)
+#       still need to be vendored for portability.
+
+# Example: uncomment if you need HTTP client beyond stdlib urllib
+# requests>=2.31

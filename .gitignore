@@ -1,0 +1,46 @@
+# Build artifacts
+dist/
+.build/
+
+# Vendor directory (populated by make vendor)
+workflow/vendor/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+build/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Type checking
+.mypy_cache/
+
+# Linter cache
+.ruff_cache/
+
+# macOS
+.DS_Store
+._*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Alfred dev temp dirs (created by dev.sh)
+/tmp/alfred-dev-cache/
+/tmp/alfred-dev-data/
+
+# Secrets (never commit these)
+.env
+*.key

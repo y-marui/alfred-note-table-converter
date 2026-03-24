@@ -1,0 +1,55 @@
+repos:
+  # Ruff: fast linter + formatter (replaces flake8, isort, pyupgrade, etc.)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.7
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # General file hygiene + security basics
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # allow custom tags in GitHub Actions YAML
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        files: scripts/.*\.sh$
+
+  # Secret scanning — uses .gitleaks.toml for project-specific rules
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+        args: [--config=.gitleaks.toml]
+
+  # Block .env files from being committed
+  - repo: local
+    hooks:
+      - id: no-commit-dotenv
+        name: block .env files
+        language: fail
+        entry: ".env files must not be committed"
+        files: '^\.env(\..+)?$'
+
+  # Type checking (runs mypy against src/)
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        language: system
+        entry: mypy src
+        types: [python]
+        pass_filenames: false

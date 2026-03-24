@@ -1,0 +1,58 @@
+# .gitleaks.toml
+# Extends gitleaks default rules with project-specific additions.
+# Default rules: https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+
+title = "dev-charter gitleaks config"
+
+[extend]
+useDefault = true
+
+# ----------------------------------------------------------------
+# Custom rules
+# ----------------------------------------------------------------
+
+[[rules]]
+id          = "hardcoded-unix-local-path"
+description = "Hardcoded Unix local absolute path (/Users/ or /home/)"
+regex       = '''(/Users/[A-Za-z0-9_.\-]+/|/home/[A-Za-z0-9_.\-]+/)'''
+tags        = ["path", "local"]
+
+  [rules.allowlist]
+  description = "Allow CI runner paths, docs, and example files"
+  regexes     = [
+    '''/home/runner/''',
+    '''/home/ubuntu/''',
+    '''/home/github/''',
+  ]
+  paths = [
+    '''\.md$''',
+    '''\.txt$''',
+    '''\.example$''',
+    '''docs/''',
+  ]
+
+[[rules]]
+id          = "hardcoded-windows-local-path"
+description = "Hardcoded Windows local absolute path (C:\\Users\\)"
+regex       = '''C:\\Users\\[A-Za-z0-9_.\-]+\\'''
+tags        = ["path", "local", "windows"]
+
+  [rules.allowlist]
+  description = "Allow docs and example files"
+  paths = [
+    '''\.md$''',
+    '''\.txt$''',
+    '''\.example$''',
+    '''docs/''',
+  ]
+
+# ----------------------------------------------------------------
+# Global allowlist
+# ----------------------------------------------------------------
+
+[allowlist]
+description = "Global allowlist"
+paths = [
+  '''.gitleaks.toml''',
+  '''\.pre-commit-config\.yaml''',
+]
