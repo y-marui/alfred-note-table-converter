@@ -43,6 +43,13 @@ class TestConvertCommand:
         assert r"\begin{array}" in arg
         assert r"\textbf{Col1}" in arg
 
+    def test_md_conversion_cmd_mod_has_quadruple_backslash(self, capsys):
+        with patch.object(convert_cmd, "_clipboard", return_value=_MD_TABLE):
+            convert_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        cmd_arg = data["items"][0]["mods"]["cmd"]["arg"]
+        assert r"\\\\" in cmd_arg  # four backslashes in the row break
+
     def test_latex_conversion_arg_contains_markdown(self, capsys):
         with patch.object(convert_cmd, "_clipboard", return_value=_LATEX_TABLE):
             convert_cmd.handle("")

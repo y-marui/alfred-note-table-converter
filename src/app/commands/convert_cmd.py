@@ -4,7 +4,8 @@ Usage in Alfred:  tbl
                   tbl convert
 
 Reads the clipboard, detects the table format, and offers to convert it.
-The converted text is returned as the action arg so Alfred can copy it.
+Enter: copy converted table (\\) to clipboard and paste.
+Cmd+Enter: same but with \\\\ (4 backslashes) for row breaks.
 """
 
 from __future__ import annotations
@@ -33,13 +34,20 @@ def handle(args: str) -> None:  # noqa: ARG001
 
     if fmt == "markdown":
         converted = md_to_latex(text)
+        converted_4bs = md_to_latex(text, quadruple_backslash=True)
         output(
             [
                 item(
                     title="Markdown -> LaTeX",
-                    subtitle="Convert and copy LaTeX to clipboard",
+                    subtitle="Enter: copy+paste  |  Cmd: copy+paste (4 backslashes)",
                     arg=converted,
                     uid="convert-md-to-latex",
+                    mods={
+                        "cmd": {
+                            "subtitle": "Markdown -> LaTeX (4 backslashes)",
+                            "arg": converted_4bs,
+                        }
+                    },
                 )
             ]
         )
@@ -50,7 +58,7 @@ def handle(args: str) -> None:  # noqa: ARG001
             [
                 item(
                     title="LaTeX -> Markdown",
-                    subtitle="Convert and copy Markdown to clipboard",
+                    subtitle="Convert, copy and paste Markdown",
                     arg=converted,
                     uid="convert-latex-to-md",
                 )

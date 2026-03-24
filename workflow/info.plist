@@ -19,6 +19,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>C3D4E5F6-A7B8-9012-CDEF-123456789ABC</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 	</dict>
 	<key>createdby</key>
 	<string>y-marui</string>
@@ -70,7 +83,7 @@
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
-				<true/>
+				<false/>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
@@ -92,9 +105,30 @@
 			<key>uid</key>
 			<string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string>osascript -e 'delay 0.3' -e 'tell application "System Events" to keystroke "v" using {command down}'</string>
+				<key>scriptargtype</key>
+				<integer>0</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>C3D4E5F6-A7B8-9012-CDEF-123456789ABC</string>
+		</dict>
 	</array>
 	<key>readme</key>
-	<string>Copy a Markdown or LaTeX table to your clipboard, then type "tbl" in Alfred to convert it.</string>
+	<string>Copy a Markdown or LaTeX table to your clipboard, then type "tbl" in Alfred to convert it. Enter: copy+paste. Cmd+Enter: copy+paste with 4 backslashes.</string>
 	<key>version</key>
 	<string>0.1.0</string>
 	<key>webaddress</key>

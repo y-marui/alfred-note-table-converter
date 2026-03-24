@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from app.services.table_converter import detect_format, latex_to_md, md_to_latex
 
 _MD_TABLE = """\
@@ -24,6 +26,22 @@ _MD_MULTIBYTE = """\
 | 3日 | 244 | 389 |
 | 15日 | 459 | 723 |"""
 
+_MD_BR_TABLE = """\
+| Day | Detail |
+|-----|--------|
+| Day1 | Aa <br> Ab <br> Ac |
+| Day2 | Ba |"""
+
+_LATEX_BR_TABLE = r"""$$
+\begin{array}{|l|l|} \hline \hline
+\textbf{Day} & \textbf{Detail} \\ \hline \hline
+\text{Day1} & \text{Aa} \\ \hline
+ & \text{Ab} \\ \hline
+ & \text{Ac} \\ \hline
+\text{Day2} & \text{Ba} \\ \hline \hline
+\end{array}
+$$"""
+
 
 class TestDetectFormat:
     def test_detects_markdown(self):
@@ -31,6 +49,10 @@ class TestDetectFormat:
 
     def test_detects_latex(self):
         assert detect_format(_LATEX_TABLE) == "latex"
+
+    def test_detects_latex_with_single_dollar(self):
+        latex = _LATEX_TABLE.replace("$$", "$")
+        assert detect_format(latex) == "latex"
 
     def test_unknown_returns_unknown(self):
         assert detect_format("just some plain text") == "unknown"
@@ -60,7 +82,6 @@ class TestMdToLatex:
     def test_double_hline_at_bottom(self):
         result = md_to_latex(_MD_TABLE)
         lines = result.splitlines()
-        # Last data row ends with \hline \hline
         assert r"\hline \hline" in lines[-3]
 
     def test_multibyte_cells(self):
@@ -72,6 +93,38 @@ class TestMdToLatex:
     def test_column_count_matches(self):
         result = md_to_latex(_MD_TABLE)
         assert "|l|l|l|" in result
+
+    def test_quadruple_backslash(self):
+        result = md_to_latex(_MD_TABLE, quadruple_backslash=True)
+        assert r"\textbf{Col3} \\\\ \hline \hline" in result
+        assert r"\text{a} & \text{b} & \text{c} \\\\ \hline" in result
+
+    def test_quadruple_backslash_last_row(self):
+        result = md_to_latex(_MD_TABLE, quadruple_backslash=True)
+        assert r"\text{d} & \text{e} & \text{f} \\\\ \hline \hline" in result
+
+    def test_br_expansion_creates_sub_rows(self):
+        result = md_to_latex(_MD_BR_TABLE)
+        # Day1 row should expand to 3 sub-rows
+        assert r"\text{Day1} & \text{Aa}" in result
+        assert r" & \text{Ab}" in result
+        assert r" & \text{Ac}" in result
+
+    def test_br_first_cell_empty_in_continuation(self):
+        result = md_to_latex(_MD_BR_TABLE)
+        # Continuation rows must have empty first cell
+        assert " & \\text{Ab}" in result
+        assert " & \\text{Ac}" in result
+
+    def test_br_hline_only_after_last_sub_row(self):
+        result = md_to_latex(_MD_BR_TABLE)
+        lines = result.splitlines()
+        # The Ab and Aa sub-rows should NOT end with \hline
+        ab_line = next(ln for ln in lines if "\\text{Ab}" in ln)
+        assert r"\hline" not in ab_line
+        # Ac sub-row (last of Day1 group) should end with \hline
+        ac_line = next(ln for ln in lines if "\\text{Ac}" in ln)
+        assert r"\hline" in ac_line
 
 
 class TestLatexToMd:
@@ -104,12 +157,27 @@ class TestLatexToMd:
         assert "3日" in result
         assert "723" in result
 
+    def test_continuation_rows_merged_with_br(self):
+        result = latex_to_md(_LATEX_BR_TABLE)
+        assert "<br>" in result
+        assert "Day1" in result
+        # Day2 should not have <br>
+        lines = result.splitlines()
+        day2_line = next(ln for ln in lines if "Day2" in ln)
+        assert "<br>" not in day2_line
+
+    def test_continuation_br_content_preserved(self):
+        result = latex_to_md(_LATEX_BR_TABLE)
+        day1_line = next(ln for ln in result.splitlines() if "Day1" in ln)
+        assert "Aa" in day1_line
+        assert "Ab" in day1_line
+        assert "Ac" in day1_line
+
 
 class TestRoundtrip:
     def test_md_to_latex_to_md(self):
         latex = md_to_latex(_MD_TABLE)
         recovered = latex_to_md(latex)
-        # Headers and data should survive the roundtrip
         assert "Col1" in recovered
         assert "Col2" in recovered
         assert "a" in recovered
@@ -121,5 +189,11 @@ class TestRoundtrip:
         assert r"\textbf{Col1}" in recovered
         assert r"\text{a}" in recovered
 
-
-import re  # noqa: E402 (needed for test helper above)
+    def test_br_roundtrip(self):
+        latex = md_to_latex(_MD_BR_TABLE)
+        recovered = latex_to_md(latex)
+        assert "Day1" in recovered
+        assert "Aa" in recovered
+        assert "Ab" in recovered
+        assert "Ac" in recovered
+        assert "<br>" in recovered
