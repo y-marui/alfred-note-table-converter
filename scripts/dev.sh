@@ -35,8 +35,14 @@ echo "  Alfred Script Filter Simulator"
 echo "  Query: \"$QUERY\""
 echo "─────────────────────────────────────"
 
-if command -v jq &>/dev/null; then
-  python3 "$ENTRY" "$QUERY" | jq .
+if command -v uv &>/dev/null; then
+  RUNNER="uv run python3"
 else
-  python3 "$ENTRY" "$QUERY"
+  RUNNER="python3"
+fi
+
+if command -v jq &>/dev/null; then
+  $RUNNER "$ENTRY" "$QUERY" | jq .
+else
+  $RUNNER "$ENTRY" "$QUERY"
 fi

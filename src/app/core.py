@@ -11,10 +11,10 @@ To add a new command:
 from __future__ import annotations
 
 from alfred.router import Router
-from app.commands import config_cmd, help_cmd, open_cmd, search
+from app.commands import config_cmd, convert_cmd, help_cmd, open_cmd
 
-router = Router(default="search")
-router.register("search")(search.handle)
+router = Router(default="convert")
+router.register("convert")(convert_cmd.handle)
 router.register("open")(open_cmd.handle)
 router.register("config")(config_cmd.handle)
 router.register("help")(help_cmd.handle)

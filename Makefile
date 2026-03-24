@@ -23,34 +23,33 @@ help:
 # Setup
 # ---------------------------------------------------------------------------
 install:
-	pip3 install --quiet -e ".[dev]"
+	uv sync --extra dev
 	@command -v pre-commit >/dev/null 2>&1 && $(MAKE) hooks || true
 
 hooks:
-	pip3 install --quiet pre-commit
-	pre-commit install
+	uv run pre-commit install
 
 # ---------------------------------------------------------------------------
 # Code quality
 # ---------------------------------------------------------------------------
 lint:
-	ruff check src/ tests/
+	uv run ruff check src/ tests/
 
 format:
-	black src/ tests/
-	ruff check --fix src/ tests/
+	uv run black src/ tests/
+	uv run ruff check --fix src/ tests/
 
 typecheck:
-	mypy src/
+	uv run mypy src/
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 test:
-	pytest
+	uv run pytest
 
 test-cov:
-	pytest --cov=src --cov-report=term-missing --cov-report=html
+	uv run pytest --cov=src --cov-report=term-missing --cov-report=html
 
 # ---------------------------------------------------------------------------
 # Build

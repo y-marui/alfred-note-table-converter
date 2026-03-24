@@ -5,42 +5,70 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-from app.commands import config_cmd, help_cmd, open_cmd, search
+from app.commands import config_cmd, convert_cmd, help_cmd, open_cmd
+
+_MD_TABLE = """\
+| Col1 | Col2 |
+|------|------|
+| a    | b    |"""
+
+_LATEX_TABLE = r"""$
+\begin{array}{|l|l|} \hline \hline
+\textbf{Col1} & \textbf{Col2} \\ \hline \hline
+\text{a} & \text{b} \\ \hline \hline
+\end{array}
+$"""
 
 
-class TestSearchCommand:
-    def test_empty_query_returns_prompt(self, capsys):
-        search.handle("")
-        data = json.loads(capsys.readouterr().out)
-        assert data["items"][0]["valid"] is False
-        assert "Type to search" in data["items"][0]["title"]
-
-    def test_whitespace_only_query_returns_prompt(self, capsys):
-        """Whitespace-only query must be treated as empty."""
-        search.handle("   ")
-        data = json.loads(capsys.readouterr().out)
-        assert "Type to search" in data["items"][0]["title"]
-
-    def test_returns_results(self, capsys):
-        with patch.object(
-            search._service,
-            "search",
-            return_value=[
-                {"id": "1", "title": "Result 1", "subtitle": "Sub", "url": "https://example.com"}
-            ],
-        ):
-            search.handle("query")
-
+class TestConvertCommand:
+    def test_markdown_clipboard_shows_md_to_latex(self, capsys):
+        with patch.object(convert_cmd, "_clipboard", return_value=_MD_TABLE):
+            convert_cmd.handle("")
         data = json.loads(capsys.readouterr().out)
         assert len(data["items"]) == 1
-        assert data["items"][0]["title"] == "Result 1"
+        assert "LaTeX" in data["items"][0]["title"]
 
-    def test_no_results_returns_empty_message(self, capsys):
-        with patch.object(search._service, "search", return_value=[]):
-            search.handle("noresults")
-
+    def test_latex_clipboard_shows_latex_to_md(self, capsys):
+        with patch.object(convert_cmd, "_clipboard", return_value=_LATEX_TABLE):
+            convert_cmd.handle("")
         data = json.loads(capsys.readouterr().out)
-        assert "No results" in data["items"][0]["title"]
+        assert len(data["items"]) == 1
+        assert "Markdown" in data["items"][0]["title"]
+
+    def test_md_conversion_arg_contains_latex(self, capsys):
+        with patch.object(convert_cmd, "_clipboard", return_value=_MD_TABLE):
+            convert_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        arg = data["items"][0]["arg"]
+        assert r"\begin{array}" in arg
+        assert r"\textbf{Col1}" in arg
+
+    def test_latex_conversion_arg_contains_markdown(self, capsys):
+        with patch.object(convert_cmd, "_clipboard", return_value=_LATEX_TABLE):
+            convert_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        arg = data["items"][0]["arg"]
+        assert "| Col1 |" in arg
+        assert "|---|" in arg
+
+    def test_unknown_clipboard_shows_error(self, capsys):
+        with patch.object(convert_cmd, "_clipboard", return_value="no table here"):
+            convert_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        assert "Error" in data["items"][0]["title"] or "No table" in data["items"][0]["title"]
+
+    def test_empty_clipboard_shows_error(self, capsys):
+        with patch.object(convert_cmd, "_clipboard", return_value=""):
+            convert_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        assert not data["items"][0]["valid"]
+
+    def test_args_are_ignored(self, capsys):
+        """Query string does not affect clipboard-based conversion."""
+        with patch.object(convert_cmd, "_clipboard", return_value=_MD_TABLE):
+            convert_cmd.handle("some random query")
+        data = json.loads(capsys.readouterr().out)
+        assert "LaTeX" in data["items"][0]["title"]
 
 
 class TestOpenCommand:
@@ -83,10 +111,8 @@ class TestConfigCommand:
         assert any("api_key" in t for t in titles)
 
     def test_unknown_subcommand_shows_current_config(self, capsys):
-        """Unrecognised sub-commands fall through to showing the current config."""
         config_cmd.handle("unknown-subcommand")
         data = json.loads(capsys.readouterr().out)
-        # Should return config view, not crash
         assert len(data["items"]) > 0
 
 

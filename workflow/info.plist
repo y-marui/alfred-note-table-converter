@@ -3,31 +3,31 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>com.example.alfred-workflow-template</string>
+	<string>com.y-marui.alfred-note-table-converter</string>
 	<key>connections</key>
 	<dict>
 		<key>36381EAF-63DA-4000-AED5-AF6DAF671396</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>D90DBB99-FC05-4BE8-B79B-C4DFD1FE55F9</string>
+				<string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
-				<false/>
+				<true/>
 			</dict>
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string>Your Name</string>
+	<string>y-marui</string>
 	<key>description</key>
-	<string>Alfred Workflow Template</string>
+	<string>Convert tables between Markdown and LaTeX formats</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>Workflow Template</string>
+	<string>Note Table Converter</string>
 	<key>objects</key>
 	<array>
 		<dict>
@@ -38,7 +38,7 @@
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>0</integer>
 				<key>argumenttreatemptyqueryasnil</key>
-				<true/>
+				<false/>
 				<key>argumenttrimmode</key>
 				<integer>0</integer>
 				<key>argumenttype</key>
@@ -46,7 +46,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>keyword</key>
-				<string>wf</string>
+				<string>tbl</string>
 				<key>queuedelaycustom</key>
 				<integer>3</integer>
 				<key>queuedelayimmediatelyinitially</key>
@@ -56,17 +56,17 @@
 				<key>queuemode</key>
 				<integer>1</integer>
 				<key>runningsubtext</key>
-				<string>Loading…</string>
+				<string>Converting…</string>
 				<key>script</key>
-				<string>python3 scripts/entry.py "$1"</string>
+				<string>if command -v uv &amp;&gt;/dev/null; then uv run python3 scripts/entry.py "$1"; else python3 scripts/entry.py "$1"; fi</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>Search or configure</string>
+				<string>Convert clipboard table: Markdown &lt;-&gt; LaTeX</string>
 				<key>title</key>
-				<string>Workflow Template</string>
+				<string>Note Table Converter</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
@@ -82,26 +82,22 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>browser</key>
-				<string></string>
-				<key>spaces</key>
-				<string></string>
-				<key>url</key>
+				<key>clipboardtext</key>
 				<string>{query}</string>
-				<key>utf8</key>
-				<true/>
+				<key>transient</key>
+				<false/>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.action.openurl</string>
+			<string>alfred.workflow.output.clipboard</string>
 			<key>uid</key>
-			<string>D90DBB99-FC05-4BE8-B79B-C4DFD1FE55F9</string>
+			<string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
 		</dict>
 	</array>
 	<key>readme</key>
-	<string></string>
+	<string>Copy a Markdown or LaTeX table to your clipboard, then type "tbl" in Alfred to convert it.</string>
 	<key>version</key>
 	<string>0.1.0</string>
 	<key>webaddress</key>
-	<string>https://github.com/yourname/your-workflow</string>
+	<string>https://github.com/y-marui/alfred-note-table-converter</string>
 </dict>
 </plist>

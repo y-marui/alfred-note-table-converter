@@ -19,13 +19,19 @@ BUILD_DIR="$REPO_ROOT/.build"
 # 1. Read version from pyproject.toml
 #    Delegated to scripts/read_version.py to avoid heredoc/quote conflicts.
 # ---------------------------------------------------------------------------
-VERSION=$(python3 scripts/read_version.py)
+if command -v uv &>/dev/null; then
+  PYTHON="uv run python3"
+else
+  PYTHON="python3"
+fi
+
+VERSION=$($PYTHON scripts/read_version.py)
 echo "→ Version: $VERSION"
 
 # ---------------------------------------------------------------------------
 # 2. Sync version into workflow/info.plist
 # ---------------------------------------------------------------------------
-python3 - "$WORKFLOW_DIR/info.plist" "$VERSION" <<'EOF'
+$PYTHON - "$WORKFLOW_DIR/info.plist" "$VERSION" <<'EOF'
 import sys, plistlib, pathlib
 
 plist_path = pathlib.Path(sys.argv[1])
@@ -60,11 +66,18 @@ echo "→ Installing vendor dependencies"
 mkdir -p "$BUILD_DIR/vendor"
 
 if [[ -f "$REPO_ROOT/requirements.txt" ]]; then
-  pip3 install \
-    --quiet \
-    --requirement "$REPO_ROOT/requirements.txt" \
-    --target "$BUILD_DIR/vendor" \
-    --upgrade
+  if command -v uv &>/dev/null; then
+    uv pip install \
+      --quiet \
+      --requirement "$REPO_ROOT/requirements.txt" \
+      --target "$BUILD_DIR/vendor"
+  else
+    pip3 install \
+      --quiet \
+      --requirement "$REPO_ROOT/requirements.txt" \
+      --target "$BUILD_DIR/vendor" \
+      --upgrade
+  fi
 else
   echo "  No requirements.txt - skipping"
 fi
@@ -81,7 +94,7 @@ find "$BUILD_DIR" -name "*.dist-info" -print0 | xargs -0 rm -rf
 mkdir -p "$DIST_DIR"
 
 # Read workflow name from info.plist for the output filename
-WORKFLOW_NAME=$(python3 - "$BUILD_DIR/info.plist" <<'EOF'
+WORKFLOW_NAME=$($PYTHON - "$BUILD_DIR/info.plist" <<'EOF'
 import sys, plistlib, pathlib, re
 with pathlib.Path(sys.argv[1]).open("rb") as f:
     data = plistlib.load(f)

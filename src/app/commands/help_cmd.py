@@ -8,10 +8,10 @@ from __future__ import annotations
 from alfred.response import item, output
 
 _COMMANDS = [
-    ("search <query>", "Search for items  (default command)", "wf search "),
-    ("open <name>", "Open a named shortcut", "wf open "),
-    ("config", "View or reset configuration", "wf config"),
-    ("help", "Show this help", "wf help"),
+    ("convert", "Convert clipboard table: Markdown <-> LaTeX (default)", "tbl convert"),
+    ("open <name>", "Open a named shortcut", "tbl open "),
+    ("config", "View or reset configuration", "tbl config"),
+    ("help", "Show this help", "tbl help"),
 ]
 
 
@@ -20,7 +20,7 @@ def handle(args: str) -> None:  # noqa: ARG001
     output(
         [
             item(
-                title=f"wf {cmd}",
+                title=f"tbl {cmd}",
                 subtitle=desc,
                 arg="",
                 uid=f"help-{cmd.split()[0]}",
