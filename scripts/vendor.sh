@@ -17,10 +17,17 @@ if [[ ! -f "$REPO_ROOT/requirements.txt" ]]; then
   exit 0
 fi
 
-pip3 install \
-  --quiet \
-  --requirement "$REPO_ROOT/requirements.txt" \
-  --target "$VENDOR_DIR" \
-  --upgrade
+if command -v uv &>/dev/null; then
+  uv pip install \
+    --quiet \
+    --requirement "$REPO_ROOT/requirements.txt" \
+    --target "$VENDOR_DIR"
+else
+  pip3 install \
+    --quiet \
+    --requirement "$REPO_ROOT/requirements.txt" \
+    --target "$VENDOR_DIR" \
+    --upgrade
+fi
 
 echo "✓ Vendor install complete"

@@ -24,7 +24,6 @@ help:
 # ---------------------------------------------------------------------------
 install:
 	uv sync --extra dev
-	@command -v pre-commit >/dev/null 2>&1 && $(MAKE) hooks || true
 
 hooks:
 	uv run pre-commit install
