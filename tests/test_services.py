@@ -10,13 +10,13 @@ _MD_TABLE = """\
 | a    | b    | c    |
 | d    | e    | f    |"""
 
-_LATEX_TABLE = r"""$
+_LATEX_TABLE = r"""$$
 \begin{array}{|l|l|l|} \hline \hline
 \textbf{Col1} & \textbf{Col2} & \textbf{Col3} \\ \hline \hline
 \text{a} & \text{b} & \text{c} \\ \hline
 \text{d} & \text{e} & \text{f} \\ \hline \hline
 \end{array}
-$"""
+$$"""
 
 _MD_MULTIBYTE = """\
 |  | 2等 | 1等 |
@@ -42,8 +42,8 @@ class TestDetectFormat:
 class TestMdToLatex:
     def test_basic_conversion(self):
         result = md_to_latex(_MD_TABLE)
-        assert result.startswith("$")
-        assert result.endswith("$")
+        assert result.startswith("$$")
+        assert result.endswith("$$")
         assert r"\begin{array}{|l|l|l|}" in result
         assert r"\textbf{Col1}" in result
         assert r"\textbf{Col2}" in result

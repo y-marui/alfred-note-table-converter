@@ -12,12 +12,12 @@ _MD_TABLE = """\
 |------|------|
 | a    | b    |"""
 
-_LATEX_TABLE = r"""$
+_LATEX_TABLE = r"""$$
 \begin{array}{|l|l|} \hline \hline
 \textbf{Col1} & \textbf{Col2} \\ \hline \hline
 \text{a} & \text{b} \\ \hline \hline
 \end{array}
-$"""
+$$"""
 
 
 class TestConvertCommand:

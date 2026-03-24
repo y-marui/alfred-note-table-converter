@@ -11,7 +11,7 @@ def detect_format(text: str) -> str:
     Returns "markdown", "latex", or "unknown".
     """
     stripped = text.strip()
-    if stripped.startswith("$") and r"\begin{array}" in stripped:
+    if stripped.startswith("$$") and r"\begin{array}" in stripped:
         return "latex"
     lines = [ln for ln in stripped.splitlines() if ln.strip()]
     if len(lines) >= 2 and "|" in lines[0] and re.match(r"^[\s|:-]+$", lines[1]):
@@ -36,20 +36,20 @@ def md_to_latex(text: str) -> str:
     col_spec = "|" + "|".join(["l"] * ncols) + "|"
 
     out: list[str] = [
-        "$",
+        "$$",
         rf"\begin{{array}}{{{col_spec}}} \hline \hline",
     ]
 
     header_cells = " & ".join(rf"\textbf{{{cell}}}" for cell in header)
-    out.append(rf"{header_cells} \\ \hline \hline")
+    out.append(header_cells + r" \\ \hline \hline")
 
     for i, row in enumerate(data_rows):
         cells = " & ".join(rf"\text{{{cell}}}" for cell in row)
         hline = r"\hline \hline" if i == len(data_rows) - 1 else r"\hline"
-        out.append(rf"{cells} \\ {hline}")
+        out.append(cells + r" \\ " + hline)
 
     out.append(r"\end{array}")
-    out.append("$")
+    out.append("$$")
 
     return "\n".join(out)
 
@@ -57,9 +57,13 @@ def md_to_latex(text: str) -> str:
 def latex_to_md(text: str) -> str:
     """Convert a LaTeX array table to Markdown format."""
     content = text.strip()
-    if content.startswith("$"):
+    if content.startswith("$$"):
+        content = content[2:]
+    elif content.startswith("$"):
         content = content[1:]
-    if content.endswith("$"):
+    if content.endswith("$$"):
+        content = content[:-2]
+    elif content.endswith("$"):
         content = content[:-1]
     content = content.strip()
 
