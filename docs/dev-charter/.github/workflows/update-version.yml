@@ -1,0 +1,57 @@
+name: Update VERSION
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  update_version:
+    name: Update VERSION
+    runs-on: ubuntu-latest
+    # Only runs for PRs from branches within this repo (not forks) and not
+    # triggered by the auto-update commit itself (prevents redundant re-runs).
+    # Fork PRs must update VERSION manually; CI will fail with a clear message.
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check and update VERSION
+        id: check
+        run: |
+          set -euo pipefail
+          EXPECTED=$(date +%Y-%m-%d)
+          ACTUAL=$(head -1 VERSION 2>/dev/null || echo "")
+          echo "expected=${EXPECTED}" >> "$GITHUB_OUTPUT"
+          if [ "$ACTUAL" = "$EXPECTED" ]; then
+            echo "VERSION is up to date (${ACTUAL})"
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Updating VERSION: ${ACTUAL} → ${EXPECTED}"
+            printf '%s\n' "${EXPECTED}" > VERSION
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit VERSION update
+        if: steps.check.outputs.updated == 'true'
+        run: |
+          set -euo pipefail
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add VERSION
+          git commit -m "chore: update VERSION to ${{ steps.check.outputs.expected }}"
+          git push
+
+      - name: Re-trigger CI after VERSION update
+        if: steps.check.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh workflow run ci.yml --ref "${{ github.head_ref }}"

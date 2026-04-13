@@ -77,6 +77,18 @@ repos:
           )
 
   # ----------------------------------------------------------------
+  # VERSION date check
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-version-date
+        name: Check VERSION date
+        language: script
+        entry: scripts/check-version-date.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
   # Shell scripts
   # ----------------------------------------------------------------
   - repo: https://github.com/shellcheck-py/shellcheck-py

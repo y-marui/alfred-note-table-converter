@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  security:
+    name: Security scan (pre-commit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pre-commit/action@v3.0.1
+
+  build:
+    name: Build
+    needs: [security]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - run: echo "All checks passed"
