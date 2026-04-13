@@ -1,4 +1,4 @@
-# AI コンテキスト階層
+# AI Context Hierarchy
 
 優先順位
 

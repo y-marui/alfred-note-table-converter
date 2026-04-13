@@ -1,10 +1,10 @@
-# セキュリティポリシー
+# Security Policy
 
-## セキュリティの二層構造
+## Two-Layer Security Architecture
 
 このプロジェクトのセキュリティは以下の二層で構成される。
 
-### 層1: 個人のグローバル git フック（dotfiles 管理・個人のみ）
+### Layer 1: Personal Global Git Hooks (dotfiles, personal only)
 
 `~/.gitconfig` に `core.hooksPath = ~/.config/git/hooks` を設定することで、
 開発者個人のマシン上の**全リポジトリに自動適用**される安全網。
@@ -28,14 +28,14 @@
 git config hooks.skip-policy-check true
 ```
 
-### 層2: per-repo の pre-commit フック（チーム強制・CI でも動作）
+### Layer 2: Per-Repo Pre-commit Hooks (team-enforced, runs in CI)
 
 `.pre-commit-config.yaml` をリポジトリにコミットし `pre-commit install` することで有効になる。
 **チームとしての実際の強制手段**であり、CI でも必ず動作させる。
 
 ---
 
-## 自動強制ポリシー
+## Automated Enforcement Policy
 
 以下はフックによって**自動的にブロック**される。
 
@@ -57,29 +57,29 @@ API_KEY=your-api-key-here
 
 ---
 
-## 手動遵守ポリシー
+## Manual Compliance Policy
 
 自動化できないため、開発者が自ら守ること。
 
-### シークレット管理
+### Secret Management
 
 - API キー・パスワード・トークンを絶対にコードに書かない。環境変数または Secret Manager（AWS Secrets Manager、HashiCorp Vault 等）を使う。
 - 誤ってコミットしたシークレットは、履歴から削除した上で即座にローテーションする。
 
-### AI との協働
+### AI Collaboration
 
 - **シークレットを含むファイルやコードを AI に渡さない**（プロンプト・コンテキストファイル・スクリーンショット含む）。
 - **AI が生成したコードは必ずレビューしてからコミットする**。SQLインジェクション・ハードコードされた認証情報・安全でない逆シリアライズ等を含む可能性がある。
 - **AI との会話ログをリポジトリにコミットしない**。
 
-### コードレビュー
+### Code Review
 
 - `main` に到達するコミットは必ず他の開発者がレビューする。
 - 認証・認可・暗号化・データアクセスに関わる変更はセキュリティレビューを必須とする。
 
 ---
 
-## セットアップ手順
+## Setup Steps
 
 新規リポジトリに本憲章を適用する場合：
 
@@ -108,7 +108,7 @@ CI での実行例（GitHub Actions）：
 
 ---
 
-## 設定ファイル一覧
+## Configuration Files
 
 | ファイル | 用途 |
 |---|---|

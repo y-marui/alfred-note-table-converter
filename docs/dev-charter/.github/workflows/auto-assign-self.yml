@@ -1,0 +1,22 @@
+name: Assign self when I create an issue
+
+on:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  assign:
+    if: github.actor == github.repository_owner || endsWith(github.actor, '[bot]')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: [context.repo.owner],
+            })

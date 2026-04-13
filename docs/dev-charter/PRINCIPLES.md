@@ -1,19 +1,19 @@
-# 原則
+# Principles
 
-## 開発哲学
+## Development Philosophy
 - まず小さなツールを構築する
 - ローカルファーストのデザインを優先する
 - インフラストラクチャを最小限に保つ
 
-## デザイン
+## Design
 - 高速なインタラクション
 - 最小限のUI
 
-## アーキテクチャ
+## Architecture
 - 最小限の依存関係
 - オフライン機能を優先
 
-## コード設計原則
+## Code Design Principles
 
 - **変更範囲は必要最小限**（Over-engineeringしない）
 - **YAGNI原則**：今必要ない機能は実装しない
