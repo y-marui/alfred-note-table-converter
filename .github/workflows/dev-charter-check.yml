@@ -2,7 +2,7 @@ name: Dev Charter
 
 on:
   schedule:
-    - cron: "23 3 * * 1"  # 毎週月曜 3:23 UTC
+    - cron: "47 21 * * 0"  # 毎週 Sun 21:47 UTC
   workflow_dispatch:
 
 jobs:
