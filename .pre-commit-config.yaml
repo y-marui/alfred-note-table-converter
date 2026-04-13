@@ -1,3 +1,13 @@
+exclude: |
+  (?x)^(
+    workflow/vendor/|
+    \.git/|
+    dist/|
+    __pycache__/|
+    .*\.min\.js$|
+    .*\.min\.css$
+  )
+
 repos:
   # Ruff: fast linter + formatter (replaces flake8, isort, pyupgrade, etc.)
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -9,16 +19,19 @@ repos:
 
   # General file hygiene + security basics
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
         args: [--unsafe]  # allow custom tags in GitHub Actions YAML
       - id: check-toml
+      - id: check-json
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=500]
+      - id: check-executables-have-shebangs
+      - id: check-case-conflict
       - id: detect-private-key
 
   # Shell script linting
@@ -26,11 +39,12 @@ repos:
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
+        args: ["--severity=warning"]
         files: scripts/.*\.sh$
 
   # Secret scanning — uses .gitleaks.toml for project-specific rules
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.4
+    rev: v8.21.2
     hooks:
       - id: gitleaks
         args: [--config=.gitleaks.toml]
@@ -38,11 +52,29 @@ repos:
   # Block .env files from being committed
   - repo: local
     hooks:
-      - id: no-commit-dotenv
-        name: block .env files
+      - id: detect-dotenv
+        name: Block .env files
         language: fail
-        entry: ".env files must not be committed"
-        files: '^\.env(\..+)?$'
+        entry: '.env ファイルはコミット禁止。ダミー値のみの .env.example を使うこと。'
+        files: '(^|/)\.env(\.[^.]+)?$'
+        exclude: '(^|/)\.env\.(example|sample|template)$'
+
+  # Block hardcoded local absolute paths
+  - repo: local
+    hooks:
+      - id: no-hardcoded-local-paths
+        name: Block hardcoded local absolute paths
+        language: pygrep
+        entry: '(/Users/[A-Za-z0-9_.-]+/|/home/[A-Za-z0-9_.-]+/|C:\\Users\\)'
+        types_or: [text]
+        exclude: |
+          (?x)(
+            \.md$|
+            docs/|
+            \.github/|
+            \.gitleaks\.toml$|
+            \.pre-commit-config\.yaml$
+          )
 
   # Type checking (runs mypy against src/)
   - repo: local

@@ -24,6 +24,12 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 
 ---
 
+## 憲章参照
+
+憲章参照: `docs/dev-charter/CHARTER_INDEX.md` でトピックを特定してから該当ファイルのみ読む
+
+---
+
 ## AI コンテキスト優先順位（AI_CONTEXT_HIERARCHY）
 
 1. タスクコンテキスト（Issue / Pull Request）

@@ -6,8 +6,9 @@
 > Production-ready template for building Alfred 5 Script Filter workflows.
 > Start shipping in 10 minutes.
 
-[![CI](https://github.com/y-marui/alfred-workflow-template/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/alfred-workflow-template/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/y-marui/alfred-note-table-converter/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/alfred-note-table-converter/actions/workflows/ci.yml)
+[![Charter Check](https://github.com/y-marui/alfred-note-table-converter/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/y-marui/alfred-note-table-converter/actions/workflows/dev-charter-check.yml)
 
 | Field | Value |
 |---|---|
