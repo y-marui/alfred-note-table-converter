@@ -8,7 +8,7 @@ import time
 import pytest
 
 from alfred.cache import Cache
-from alfred.config import Config
+from alfred.config import Config, ConfigSchema, SettingSpec
 from alfred.response import item, output
 from alfred.router import Router
 from alfred.safe_run import safe_run
@@ -163,6 +163,45 @@ class TestConfig:
         config.set("x", 10)
         config.set("y", 20)
         assert config.all() == {"x": 10, "y": 20}
+
+
+# ---------------------------------------------------------------------------
+# config schema
+# ---------------------------------------------------------------------------
+
+
+class TestSettingSpec:
+    def test_fields(self):
+        spec = SettingSpec(key="use_uv", default=True, description="Use uv when available")
+        assert spec.key == "use_uv"
+        assert spec.default is True
+        assert spec.description == "Use uv when available"
+
+
+class TestConfigSchema:
+    def test_add_and_specs(self):
+        schema = ConfigSchema().add("use_uv", True, "Use uv").add("ttl", 300, "TTL in seconds")
+        specs = schema.specs()
+        assert len(specs) == 2
+        assert specs[0].key == "use_uv"
+        assert specs[1].key == "ttl"
+
+    def test_default_for_declared_key(self):
+        schema = ConfigSchema().add("use_uv", True, "Use uv")
+        assert schema.default_for("use_uv") is True
+
+    def test_default_for_undeclared_key(self):
+        schema = ConfigSchema()
+        assert schema.default_for("missing") is None
+
+    def test_keys(self):
+        schema = ConfigSchema().add("a", 1, "A").add("b", 2, "B")
+        assert schema.keys() == ["a", "b"]
+
+    def test_empty_schema(self):
+        schema = ConfigSchema()
+        assert schema.specs() == []
+        assert schema.keys() == []
 
 
 # ---------------------------------------------------------------------------
