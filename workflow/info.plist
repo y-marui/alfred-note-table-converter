@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>com.y-marui.alfred-note-table-converter</string>
+	<string>com.github.y-marui.alfred-note-table-converter</string>
 	<key>connections</key>
 	<dict>
 		<key>36381EAF-63DA-4000-AED5-AF6DAF671396</key>
@@ -34,9 +34,9 @@
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string>y-marui</string>
+	<string>Yukihiro Marui</string>
 	<key>description</key>
-	<string>Convert tables between Markdown and LaTeX formats</string>
+	<string>Convert tables between Markdown and LaTeX for note</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
@@ -133,5 +133,29 @@
 	<string>0.1.0</string>
 	<key>webaddress</key>
 	<string>https://github.com/y-marui/alfred-note-table-converter</string>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>label</key>
+			<string>Use uv</string>
+			<key>variable</key>
+			<string>use_uv</string>
+			<key>description</key>
+			<string>When enabled and uv is installed, scripts run via uv run --no-project.</string>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Use uv instead of python3 when available</string>
+			</dict>
+		</dict>
+	</array>
+	<key>category</key>
+	<string>Productivity</string>
 </dict>
 </plist>
