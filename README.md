@@ -1,4 +1,4 @@
-# Alfred Note Table Converter
+# Alfred note.com Table Converter
 
 > **This is the reference (English) version.**
 > The canonical (Japanese) version is [README-jp.md](README-jp.md).
