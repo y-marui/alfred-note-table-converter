@@ -71,7 +71,7 @@
 				<key>runningsubtext</key>
 				<string>Converting…</string>
 				<key>script</key>
-				<string>if command -v uv &amp;&gt;/dev/null; then uv run python3 scripts/entry.py "$1"; else python3 scripts/entry.py "$1"; fi</string>
+				<string>sh scripts/run.sh "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>

@@ -35,7 +35,19 @@ echo "  Alfred Script Filter Simulator"
 echo "  Query: \"$QUERY\""
 echo "─────────────────────────────────────"
 
-if command -v uv &>/dev/null; then
+_cfg="${alfred_workflow_data}/config.json"
+_use_uv=$(python3 - "$_cfg" << 'PYEOF'
+import json, sys, pathlib
+p = pathlib.Path(sys.argv[1])
+try:
+    v = json.loads(p.read_text()).get("use_uv", True) if p.exists() else True
+except Exception:
+    v = True
+print("1" if v else "0")
+PYEOF
+)
+
+if [ "${_use_uv:-1}" = "1" ] && command -v uv &>/dev/null; then
   RUNNER="uv run python3"
 else
   RUNNER="python3"

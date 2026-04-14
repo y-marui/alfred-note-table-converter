@@ -1,4 +1,4 @@
-.PHONY: help install hooks lint format typecheck test test-cov vendor build release run clean update-charter
+.PHONY: help install hooks lint format typecheck test test-cov vendor build deploy release run clean update-charter
 
 # Default target
 help:
@@ -13,6 +13,7 @@ help:
 	@echo "  make test-cov    Run tests with coverage report"
 	@echo "  make vendor      Install runtime deps into workflow/vendor/"
 	@echo "  make build       Build .alfredworkflow package"
+	@echo "  make deploy      Build and install into Alfred"
 	@echo "  make release     Create GitHub Release (requires git tag)"
 	@echo "  make run Q=''    Simulate Alfred with query Q"
 	@echo "  make clean       Remove build artifacts"
@@ -35,7 +36,7 @@ lint:
 	uv run ruff check src/ tests/
 
 format:
-	uv run black src/ tests/
+	uv run ruff format src/ tests/
 	uv run ruff check --fix src/ tests/
 
 typecheck:
@@ -58,6 +59,9 @@ vendor:
 
 build: vendor
 	./scripts/build.sh
+
+deploy: build
+	@open dist/*.alfredworkflow
 
 release:
 	./scripts/release.sh
