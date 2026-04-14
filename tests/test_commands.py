@@ -97,25 +97,40 @@ class TestOpenCommand:
 
 
 class TestConfigCommand:
-    def test_empty_config_shows_no_settings(self, capsys):
+    def test_shows_schema_defaults(self, capsys):
+        # Schema-defined settings always appear even when nothing is stored.
         config_cmd.handle("")
         data = json.loads(capsys.readouterr().out)
         titles = [it["title"] for it in data["items"]]
-        assert any("No settings" in t for t in titles)
+        assert any("use_uv" in t for t in titles)
+
+    def test_default_value_shown_with_tag(self, capsys):
+        config_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        subtitles = [it["subtitle"] for it in data["items"]]
+        assert any("[default]" in s for s in subtitles)
+
+    def test_stored_value_overrides_default(self, capsys):
+        config_cmd._config.set("use_uv", False)
+        config_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        titles = [it["title"] for it in data["items"]]
+        assert any("use_uv: False" in t for t in titles)
+
+    def test_stored_value_has_no_default_tag(self, capsys):
+        config_cmd._config.set("use_uv", False)
+        config_cmd.handle("")
+        data = json.loads(capsys.readouterr().out)
+        # Find the use_uv item
+        uv_item = next(it for it in data["items"] if "use_uv" in it["title"])
+        assert "[default]" not in uv_item["subtitle"]
 
     def test_reset_clears_config(self, capsys):
-        config_cmd._config.set("key", "value")
+        config_cmd._config.set("use_uv", False)
         config_cmd.handle("reset")
         data = json.loads(capsys.readouterr().out)
         assert "reset" in data["items"][0]["title"].lower()
         assert config_cmd._config.all() == {}
-
-    def test_shows_existing_settings(self, capsys):
-        config_cmd._config.set("api_key", "secret")
-        config_cmd.handle("")
-        data = json.loads(capsys.readouterr().out)
-        titles = [it["title"] for it in data["items"]]
-        assert any("api_key" in t for t in titles)
 
     def test_unknown_subcommand_shows_current_config(self, capsys):
         config_cmd.handle("unknown-subcommand")

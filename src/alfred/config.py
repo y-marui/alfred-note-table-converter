@@ -9,10 +9,60 @@ Outside Alfred, falls back to ``~/.config/alfred-workflow/<bundle_id>/``.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
 from pathlib import Path
 from typing import Any, cast
+
+
+@dataclasses.dataclass
+class SettingSpec:
+    """Declaration of a single configuration setting.
+
+    Attributes:
+        key:         Configuration key used in the JSON store.
+        default:     Value returned when the key has not been set by the user.
+        description: Human-readable description shown in the config command.
+    """
+
+    key: str
+    default: Any
+    description: str
+
+
+class ConfigSchema:
+    """Declares available configuration keys with defaults and descriptions.
+
+    Use as a builder to define all settings for the workflow::
+
+        SCHEMA = (
+            ConfigSchema()
+            .add("use_uv", True, "Use uv instead of pip when available")
+            .add("cache_ttl", 300, "Cache time-to-live in seconds")
+        )
+    """
+
+    def __init__(self) -> None:
+        self._specs: dict[str, SettingSpec] = {}
+
+    def add(self, key: str, default: Any, description: str) -> ConfigSchema:
+        """Declare a configuration key with a default value and description."""
+        self._specs[key] = SettingSpec(key=key, default=default, description=description)
+        return self
+
+    def specs(self) -> list[SettingSpec]:
+        """Return all declared settings in declaration order."""
+        return list(self._specs.values())
+
+    def default_for(self, key: str) -> Any:
+        """Return the declared default for *key*, or ``None`` if not declared."""
+        spec = self._specs.get(key)
+        return spec.default if spec is not None else None
+
+    def keys(self) -> list[str]:
+        """Return all declared keys."""
+        return list(self._specs.keys())
 
 
 def _data_dir() -> Path:

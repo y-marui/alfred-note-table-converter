@@ -1,7 +1,7 @@
 """config command - view and manage workflow configuration.
 
-Usage in Alfred:  wf config
-                  wf config reset
+Usage in Alfred:  tbl config
+                  tbl config reset
 """
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ from __future__ import annotations
 from alfred.config import Config
 from alfred.logger import get_logger
 from alfred.response import item, output
+from app.settings import SCHEMA
 
 log = get_logger(__name__)
 _config = Config()
@@ -33,35 +34,28 @@ def handle(args: str) -> None:
         )
         return
 
-    current = _config.all()
     items = [
         item(
             title="Reset all settings",
-            subtitle="wf config reset  — clear all stored configuration",
+            subtitle="tbl config reset  — clear all stored configuration",
             arg="reset",
             uid="config-reset",
             autocomplete="config reset",
         )
     ]
 
-    if current:
-        for key, value in current.items():
-            items.insert(
-                0,
-                item(
-                    title=f"{key}: {value}",
-                    subtitle="Current setting",
-                    arg=str(value),
-                    uid=f"config-{key}",
-                    valid=False,
-                ),
-            )
-    else:
+    for spec in SCHEMA.specs():
+        stored = _config.get(spec.key)
+        current = stored if stored is not None else spec.default
+        is_default = stored is None
+        subtitle = spec.description + ("  [default]" if is_default else "")
         items.insert(
             0,
             item(
-                title="No settings configured",
-                subtitle="Settings will appear here once set",
+                title=f"{spec.key}: {current}",
+                subtitle=subtitle,
+                arg=str(current),
+                uid=f"config-{spec.key}",
                 valid=False,
             ),
         )
