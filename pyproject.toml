@@ -19,7 +19,6 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.4.0",
-    "black>=24.0",
     "mypy>=1.9",
     "pre-commit>=3.7",
 ]
@@ -57,19 +56,15 @@ select = [
 ]
 ignore = [
     "ANN401",  # Dynamically typed expressions (Any)
-    "ANN101",  # Missing type annotation for `self` (removed in ruff 0.6+)
-    "ANN102",  # Missing type annotation for `cls` (removed in ruff 0.6+)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ANN", "ARG"]
 
-# ---------------------------------------------------------------------------
-# Black
-# ---------------------------------------------------------------------------
-[tool.black]
-line-length = 100
-target-version = ["py39"]
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
 
 # ---------------------------------------------------------------------------
 # Mypy

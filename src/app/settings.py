@@ -19,5 +19,5 @@ from alfred.config import ConfigSchema
 SCHEMA: ConfigSchema = ConfigSchema().add(
     "use_uv",
     True,
-    "Use uv instead of pip when available (for package operations)",
+    "Use uv run to execute the workflow script when uv is available",
 )
