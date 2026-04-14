@@ -40,7 +40,7 @@
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>Note Table Converter</string>
+	<string>note.com Table Converter</string>
 	<key>objects</key>
 	<array>
 		<dict>
@@ -79,7 +79,7 @@
 				<key>subtext</key>
 				<string>Convert clipboard table: Markdown &lt;-&gt; LaTeX</string>
 				<key>title</key>
-				<string>Note Table Converter</string>
+				<string>note.com Table Converter</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
