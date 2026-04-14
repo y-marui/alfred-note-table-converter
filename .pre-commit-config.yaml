@@ -11,7 +11,7 @@ exclude: |
 repos:
   # Ruff: fast linter + formatter (replaces flake8, isort, pyupgrade, etc.)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.7
+    rev: v0.11.7
     hooks:
       - id: ruff
         args: [--fix]
