@@ -68,7 +68,9 @@ class ConfigSchema:
 def _data_dir() -> Path:
     base = os.environ.get("alfred_workflow_data")
     if not base:
-        bundle_id = os.environ.get("alfred_workflow_bundleid", "alfred-workflow-template")
+        bundle_id = os.environ.get(
+            "alfred_workflow_bundleid", "com.github.y-marui.alfred-note-table-converter"
+        )
         base = str(Path.home() / ".config" / "alfred-workflow" / bundle_id)
     path = Path(base)
     path.mkdir(parents=True, exist_ok=True)

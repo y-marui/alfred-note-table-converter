@@ -97,33 +97,19 @@ class TestOpenCommand:
 
 
 class TestConfigCommand:
-    def test_shows_schema_defaults(self, capsys):
-        # Schema-defined settings always appear even when nothing is stored.
+    def test_shows_reset_item(self, capsys):
+        # Reset item is always present regardless of schema.
         config_cmd.handle("")
         data = json.loads(capsys.readouterr().out)
         titles = [it["title"] for it in data["items"]]
-        assert any("use_uv" in t for t in titles)
+        assert any("Reset" in t for t in titles)
 
-    def test_default_value_shown_with_tag(self, capsys):
+    def test_empty_schema_shows_only_reset(self, capsys):
+        # SCHEMA has no entries; only the Reset item should appear.
         config_cmd.handle("")
         data = json.loads(capsys.readouterr().out)
-        subtitles = [it["subtitle"] for it in data["items"]]
-        assert any("[default]" in s for s in subtitles)
-
-    def test_stored_value_overrides_default(self, capsys):
-        config_cmd._config.set("use_uv", False)
-        config_cmd.handle("")
-        data = json.loads(capsys.readouterr().out)
-        titles = [it["title"] for it in data["items"]]
-        assert any("use_uv: False" in t for t in titles)
-
-    def test_stored_value_has_no_default_tag(self, capsys):
-        config_cmd._config.set("use_uv", False)
-        config_cmd.handle("")
-        data = json.loads(capsys.readouterr().out)
-        # Find the use_uv item
-        uv_item = next(it for it in data["items"] if "use_uv" in it["title"])
-        assert "[default]" not in uv_item["subtitle"]
+        assert len(data["items"]) == 1
+        assert "Reset" in data["items"][0]["title"]
 
     def test_reset_clears_config(self, capsys):
         config_cmd._config.set("use_uv", False)

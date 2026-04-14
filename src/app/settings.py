@@ -1,7 +1,8 @@
 """Application-level configuration schema.
 
-Declares all user-configurable settings with defaults and descriptions.
-The schema is consumed by the config command to display and manage settings.
+Declares user-configurable settings managed via config.json (alfred.config.Config).
+Settings controlled by Alfred's Configuration Builder (userconfigurationconfig in
+info.plist) are passed as environment variables and do NOT appear here.
 
 Example — reading a setting with its declared default::
 
@@ -9,15 +10,14 @@ Example — reading a setting with its declared default::
     from alfred.config import Config
 
     config = Config()
-    use_uv = config.get("use_uv", SCHEMA.default_for("use_uv"))
+    value = config.get("my_key", SCHEMA.default_for("my_key"))
 """
 
 from __future__ import annotations
 
 from alfred.config import ConfigSchema
 
-SCHEMA: ConfigSchema = ConfigSchema().add(
-    "use_uv",
-    True,
-    "Use uv run to execute the workflow script when uv is available",
-)
+# No app-level config keys yet.
+# Settings managed by Alfred's Configuration Builder (e.g. use_uv) are
+# available as environment variables set by Alfred at runtime.
+SCHEMA: ConfigSchema = ConfigSchema()
