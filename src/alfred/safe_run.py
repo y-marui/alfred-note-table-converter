@@ -8,7 +8,7 @@ catches any exception and outputs a visible error item instead.
 from __future__ import annotations
 
 import traceback
-from typing import Callable
+from collections.abc import Callable
 
 
 def safe_run(fn: Callable[[], None]) -> None:

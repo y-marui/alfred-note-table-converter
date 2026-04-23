@@ -3,7 +3,7 @@ name = "alfred-workflow-template"
 version = "0.1.0"
 description = "Alfred Workflow development template"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 # Runtime dependencies - also add to requirements.txt for vendor install
 dependencies = []
@@ -36,7 +36,7 @@ where = ["src"]
 # ---------------------------------------------------------------------------
 [tool.ruff]
 src = ["src"]
-target-version = "py39"
+target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
@@ -70,7 +70,7 @@ line-ending = "auto"
 # Mypy
 # ---------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 mypy_path = "src"
 strict = true
 

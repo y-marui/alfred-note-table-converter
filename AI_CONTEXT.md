@@ -9,7 +9,7 @@
 ## プロジェクト概要
 
 Alfred 5 Script Filter ワークフロー用の OSS テンプレート。
-Python 3.9+、レイヤードアーキテクチャ、CI/CD 完備。
+Python 3.11+、レイヤードアーキテクチャ、CI/CD 完備。
 対象: 個人〜3人規模の開発チーム。
 
 ```
@@ -27,6 +27,13 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 ## 憲章参照
 
 憲章参照: `docs/dev-charter/CHARTER_INDEX.md` でトピックを特定してから該当ファイルのみ読む
+
+---
+
+## ドキュメント同期ルール（Document Sync Rule）
+
+仕様・ルール・構成に変更が生じたとき、変更と同じ作業内で関連ドキュメントを更新する。
+対象は `docs/` 内のファイルに限らず、`AI_CONTEXT.md`・`README.md` 等のルートファイルも含む。
 
 ---
 

@@ -11,8 +11,9 @@ import json
 import os
 import string
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 def _cache_dir() -> Path:
