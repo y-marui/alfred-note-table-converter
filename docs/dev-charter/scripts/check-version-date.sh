@@ -8,9 +8,9 @@
 set -euo pipefail
 
 if [ -n "${CI:-}" ]; then
-  EXPECTED=$(git log -1 --no-merges --format="%ad" --date=format:"%Y-%m-%d")
+  EXPECTED=$(TZ=UTC git log -1 --no-merges --format="%ad" --date=format-local:"%Y-%m-%d")
 else
-  EXPECTED=$(date +%Y-%m-%d)
+  EXPECTED=$(date -u +%Y-%m-%d)
 fi
 
 ACTUAL=$(head -1 VERSION 2>/dev/null || echo "")

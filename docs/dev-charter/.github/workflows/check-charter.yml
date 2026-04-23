@@ -11,10 +11,6 @@ on:
         description: "Path to the dev-charter subtree within the project"
         default: "docs/dev-charter"
         type: string
-      fail_if_outdated:
-        description: "Exit with code 1 when dev-charter needs an update (makes CI badge turn red)"
-        default: false
-        type: boolean
   workflow_dispatch:
     inputs:
       prefix:
@@ -121,8 +117,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           REMOTE="${{ steps.versions.outputs.remote }}"
-          UPDATE_CHECKLIST_URL="https://github.com/y-marui/dev-charter/blob/main/UPDATE_CHECKLIST.md"
-          INSTALL_CHECKLIST_URL="https://github.com/y-marui/dev-charter/blob/main/INSTALL_CHECKLIST.md"
 
           gh label create "dev-charter" --color "#0075ca" --description "dev-charter update" --force
 
@@ -132,18 +126,12 @@ jobs:
           ## dev-charter を ${REMOTE} に更新
 
           \`git subtree pull\` を自動的に適用しました。
-          マージ後、[更新チェックリスト](${UPDATE_CHECKLIST_URL}) に従って変更のあった箇所を対応してください。
+          マージ後、\`docs/dev-charter/UPDATE_CHECKLIST.md\` に従って変更のあった箇所を対応してください。
 
-          > 全ファイルを網羅的に確認したい場合は [インストールチェックリスト](${INSTALL_CHECKLIST_URL}) を使用してください。
+          > 全ファイルを網羅的に確認したい場合は \`docs/dev-charter/INSTALL_CHECKLIST.md\` を使用してください。
           EOF
           )" \
             --base main \
             --head update-charter \
             --label "dev-charter" || \
             gh pr list --head update-charter --base main --json number --jq length | grep -q '^[1-9]'
-
-      - name: Fail if outdated
-        if: steps.versions.outputs.outdated == 'true' && inputs.fail_if_outdated
-        run: |
-          echo "::error::dev-charter is outdated. Merge the update PR to resolve."
-          exit 1
