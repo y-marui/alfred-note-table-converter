@@ -13,13 +13,14 @@ Run the following command to see which dev-charter files changed in this update
 Read each changed file and update the project to reflect the changes.
 
 Common areas affected by file:
-- AI_TOOL_SETUP.md                     → update AI context files (AI_CONTEXT.md and agent config files)
-- topics/PROJECT_README_GUIDELINES.md  → update the project README
-- topics/GITHUB_SETTINGS.md            → apply repository settings (gh commands if available, otherwise GitHub UI)
-- topics/CI_POLICY.md                  → review and update .github/workflows/
-- SECURITY_POLICY.md                   → review security hook and scan configuration
-- LEGAL_POLICY.md                      → verify license files
-- Other policy files                   → update AI context if the policy changed meaningfully
+- AI_TOOL_SETUP.md                          → update AI context files (AI_CONTEXT.md and agent config files)
+- topics/PROJECT_README_GUIDELINES.md       → update the project README
+- topics/TEMPLATE_README_GUIDELINES.md      → update README.md and README_TEMPLATE.md (template repos only)
+- topics/GITHUB_SETTINGS.md                 → apply repository settings (gh commands if available, otherwise GitHub UI)
+- topics/CI_POLICY.md                       → review and update .github/workflows/
+- SECURITY_POLICY.md                        → review security hook and scan configuration
+- LEGAL_POLICY.md                           → verify license files
+- Other policy files                        → update AI context if the policy changed meaningfully
 
 - If AI_CONTEXT.md does not exist, use the install checklist instead
 - If a charter change conflicts with a project-specific rule, list the conflicts and confirm priority with the user
@@ -47,13 +48,14 @@ Common areas affected by file:
 変更された各ファイルを読み、プロジェクトへの影響を確認して対応してください。
 
 ファイル別の主な影響箇所：
-- AI_TOOL_SETUP.md                    → AI コンテキストファイルを更新（AI_CONTEXT.md・各ツール設定ファイル）
-- topics/PROJECT_README_GUIDELINES.md → プロジェクトの README を更新
-- topics/GITHUB_SETTINGS.md           → リポジトリ設定を適用（gh コマンドが使える場合はコマンドで、使えない場合は GitHub UI から）
-- topics/CI_POLICY.md                 → .github/workflows/ を確認・更新
-- SECURITY_POLICY.md                  → セキュリティフック・スキャン設定を確認
-- LEGAL_POLICY.md                     → ライセンスファイルを確認
-- その他のポリシーファイル             → 内容に変更があれば AI コンテキストを更新
+- AI_TOOL_SETUP.md                         → AI コンテキストファイルを更新（AI_CONTEXT.md・各ツール設定ファイル）
+- topics/PROJECT_README_GUIDELINES.md      → プロジェクトの README を更新
+- topics/TEMPLATE_README_GUIDELINES.md     → README.md と README_TEMPLATE.md を更新（テンプレートリポジトリのみ）
+- topics/GITHUB_SETTINGS.md                → リポジトリ設定を適用（gh コマンドが使える場合はコマンドで、使えない場合は GitHub UI から）
+- topics/CI_POLICY.md                      → .github/workflows/ を確認・更新
+- SECURITY_POLICY.md                       → セキュリティフック・スキャン設定を確認
+- LEGAL_POLICY.md                          → ライセンスファイルを確認
+- その他のポリシーファイル                  → 内容に変更があれば AI コンテキストを更新
 
 - AI_CONTEXT.md が存在しない場合はインストールチェックリストを使うこと
 - 憲章の変更がプロジェクト固有ルールと矛盾する場合は矛盾点を列挙してユーザーに確認する

@@ -1,132 +1,166 @@
-# Alfred Workflow Template
+# Dev Charter (開発憲章)
 
-> **これは日本語版（正本）です。**
+> **このファイルは正本（日本語版）です。**
 > 英語版（参照）は [README.md](README.md) を参照してください。
 
-> Alfred 5 Script Filter ワークフローのプロダクションレディなテンプレート。
-> 10分で開発を開始できます。
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
+[![check-charter CI](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml)
 
-[![CI](https://github.com/y-marui/alfred-workflow-template/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/alfred-workflow-template/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+AI支援ソフトウェアプロジェクトのための共有開発憲章。
 
-| 項目 | 内容 |
+このリポジトリは、プロジェクト横断的に使用される共通の哲学、アーキテクチャ原則、
+および開発ルールを定義します。
+
+## Documents
+
+| ファイル | 内容 |
 |---|---|
-| 開発対象 | Alfred 5 Script Filter ワークフロー |
-| 開発環境 | 個人〜小規模チーム（1〜3人） |
-| 主言語 | 英語（OSS） |
-| 動作要件 | Python 3.9+, Alfred 5 |
-| AI ツール | Claude Code / GitHub Copilot / Gemini CLI |
+| [CHARTER_INDEX.md](CHARTER_INDEX.md) | 憲章ドキュメントのインデックス（トピック → ファイル対応表） |
+| [PRINCIPLES.md](PRINCIPLES.md) | 開発哲学・デザイン・アーキテクチャ原則 |
+| [CODE_STYLE.md](CODE_STYLE.md) | コードスタイル |
+| [AI_COLLABORATION_RULES.md](AI_COLLABORATION_RULES.md) | AI 協働ルールと役割分担 |
+| [AI_CONTEXT_HIERARCHY.md](AI_CONTEXT_HIERARCHY.md) | AI コンテキスト優先階層 |
+| [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) | AI コンテキストファイルの構成仕様（AI_CONTEXT.md・各ツール設定ファイル） |
+| [DOCS_STRUCTURE.md](DOCS_STRUCTURE.md) | プロジェクトのドキュメント構成（root ファイル・DEVELOPING.md/CONTRIBUTING.md の責務分離・docs/ 標準構成・AI_CONTEXT.md 参照順） |
+| [LANGUAGE_POLICY.md](LANGUAGE_POLICY.md) | 言語ポリシー（正本＝日本語） |
+| [LOCALIZATION_POLICY.md](LOCALIZATION_POLICY.md) | ローカライゼーションポリシー |
+| [PROJECT_LIFECYCLE.md](PROJECT_LIFECYCLE.md) | プロジェクトライフサイクルと体制 |
+| [UI_GUIDELINES.md](UI_GUIDELINES.md) | UI ガイドライン・カラー・アイコン |
+| [MONETIZATION_POLICY.md](MONETIZATION_POLICY.md) | マネタイズポリシーとプラットフォーム別方針 |
+| [SECURITY_POLICY.md](SECURITY_POLICY.md) | セキュリティポリシーとフック設定リファレンス |
+| [LEGAL_POLICY.md](LEGAL_POLICY.md) | ライセンス選択基準・テンプレート（Closed / MIT / AGPL・GPL・LGPL） |
+| [topics/CI_POLICY.md](topics/CI_POLICY.md) | CI job設計方針・Branch Protection Ruleset |
+| [topics/GITHUB_SETTINGS.md](topics/GITHUB_SETTINGS.md) | GitHub リポジトリ設定確認（Ruleset・Sponsors） |
+| [topics/GITHUB_CONTRIBUTING.md](topics/GITHUB_CONTRIBUTING.md) | Issue・PR・CONTRIBUTING.md・PRテンプレート・準CLA（OSS向け） |
+| [topics/TEMPLATE_README_GUIDELINES.md](topics/TEMPLATE_README_GUIDELINES.md) | GitHub テンプレートリポジトリの README 設計規約（開発環境・言語・LICENSE・必須セクション） |
+| [topics/PROJECT_README_GUIDELINES.md](topics/PROJECT_README_GUIDELINES.md) | テンプレートから作成したプロジェクトの README 整備手順 |
+| [topics/PYTHON_DEV_ENV.md](topics/PYTHON_DEV_ENV.md) | Python 開発環境構成（pyenv・uv・ruff・mypy・pytest） |
+| [topics/PYTHON_CLI.md](topics/PYTHON_CLI.md) | Python CLI 実装方針（typer・pydantic-settings・XDG設定） |
 
-## 特徴
+## How to Use
 
-- ✅ **レイヤードアーキテクチャ** — Alfred 境界とビジネスロジックを分離
-- ✅ **軽量 Alfred SDK** — レスポンスビルダー、ルーター、キャッシュ、設定、ロガー
-- ✅ **コマンドベース UX** — `wf search`、`wf open`、`wf config`、`wf help`
-- ✅ **フルテストスイート** — pytest で Alfred なしにテスト実行可能
-- ✅ **CI/CD** — GitHub Actions でリント・テスト・ビルド・リリースを自動化
-- ✅ **ベンダーパッケージング** — サードパーティ依存を `vendor/` にバンドル
-- ✅ **AI 対応** — `AI_CONTEXT.md` + `CLAUDE.md` で AI アシスタントのコンテキストを管理
+1. `git subtree` で `docs/dev-charter/` に取り込む
+2. AI に dev-charter を読ませ、プロジェクトルートに `AI_CONTEXT.md` と AI ツール設定ファイルを生成させる
+3. 憲章が更新されたら `git subtree pull` 後、AI にコンテキストファイルを追従させる
 
-## 動作要件
+構成仕様は [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) を参照。
 
-- Alfred 5（Script Filter には Powerpack が必要）
-- Python 3.9+
-- [pre-commit](https://pre-commit.com/)（セキュリティフック用）
+## Quick Install
 
-## クイックスタート（開発者）
+プロジェクトのルートで実行してください：
 
 ```bash
-git clone https://github.com/yourname/alfred-workflow-template
-cd alfred-workflow-template
-
-# 開発用依存関係をインストール
-make install
-
-# Alfred をローカルでシミュレート
-make run Q="search foo"
-make run Q="help"
-
-# テストを実行
-make test
-
-# ワークフローパッケージをビルド
-make build
-# → dist/workflow-template-0.1.0.alfredworkflow
+bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
 ```
 
-`dist/*.alfredworkflow` をダブルクリックして Alfred にインストールします。
+スクリプトが git subtree のセットアップを自動化し、Claude Code が利用可能であれば
+初回セットアップ（INSTALL_CHECKLIST）の起動まで案内します。
 
-## 使い方
+> **Note:** インストール先やブランチを変更する場合は環境変数で指定できます：
+> `CHARTER_PREFIX=path/to/charter bash <(curl -fsSL .../install.sh)`
 
-```
-wf <query>           検索（デフォルト）
-wf search <query>    検索
-wf open <name>       ショートカットを開く
-wf config            設定の確認 / リセット
-wf help              コマンド一覧を表示
-```
-
-## プロジェクト構造
+## Install (git subtree)
 
 ```
-alfred-workflow-template/
-├── src/
-│   ├── alfred/         # Alfred SDK (response, router, cache, config, logger, safe_run)
-│   └── app/            # アプリケーション層 (commands, services, clients)
-├── workflow/           # Alfred パッケージ (info.plist, scripts/entry.py, vendor/)
-├── tests/              # pytest テストスイート
-├── scripts/            # build.sh, dev.sh, release.sh, vendor.sh
-└── docs/               # アーキテクチャ・開発・利用ドキュメント
+git remote add dev-charter https://github.com/y-marui/dev-charter
+git fetch dev-charter
+git subtree add --prefix=docs/dev-charter dev-charter main --squash
 ```
 
-## ドキュメント
+インストール後、以下のプロンプトを AI ツールに貼り付けてください：
 
-| ドキュメント | 内容 |
+```
+docs/dev-charter/INSTALL_CHECKLIST.md を実行して
+```
+
+## Update
+
+`dev-charter` リモートが未設定の場合（プロジェクトを clone した直後など）は先に追加する：
+
+```
+git remote add dev-charter https://github.com/y-marui/dev-charter
+git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+```
+
+> **Note（テンプレートリポジトリから作成したプロジェクト）:**
+> GitHub テンプレートはファイルのみコピーし git 履歴を引き継がないため、`git subtree pull` は失敗します。
+> `check-charter.yml` ワークフローがこのケースを自動検出して対処します。
+> 手動で更新する場合は `git subtree pull` の代わりに以下を実行してください：
+> ```bash
+> git remote add dev-charter https://github.com/y-marui/dev-charter || true
+> git fetch dev-charter
+> SPLIT=$(git rev-parse dev-charter/main)
+> rm -rf docs/dev-charter/
+> mkdir -p docs/dev-charter/
+> git archive dev-charter/main | tar -x -C docs/dev-charter/
+> git add docs/dev-charter/
+> git commit -m "Squashed 'docs/dev-charter/' content from commit ${SPLIT}
+>
+> git-subtree-dir: docs/dev-charter
+> git-subtree-split: ${SPLIT}"
+> ```
+
+更新後、以下のプロンプトを AI ツールに貼り付けてください：
+
+```
+docs/dev-charter/UPDATE_CHECKLIST.md を実行して
+```
+
+## Makefile Helper
+
+```
+update-charter:
+	git remote | grep -q '^dev-charter$$' || \
+	  git remote add dev-charter https://github.com/y-marui/dev-charter
+	git fetch dev-charter
+	git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+```
+
+## Version Check (CI)
+
+`.github/workflows/dev-charter-check.yml` をプロジェクトに追加すると、
+毎週自動で最新バージョンを確認し、古い場合は update PR を作成します。
+
+```yaml
+name: Dev Charter
+on:
+  schedule:
+    - cron: "23 3 * * 1"  # 毎週月曜 3:23 UTC — minute/hour/day-of-week はランダムな値に変更してください
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+    permissions:
+      contents: write
+      pull-requests: write
+```
+
+> **Note:** Branch Protection で direct push が禁止されている場合は、
+> GitHub Actions bot の bypass rule を追加してください
+> （Settings > Rules > Rulesets > Bypass list > GitHub Actions）。
+
+## Badge for Adopting Projects
+
+プロジェクトの README にこのバッジを追加すると、dev-charter の更新状態を可視化できます。
+
+### Workflow Status Badge
+
+dev-charter が最新かどうかを表示します。
+
+```markdown
+[![Charter Check](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml)
+```
+
+`{owner}` と `{repo}` を自分のリポジトリのオーナー名・リポジトリ名に置き換えてください。
+
+| 状態 | Status Badge |
 |---|---|
-| [docs/architecture.md](docs/architecture.md) | アーキテクチャ全体設計 |
-| [docs/development.md](docs/development.md) | コマンド追加・依存関係管理・リリース手順 |
-| [docs/usage.md](docs/usage.md) | エンドユーザー向け利用ガイド |
+| 未導入 / CI 未設定 | 赤（VERSION not found） |
+| 導入済み・最新 | 緑 |
+| 導入済み・更新必要 | 赤 |
 
-## AI 支援開発
+---
 
-このテンプレートは AI 支援開発に対応しています。
-
-| ツール | 役割 |
-|---|---|
-| Claude Code | アーキテクチャ設計・大規模変更・リファクタリング |
-| GitHub Copilot | バグ修正・細かな実装・単体テスト作成 |
-| Gemini CLI | ドキュメント管理 |
-
-セッションコンテキスト: [`AI_CONTEXT.md`](AI_CONTEXT.md)、[`CLAUDE.md`](CLAUDE.md)
-
-## このテンプレートのカスタマイズ手順
-
-1. `workflow/info.plist` を編集:
-   - `bundleid` を自分のバンドル ID に変更（例: `com.yourname.workflowname`）
-   - キーワード（`wf`）を自分のトリガーキーワードに変更
-   - `uuidgen` で生成した UUID に置き換え
-2. `src/app/clients/api_client.py` を実際の API クライアントに置き換え
-3. `pyproject.toml` のワークフロー名を更新
-4. `src/app/commands/open_cmd.py` のショートカットを更新
-5. `workflow/icon.png` を追加
-
-## リリース手順
-
-```bash
-# 1. pyproject.toml のバージョンを更新
-# 2. タグを付けてプッシュ
-git tag v1.2.3
-git push --tags
-# GitHub Actions が .alfredworkflow をビルドして GitHub Release を作成
-```
-
-## サポート
-
-このテンプレートが役に立ったら、サポートしていただけると嬉しいです。
-
-- [Buy Me a Coffee](https://www.buymeacoffee.com/y.marui)
-- [GitHub Sponsors](https://github.com/sponsors/y-marui)
-
-## ライセンス
-
-MIT — [LICENSE](LICENSE) を参照
+*この文書には英語版 [README.md](README.md) があります。編集時は同一コミットで更新してください。*

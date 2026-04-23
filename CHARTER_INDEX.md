@@ -17,6 +17,7 @@ dev-charter の各ドキュメントへのインデックス。
 | AI の作業前チェック、エラー対処、AI 役割分担、複数 AI 連携 | `AI_COLLABORATION_RULES.md` |
 | AI コンテキストの優先順位（タスク > プロジェクト > 憲章 > グローバル） | `AI_CONTEXT_HIERARCHY.md` |
 | CLAUDE.md・GEMINI.md・AI_CONTEXT.md の構成方法 | `AI_TOOL_SETUP.md` |
+| docs/ 構成、file-map.md、architecture.md、AI_CONTEXT.md 参照順、CONTRIBUTING.md | `DOCS_STRUCTURE.md` |
 | 言語選択（日本語・英語）、ドキュメントの正本、セクションヘッダ言語 | `LANGUAGE_POLICY.md` |
 | ライセンス選択（MIT・GPL・AGPL・CC）、著作権表記 | `LEGAL_POLICY.md` |
 | シークレット管理、git フック、pre-commit、セキュリティ設定 | `SECURITY_POLICY.md` |

@@ -1,57 +1,99 @@
-repos:
-  # Ruff: fast linter + formatter (replaces flake8, isort, pyupgrade, etc.)
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.7
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
+exclude: |
+  (?x)^(
+    node_modules/|
+    vendor/|
+    \.git/|
+    \.yarn/|
+    dist/|
+    build/|
+    \.next/|
+    __pycache__/|
+    .*\.min\.js$|
+    .*\.min\.css$|
+    go\.sum$|
+    package-lock\.json$|
+    yarn\.lock$|
+    Gemfile\.lock$|
+    Cargo\.lock$|
+    poetry\.lock$
+  )
 
-  # General file hygiene + security basics
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+repos:
+  # ----------------------------------------------------------------
+  # Security (required — verified by global git hook)
+  # ----------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
     hooks:
+      - id: gitleaks
+        args: ["--config=.gitleaks.toml"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Required: SSH private key detection
+      - id: detect-private-key
+
+      # Required: block .env files (.env.example / .env.sample / .env.template are allowed)
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
-        args: [--unsafe]  # allow custom tags in GitHub Actions YAML
-      - id: check-toml
+      - id: check-json
       - id: check-merge-conflict
-      - id: check-added-large-files
-        args: [--maxkb=500]
-      - id: detect-private-key
+      - id: check-executables-have-shebangs
+      - id: check-case-conflict
 
-  # Shell script linting
+  # Required: .env file check (hook id contains "detect-dotenv")
+  - repo: local
+    hooks:
+      - id: detect-dotenv
+        name: Block .env files
+        language: fail
+        entry: '.env ファイルはコミット禁止。ダミー値のみの .env.example を使うこと。'
+        files: '(^|/)\.env(\.[^.]+)?$'
+        exclude: '(^|/)\.env\.(example|sample|template)$'
+
+  # ----------------------------------------------------------------
+  # Hardcoded local absolute paths
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: no-hardcoded-local-paths
+        name: Block hardcoded local absolute paths
+        language: pygrep
+        entry: '(/Users/[A-Za-z0-9_.-]+/|/home/[A-Za-z0-9_.-]+/|C:\\Users\\)'
+        types_or: [text]
+        # Note: exclude はファイル「パス」に対するマッチ。
+        # 設定ファイル自身（allowlist パターンを含む）は除外する。
+        exclude: |
+          (?x)(
+            \.md$|
+            docs/|
+            \.github/|
+            \.gitleaks\.toml$|
+            \.pre-commit-config\.yaml$
+          )
+
+  # ----------------------------------------------------------------
+  # VERSION date check
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-version-date
+        name: Check VERSION date
+        language: script
+        entry: scripts/check-version-date.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Shell scripts
+  # ----------------------------------------------------------------
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
-        files: scripts/.*\.sh$
-
-  # Secret scanning — uses .gitleaks.toml for project-specific rules
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.4
-    hooks:
-      - id: gitleaks
-        args: [--config=.gitleaks.toml]
-
-  # Block .env files from being committed
-  - repo: local
-    hooks:
-      - id: no-commit-dotenv
-        name: block .env files
-        language: fail
-        entry: ".env files must not be committed"
-        files: '^\.env(\..+)?$'
-
-  # Type checking (runs mypy against src/)
-  - repo: local
-    hooks:
-      - id: mypy
-        name: mypy
-        language: python
-        entry: mypy
-        args: [src]
-        additional_dependencies: ["mypy>=1.0"]
-        types: [python]
-        pass_filenames: false
+        args: ["--severity=warning"]
+        exclude: '\.zsh$'
