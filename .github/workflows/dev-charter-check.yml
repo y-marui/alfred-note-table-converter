@@ -11,7 +11,6 @@ jobs:
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
     with:
       prefix: docs/dev-charter
-      fail_if_outdated: true
     permissions:
       contents: write
       pull-requests: write
