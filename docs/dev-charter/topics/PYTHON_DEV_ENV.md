@@ -2,10 +2,20 @@
 
 Pythonプロジェクト共通の開発環境構成を定義する。
 
+## Version Policy
+
+| 項目 | 基準 | 2026-04-23時点の例 |
+|---|---|---|
+| **開発バージョン**（`.python-version`） | 最新安定版 | 3.13 |
+| **サポート範囲**（`requires-python`） | EOLまで6ヶ月以上あるバージョン | >=3.11 |
+| **CIマトリクス** | サポート対象の全バージョン | 3.11, 3.12, 3.13 |
+
+サポート範囲とCIマトリクスは定期的に見直し、EOLが6ヶ月を切ったバージョンを外す。
+
 ## Runtime Management
 
 - **pyenv** でPythonバージョンを管理する
-- `.python-version` をリポジトリに含め、使用するバージョンを固定する
+- `.python-version` をリポジトリに含め、最新安定版に固定する
 
 ## Package Management
 
@@ -21,7 +31,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mypackage"
-requires-python = ">=3.12"
+requires-python = ">=3.11"  # EOLまで6ヶ月以上あるバージョンを下限とする
 dependencies = [...]
 
 [dependency-groups]
@@ -91,6 +101,9 @@ lint:
 
 test:
   name: Test (pytest)
+  strategy:
+    matrix:
+      python-version: ["3.11", "3.12", "3.13"]  # EOLまで6ヶ月以上あるバージョン
   steps:
     - uses: actions/checkout@v4
     - uses: astral-sh/setup-uv@v5

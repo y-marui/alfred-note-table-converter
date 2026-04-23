@@ -21,6 +21,7 @@ AI支援ソフトウェアプロジェクトのための共有開発憲章。
 | [AI_COLLABORATION_RULES.md](AI_COLLABORATION_RULES.md) | AI 協働ルールと役割分担 |
 | [AI_CONTEXT_HIERARCHY.md](AI_CONTEXT_HIERARCHY.md) | AI コンテキスト優先階層 |
 | [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) | AI コンテキストファイルの構成仕様（AI_CONTEXT.md・各ツール設定ファイル） |
+| [DOCS_STRUCTURE.md](DOCS_STRUCTURE.md) | プロジェクトのドキュメント構成（root ファイル・DEVELOPING.md/CONTRIBUTING.md の責務分離・docs/ 標準構成・AI_CONTEXT.md 参照順） |
 | [LANGUAGE_POLICY.md](LANGUAGE_POLICY.md) | 言語ポリシー（正本＝日本語） |
 | [LOCALIZATION_POLICY.md](LOCALIZATION_POLICY.md) | ローカライゼーションポリシー |
 | [PROJECT_LIFECYCLE.md](PROJECT_LIFECYCLE.md) | プロジェクトライフサイクルと体制 |
@@ -131,8 +132,6 @@ jobs:
   check:
     name: Check
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
-    with:
-      fail_if_outdated: true
     permissions:
       contents: write
       pull-requests: write
@@ -148,7 +147,7 @@ jobs:
 
 ### Workflow Status Badge
 
-dev-charter が最新かどうかを表示します。バッジが機能するには上記ワークフローに `fail_if_outdated: true` が必要です。
+dev-charter が最新かどうかを表示します。
 
 ```markdown
 [![Charter Check](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml)
