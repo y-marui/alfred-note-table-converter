@@ -7,7 +7,7 @@ This file provides Claude Code with quick-access context for developing this Alf
 ## Project overview
 
 An Alfred 5 Script Filter workflow template.
-Python 3.9+, layered architecture, OSS-ready.
+Python 3.11+, layered architecture, OSS-ready.
 
 ## Quick orientation
 

@@ -12,7 +12,7 @@ An Alfred 5 workflow that converts tables between Markdown and LaTeX — directl
 ## Requirements
 
 - Alfred 5 (Powerpack required)
-- Python 3.9+
+- Python 3.11+
 - [pre-commit](https://pre-commit.com/) (for development security hooks)
 
 ## Setup
