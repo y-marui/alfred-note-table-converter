@@ -73,6 +73,22 @@ select = ["E", "F", "I", "UP"]
 strict = true
 ```
 
+## Package Distribution (py.typed)
+
+自作パッケージを `git+https://` などで他プロジェクトから依存指定する場合、パッケージに型情報を公開するため以下を必須とする（[PEP 561](https://peps.python.org/pep-0561/)）。
+
+- パッケージのルートに `py.typed`（空ファイル）を配置する
+- すべての公開関数・メソッド・クラスに型アノテーションを付ける
+- 型スタブ（`.pyi`）は PyPI 公開パッケージでなければ不要
+
+```toml
+# pyproject.toml（py.typed をホイールに含める）
+[tool.hatch.build.targets.wheel]
+include = ["src/mypackage/py.typed"]
+```
+
+これにより、利用側が mypy strict モードを有効にした場合でも `import-untyped` エラーが発生せず、`mypy.overrides` に `ignore_missing_imports` の例外を追加する必要がなくなる。
+
 ## Testing
 
 - **pytest** でユニットテスト・統合テストを実行する
