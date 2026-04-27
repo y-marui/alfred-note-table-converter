@@ -2,6 +2,8 @@
 
 After running `git subtree add` to install dev-charter in your project, paste the following prompts into your AI tool in order.
 
+> **Important:** Do **not** directly edit files under `docs/dev-charter/`. If a change is needed, open an issue in the dev-charter repository and pull the update via `git subtree pull`. Project-specific rules belong in the project's own `AI_CONTEXT.md` or dedicated files.
+
 ## Step 1 — Bulk setup
 
 ```
@@ -55,6 +57,8 @@ For each file in order:
 # dev-charter インストールチェックリスト
 
 `git subtree add` で dev-charter をインストールした後、以下のプロンプトを順に AI に貼り付けて実行してください。
+
+> **重要:** `docs/dev-charter/` 配下のファイルを直接編集しないこと。変更が必要な場合は dev-charter リポジトリに Issue を立て、`git subtree pull` でアップデートを取り込む。プロジェクト固有のルールはプロジェクトの `AI_CONTEXT.md` または専用ファイルに記載すること。
 
 ## Step 1 — 一括セットアップ
 

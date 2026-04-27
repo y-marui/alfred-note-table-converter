@@ -31,6 +31,14 @@
 - 大きな変更前に方針を説明してから着手する
 - 不要な依存追加禁止：既存の依存で解決できないか先に検討する
 
+## dev-charter Modification Rules
+
+採用先プロジェクト（dev-charter を `git subtree` で取り込んだプロジェクト）では、`docs/dev-charter/` 配下のファイルを**直接編集しない**。
+
+- 変更が必要な場合は dev-charter リポジトリ本体に Issue を立て、`git subtree pull` でアップデートを取り込む
+- `git subtree pull` によるアップデートのみ許可する
+- 採用先プロジェクト固有のルールは、プロジェクトの `AI_CONTEXT.md` または専用ファイルに記載する
+
 ## Charter Lookup
 
 不明点が憲章に関係する場合は**全ファイルを検索せず**、以下の手順で参照する：

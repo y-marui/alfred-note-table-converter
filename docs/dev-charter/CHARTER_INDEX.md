@@ -32,5 +32,5 @@ dev-charter の各ドキュメントへのインデックス。
 | OSS コントリビューション、Issue テンプレート、PR テンプレート、準 CLA | `topics/GITHUB_CONTRIBUTING.md` |
 | README の構成（テンプレートから作成したプロジェクト用） | `topics/PROJECT_README_GUIDELINES.md` |
 | README の構成（テンプレートリポジトリ自体の設計） | `topics/TEMPLATE_README_GUIDELINES.md` |
-| Python 開発環境、pyenv、uv、ruff、mypy、pytest | `topics/PYTHON_DEV_ENV.md` |
+| Python 開発環境、pyenv、uv、ruff、mypy、pytest、py.typed、PEP 561 | `topics/PYTHON_DEV_ENV.md` |
 | Python CLI、typer、pydantic-settings、XDG 設定ファイル | `topics/PYTHON_CLI.md` |

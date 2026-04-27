@@ -123,15 +123,33 @@ jobs:
           gh pr create \
             --title "chore: update dev-charter to ${REMOTE}" \
             --body "$(cat <<EOF
+          ## Update dev-charter to ${REMOTE}
+
+          \`git subtree pull\` has been applied automatically.
+          This PR is a **Draft**. Complete the following steps, then mark it as ready:
+
+          1. Open \`docs/dev-charter/UPDATE_CHECKLIST.md\` and paste its contents into your AI tool to apply the changes.
+          2. Review and commit the changes.
+          3. Run \`gh pr ready\` to remove the Draft status.
+
+          > To review all charter files (not just changed ones), use \`docs/dev-charter/INSTALL_CHECKLIST.md\`.
+
+          ---
+
           ## dev-charter を ${REMOTE} に更新
 
           \`git subtree pull\` を自動的に適用しました。
-          マージ後、\`docs/dev-charter/UPDATE_CHECKLIST.md\` に従って変更のあった箇所を対応してください。
+          この PR は **Draft** です。以下の手順を完了してから Draft を解除してください：
+
+          1. \`docs/dev-charter/UPDATE_CHECKLIST.md\` の内容を AI ツールに貼り付けて対応を実行する
+          2. 変更をレビュー・コミットする
+          3. \`gh pr ready\` を実行して Draft を解除する
 
           > 全ファイルを網羅的に確認したい場合は \`docs/dev-charter/INSTALL_CHECKLIST.md\` を使用してください。
           EOF
           )" \
             --base main \
             --head update-charter \
-            --label "dev-charter" || \
+            --label "dev-charter" \
+            --draft || \
             gh pr list --head update-charter --base main --json number --jq length | grep -q '^[1-9]'

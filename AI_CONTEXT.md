@@ -103,6 +103,14 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 - 大きな変更前に方針を説明してから着手する
 - **不要な依存追加禁止** — 既存の依存で解決できないか先に検討する
 
+### dev-charter 変更ルール
+
+`docs/dev-charter/` 配下のファイルを**直接編集しない**。
+
+- 変更が必要な場合は dev-charter リポジトリ本体に Issue を立て、`git subtree pull` でアップデートを取り込む
+- `git subtree pull` によるアップデートのみ許可する
+- プロジェクト固有のルールは `AI_CONTEXT.md` または専用ファイルに記載する
+
 ### AI 並用時のルール
 - Claude Code 作業中は Copilot 提案を**参考程度**に（盲目的に受け入れない）
 - Copilot の提案がプロジェクト規約に反する場合は無視し、Claude Code でレビュー後採用
@@ -161,7 +169,7 @@ OSS プロジェクトのため、以下の方式を採用する:
 - **Buy Me a Coffee**: https://www.buymeacoffee.com/y.marui
 - **GitHub Sponsors**: リポジトリの Sponsors 機能
 
-README.md の末尾に Buy Me a Coffee バッジを掲載する。
+README.md のバッジ行に GitHub Sponsors と Buy Me a Coffee バッジを掲載する（サポートセクションは設けず、バッジで代替）。
 マネタイズを本格検討する場合は `MONETIZATION.md` を作成し、このファイルに概要を追記する。
 
 ---
