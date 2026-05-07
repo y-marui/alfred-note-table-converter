@@ -151,5 +151,6 @@ jobs:
             --base main \
             --head update-charter \
             --label "dev-charter" \
+            --assignee "${{ github.repository_owner }}" \
             --draft || \
             gh pr list --head update-charter --base main --json number --jq length | grep -q '^[1-9]'
