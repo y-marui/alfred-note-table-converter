@@ -16,7 +16,7 @@ Changelog = "https://github.com/yourname/alfred-workflow-template/blob/main/CHAN
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
+    "pytest>=9.0.3",
     "pytest-cov>=4.0",
     "ruff>=0.4.0",
     "mypy>=1.9",
