@@ -108,8 +108,8 @@ testpaths = ["tests"]
 lint:
   name: Lint
   steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/setup-uv@v5
+    - uses: actions/checkout@v7
+    - uses: astral-sh/setup-uv@v8
     - run: uv sync --frozen
     - run: uv run ruff check .
     - run: uv run ruff format --check .
@@ -121,8 +121,8 @@ test:
     matrix:
       python-version: ["3.11", "3.12", "3.13"]  # EOLまで6ヶ月以上あるバージョン
   steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/setup-uv@v5
+    - uses: actions/checkout@v7
+    - uses: astral-sh/setup-uv@v8
     - run: uv sync --frozen
     - run: uv run pytest
 ```

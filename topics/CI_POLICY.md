@@ -9,14 +9,14 @@
 | job ID | 小文字スネークケース | `lint`, `test`, `build` |
 | job `name` | タイトルケース。追加説明が必要な場合は括弧付きで補足 | `Lint`, `Test`, `Test (pytest)`, `Build`, `Security scan (pre-commit)` |
 
-### 標準 job 名
+### Standard Job Names
 
 | job ID | `name` | 用途 |
 |---|---|---|
 | `security` | `Security scan (pre-commit)` | pre-commit によるシークレット検知・静的解析 |
 | `lint` | `Lint` | コードスタイル・フォーマット検査 |
 | `test` | `Test` / `Test (pytest)` など | ユニットテスト・インテグレーションテスト |
-| `build` | `Build` / `Build (installability check)` など | ビルド成果物の生成、またはインストール可能性の検証 |
+| `build` | `Build` | 全 job の集約、ビルド成果物の生成、またはインストール可能性の検証 |
 
 `build` は全 job の集約点として必ず最後に配置し、Branch Protection の必須ステータスチェックに登録する。
 
@@ -71,10 +71,10 @@ jobs:
 
 ```yaml
 build:
-  name: Installability check
+  name: Build
   needs: [security, lint, test]
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - run: pip install -e .
     - run: python -c "import mypackage"
 ```
@@ -109,7 +109,7 @@ Rules:
 ☑ Restrict deletions
 ```
 
-### Status Check の指定方法
+### Status Check Configuration
 
 Rulesetの「Require status checks to pass before merging」でチェックを追加する際は、**名前とソースの両方を正しく指定**する。
 
@@ -136,4 +136,4 @@ Check name:  Build
 Source:      GitHub Actions
 ```
 
-job `name` に説明を追加した場合は、その正確な文字列を登録する（例：`Build (installability check)` / `Test (pytest)`）。
+集約 job の `name` は説明を追加せず、常に `Build` とする。個別 job の表示名は必要に応じて説明を追加してよい。

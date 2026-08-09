@@ -56,7 +56,7 @@ of this software, in whole or in part, is strictly prohibited without
 the express written permission of the author.
 ```
 
-### MIT（パーミッシブ）
+### MIT
 
 ライセンス本文は公式ソースから取得すること：
 
@@ -64,7 +64,7 @@ the express written permission of the author.
 
 `LICENSE` ファイルの先頭に `Copyright (c) [YEAR] [AUTHOR]` を追加した上で配置する。
 
-### AGPL / GPL / LGPL（コピーレフト）
+### AGPL / GPL / LGPL
 
 コピーレフトを採用する場合、ライセンス本文は公式ソースから取得すること：
 

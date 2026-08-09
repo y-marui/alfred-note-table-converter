@@ -37,7 +37,21 @@ dev-charter を導入したプロジェクトで AI コンテキストファイ�
 憲章に含まれない既存規約、または憲章を上書き・補足する事項
 
 ### AI Tool Assignments
-使用する AI ツールの担当範囲（未使用ツールは省略する）
+
+使用する AI ツールと、プロジェクト固有の担当変更を記載する。
+標準的な役割分担の正本は `AI_COLLABORATION_RULES.md` とし、`AI_CONTEXT.md` に共通の役割を転記しない。
+
+以下の形式で記載する：
+
+```
+- **使用ツール**：Claude Code、Codex、GitHub Copilot、Gemini CLI、ローカル LLM（Ollama）
+- **標準担当の正本**：`docs/dev-charter/AI_COLLABORATION_RULES.md` の「AI Tool Responsibilities」と「Rules for Multi-AI Usage」
+- **プロジェクト固有の上書き**：なし
+```
+
+担当を変更する場合は「プロジェクト固有の上書き」に差分だけを記載する。未使用ツールは「使用ツール」から省略する。
+subtree の配置先が `docs/dev-charter/` 以外の場合は、正本へのパスを実際の配置先に合わせる。
+ローカル LLM の接続情報と委任条件は `AI_COLLABORATION_RULES.md` の「Local LLM Delegation」に従う。
 
 ### Prohibited Actions
 セキュリティ制約・スコープ外変更の禁止事項
@@ -46,30 +60,30 @@ dev-charter を導入したプロジェクトで AI コンテキストファイ�
 
 AI ツールごとの設定ファイルは `AI_CONTEXT.md` への参照のみを持ち、
 **ツール固有の設定のみ**を追記する。`AI_CONTEXT.md` の内容は重複させない。
+ツール固有の設定がない場合は、以下の最小構成だけを記載する。
 
-### CLAUDE.md（Claude Code）
-
-```
-@AI_CONTEXT.md
-
-# Claude Code-specific settings
-（ツール固有の設定があればここに追記）
-```
-
-### GEMINI.md（Gemini CLI）
+### CLAUDE.md
 
 ```
 @AI_CONTEXT.md
-
-# Gemini CLI-specific settings
-（ツール固有の設定があればここに追記）
 ```
 
-### .github/copilot-instructions.md（GitHub Copilot）
+### GEMINI.md
 
 ```
-See @AI_CONTEXT.md for shared project context.
+@AI_CONTEXT.md
+```
 
-# Copilot-specific settings
-（ツール固有の設定があればここに追記）
+### AGENTS.md
+
+Codex は `@` によるファイルの自動展開を前提としないため、読み込み指示を明記する。
+
+```
+`AI_CONTEXT.md` を参照。
+```
+
+### .github/copilot-instructions.md
+
+```
+`AI_CONTEXT.md` を参照。
 ```
