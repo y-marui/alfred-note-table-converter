@@ -72,7 +72,7 @@ labels: enhancement
 
 ## CONTRIBUTING.md
 
-チェックリストはプロジェクトに合わせて取捨選択すること。
+PR チェックリストの正本は `.github/PULL_REQUEST_TEMPLATE.md` とし、プロジェクトに合わせた項目の取捨選択も同ファイルで行う。`CONTRIBUTING.md` にはチェックリストを重複させず、PR テンプレートへの参照だけを記載する。
 AGPL/GPL/LGPL 以外のプロジェクト（MIT 等）では「Contribution Terms」セクションを省略する。
 
 ```markdown
@@ -95,15 +95,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format (e.g. `f
 
 ## Pull Request Checklist
 
-- [ ] No secrets or credentials included
-- [ ] Lint passes
-- [ ] Type checks pass (if applicable)
-- [ ] Tests pass (if applicable)
-- [ ] Build succeeds (if applicable)
-- [ ] New features include tests
-- [ ] User-facing changes are documented
-- [ ] Added entry to CHANGELOG.md [Unreleased] section (if applicable)
-- [ ] Manually verified (if applicable)
+See `.github/PULL_REQUEST_TEMPLATE.md` for the current checklist.
 
 ## Contribution Terms
 
@@ -117,8 +109,8 @@ modify, distribute, sublicense, and relicense your contributions under any licen
 
 ## .github/PULL_REQUEST_TEMPLATE.md
 
-PR テンプレートは CONTRIBUTING.md のチェックリストと対応させる。
-**CONTRIBUTING.md を編集した場合は PR テンプレートも合わせて見直すこと。**
+PR チェックリストはこのファイルを正本とする。
+**コントリビューション要件を変更した場合は、PR テンプレートのチェックリストも合わせて見直すこと。**
 
 ```markdown
 ## Description
@@ -143,7 +135,7 @@ PR テンプレートは CONTRIBUTING.md のチェックリストと対応させ
 
 AGPL/GPL/LGPL 以外のプロジェクトでは最後の CLA 同意チェックボックスを省略する。
 
-## Quasi-CLA（コピーレフトプロジェクト向け）
+## Quasi-CLA
 
 AGPL/GPL/LGPL を採用し、将来の再ライセンスの余地を確保したい場合、外部コントリビューターから必要な許諾を事前に取得しておく。本格的な CLA サービスは導入せず、`CONTRIBUTING.md` と PR テンプレートによる **準 CLA 方式**で運用する（上記テンプレートの "Contribution Terms" セクションおよび CLA 同意チェックボックスがこれに該当する）。
 

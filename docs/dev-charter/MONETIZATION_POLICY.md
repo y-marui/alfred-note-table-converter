@@ -14,11 +14,37 @@ Open/Closed を問わず、プラットフォームに応じて以下の方式�
 
 | プラットフォーム | 方式 |
 |---|---|
-| Mac app / iOS app | Sublime Text 方式（時々購入を促すポップアップを表示し、正式購入で解除） |
+| Apple App Store（Swift: macOS / iOS） | 無料試用後、月間・年間サブスクリプションまたは買い切り（「Apple App Store Policy」参照） |
 | Chrome 拡張 | Buy Me a Coffee |
-| Alfred workflow | 要検討 |
+| Alfred workflow | Buy Me a Coffee |
 | Web app / site | Buy Me a Coffee ＋ 可能なら広告 |
-| Python library / app | 要検討 |
+| Python library / app | Buy Me a Coffee |
+
+## Apple App Store Policy
+
+Swift で開発し、Apple App Store で配布する macOS・iOS アプリには以下を基本方針として適用する。
+
+### Free Trial
+
+- 無料試用期間は初回利用日時から 1 か月とする
+- 試用期間中はすべての機能を利用可能にし、機能制限を設けない
+- 試用期間終了後は、月間サブスクリプション・年間サブスクリプション・買い切りのいずれかを購入しなければ継続利用できない
+
+### Pricing
+
+月間サブスクリプションの価格を基準価格とする。
+
+| 購入方式 | 価格 |
+|---|---|
+| 月間サブスクリプション | 基準価格（月額） |
+| 年間サブスクリプション | 基準価格の 10 か月分 |
+| 買い切り | 基準価格の 12 か月分 |
+
+### Cross-Platform Purchase
+
+- macOS 版と iOS 版は同一購入に含める
+- いずれか一方で購入した利用者は、もう一方でも購入を復元して同じ権利を利用できるようにする
+- 月間・年間サブスクリプションと買い切りのすべてで、macOS・iOS 間の購入権利を共有する
 
 ## GitHub Published Projects
 

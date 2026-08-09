@@ -49,7 +49,7 @@ class Settings(BaseSettings):
 
 設定ファイルが存在しない場合は、単純にエラー終了せず作成を促す。
 
-### For development (リポジトリ内で使う場合)
+### For Development
 
 README に以下を記載し、手動コピーを案内する：
 
@@ -60,7 +60,7 @@ cp .env.example .env
 # .env を編集して必要な値を設定してください
 ```
 
-### For installed package (pip/uv install した場合)
+### For Installed Package
 
 設定ファイルのコピーは `init` コマンドとして独立させる。
 `ensure_config()` はその `init` コマンドの実行を促すだけにとどめる。

@@ -2,7 +2,7 @@
 
 GitHub リポジトリ設定の確認ガイド。テンプレートからプロジェクトを作成したとき、または新規リポジトリをセットアップする際に使用する。
 
-## AI による設定適用
+## AI-Driven Configuration
 
 各セクションには `gh` コマンドまたは設定ファイルを記載している。AI がセットアップ・更新作業を行う場合は以下の方針で適用する。
 
@@ -72,7 +72,7 @@ gh api -X PATCH repos/{owner}/{repo} -F allow_auto_merge=true
 
 **確認場所:** GitHub リポジトリ → Settings → Actions → General → Workflow permissions
 
-### Workflow permissions（デフォルト権限）
+### Workflow Permissions
 
 **設定値:** `Read repository contents and packages permissions`（デフォルト）のまま使う。
 
@@ -111,7 +111,7 @@ GitHub Dashboard の "Needs your review" を機能させるために CODEOWNERS 
 
 `*` はリポジトリ全体を対象にする。Bot PR（Dependabot など）・他者の PR・自分の PR のすべてで、オーナーがコードレビュアーとして自動追加される。
 
-### Require a review from Code Owners との違い
+### Code Owner Review Requirement
 
 **レビュアー自動追加**（Dashboard 表示）は CODEOWNERS ファイルがあれば Ruleset 設定に関係なく動作する。
 
@@ -145,7 +145,7 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.addAssignees({

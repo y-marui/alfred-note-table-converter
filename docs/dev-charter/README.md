@@ -13,29 +13,7 @@ and development rules used across projects.
 
 ## Documents
 
-| File | Description |
-|---|---|
-| [CHARTER_INDEX.md](CHARTER_INDEX.md) | Charter document index (topic-to-file lookup table for efficient reference) |
-| [PRINCIPLES.md](PRINCIPLES.md) | Development philosophy, design and architecture principles |
-| [CODE_STYLE.md](CODE_STYLE.md) | Code style guide |
-| [AI_COLLABORATION_RULES.md](AI_COLLABORATION_RULES.md) | AI collaboration rules and role assignments |
-| [AI_CONTEXT_HIERARCHY.md](AI_CONTEXT_HIERARCHY.md) | AI context priority hierarchy |
-| [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) | AI context file structure spec (AI_CONTEXT.md and agent config files) |
-| [DOCS_STRUCTURE.md](DOCS_STRUCTURE.md) | Project documentation structure (root files, DEVELOPING.md/CONTRIBUTING.md responsibilities, docs/ layout, AI_CONTEXT.md reference order) |
-| [LANGUAGE_POLICY.md](LANGUAGE_POLICY.md) | Language policy (canonical = Japanese) |
-| [LOCALIZATION_POLICY.md](LOCALIZATION_POLICY.md) | Localization and supported languages |
-| [PROJECT_LIFECYCLE.md](PROJECT_LIFECYCLE.md) | Project lifecycle and team structure |
-| [UI_GUIDELINES.md](UI_GUIDELINES.md) | UI guidelines, color palette, iconography |
-| [MONETIZATION_POLICY.md](MONETIZATION_POLICY.md) | Monetization policy and platform-specific guidelines |
-| [SECURITY_POLICY.md](SECURITY_POLICY.md) | Security policy and hook configuration reference |
-| [LEGAL_POLICY.md](LEGAL_POLICY.md) | License selection criteria and templates (Closed / MIT / AGPL·GPL·LGPL) |
-| [topics/CI_POLICY.md](topics/CI_POLICY.md) | CI job design and Branch Protection Ruleset |
-| [topics/GITHUB_SETTINGS.md](topics/GITHUB_SETTINGS.md) | GitHub repository settings review (Ruleset, Sponsors) |
-| [topics/GITHUB_CONTRIBUTING.md](topics/GITHUB_CONTRIBUTING.md) | Issue, PR, CONTRIBUTING.md, PR template, and Quasi-CLA (for OSS) |
-| [topics/TEMPLATE_README_GUIDELINES.md](topics/TEMPLATE_README_GUIDELINES.md) | GitHub template repository README guidelines (environment, language, LICENSE, required sections) |
-| [topics/PROJECT_README_GUIDELINES.md](topics/PROJECT_README_GUIDELINES.md) | README setup guide for projects created from a template |
-| [topics/PYTHON_DEV_ENV.md](topics/PYTHON_DEV_ENV.md) | Python development environment (pyenv, uv, ruff, mypy, pytest) |
-| [topics/PYTHON_CLI.md](topics/PYTHON_CLI.md) | Python CLI implementation (typer, pydantic-settings, XDG config) |
+See the canonical [CHARTER_INDEX.md](CHARTER_INDEX.md) for the complete document list and topic-to-file lookup table.
 
 ## How to Use
 
