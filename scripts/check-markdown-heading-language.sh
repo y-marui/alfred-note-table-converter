@@ -15,8 +15,10 @@ import sys
 
 text = sys.argv[1]
 has_japanese = any(
-    "\u3000" <= ch <= "\u30ff"
+    "\u3040" <= ch <= "\u30ff"
+    or "\u3400" <= ch <= "\u4dbf"
     or "\u4e00" <= ch <= "\u9fff"
+    or ch == "々"
     for ch in text
 )
 raise SystemExit(0 if has_japanese else 1)
