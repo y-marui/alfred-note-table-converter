@@ -21,19 +21,9 @@
 
 これらを `README-jp.md` のメタ情報テーブルに記載することで、利用者がテンプレートの用途を一目で判断できるようにする。
 
-### 1.1 Project Type Reference
+### 1.1 Project Policy References
 
-典型的なプロジェクト種別と、それぞれの配布形態・ライセンス・マネタイズの傾向を示す。ライセンスとマネタイズの詳細は [LEGAL_POLICY.md](../LEGAL_POLICY.md) と [MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) を参照すること。
-
-| プロジェクト種別 | 配布形態 | 典型的なライセンス | マネタイズ |
-|---|---|---|---|
-| Mac app / iOS app | App Store・直接配布（バイナリ） | Closed または AGPL/GPL/LGPL | Sublime Text 方式 |
-| Chrome 拡張 | Chrome Web Store（バイナリ相当） | Closed または AGPL/GPL/LGPL | Buy Me a Coffee |
-| Alfred workflow | Alfred Gallery・GitHub（ソースコード） | Closed（配布しない）または MIT | 要検討 |
-| Web app / site | ブラウザアクセス（配布なし） | Closed | Buy Me a Coffee ＋ 可能なら広告 |
-| Python library / app | PyPI・GitHub（ソースコード） | Closed（配布しない）または MIT | 要検討 |
-
-> GitHub 上で公開する場合は上記に加えて GitHub Sponsors を追加（[MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) 参照）。ライセンス選択は case by case であり、この表は傾向の参考にとどめる。
+ライセンスは [LEGAL_POLICY.md](../LEGAL_POLICY.md)、マネタイズは [MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) を正本として選択する。選択した配布形態・ライセンス・マネタイズ方式は `README-jp.md` のメタ情報テーブルに記録し、この文書には対応表を重複して持たない。
 
 ---
 
@@ -50,15 +40,13 @@
 
 ### 2.2 AI Tools
 
-テンプレートが AI 支援開発を前提とする場合、使用する AI ツールとその役割をリポジトリに明示する。
+テンプレートが AI 支援開発を前提とする場合、使用する AI ツールをリポジトリに明示する。
 
 **記載場所:** `AI_CONTEXT.md` の「AI Tool Assignments」セクション、および `README-jp.md` のメタ情報テーブル（オプション行）
 
-| AI ツール | 標準的な役割 |
-|---|---|
-| Claude Code | 構成変更・大規模実装・アーキテクチャ設計 |
-| GitHub Copilot | 細かな実装補助・テスト作成・typo 修正 |
-| Gemini CLI | ドキュメント生成・翻訳補助（手動呼び出し） |
+標準的な役割分担の正本は [AI_COLLABORATION_RULES.md](../AI_COLLABORATION_RULES.md) の
+「AI Tool Responsibilities」と「Rules for Multi-AI Usage」とする。
+`AI_CONTEXT.md` には使用ツールとプロジェクト固有の上書きだけを記載し、標準担当を転記しない。
 
 AI ツールを使用しない場合は「なし」と明記する。使用するツールのみ記載し、未使用ツールは省略する。
 
@@ -121,14 +109,15 @@ AGPL/GPL/LGPL を採用する場合の準 CLA 設定（`CONTRIBUTING.md` + PR �
 | `AI_CONTEXT.md` | AI 対応時 | AI ツール向けコンテキスト（プロジェクト化後の初期セットアップ手順を含む） |
 | `CLAUDE.md` | Claude Code 使用時 | `@AI_CONTEXT.md` を記載 |
 | `GEMINI.md` | Gemini CLI 使用時 | `@AI_CONTEXT.md` を記載 |
+| `AGENTS.md` | Codex 使用時 | `AI_CONTEXT.md` を読む指示を記載 |
 | `.github/copilot-instructions.md` | Copilot 使用時 | `AI_CONTEXT.md` を参照する旨を記載 |
 | `.github/workflows/ci.yml` | CI 使用時 | テスト・ビルド・リントの自動実行 |
 | `.github/FUNDING.yml` | GitHub 公開プロジェクト | GitHub Sponsors・Buy Me a Coffee の設定（[MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) 参照） |
 | `CONTRIBUTING.md` | OSS で外部 PR を受け付ける場合 | Issues first ルール・コードスタイル・コミット形式・PR チェックリスト・準 CLA 条項（[GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) 参照） |
 | `.github/ISSUE_TEMPLATE/` | OSS で外部 Issue を受け付ける場合 | バグ報告・機能要望テンプレート |
-| `.github/PULL_REQUEST_TEMPLATE.md` | OSS で外部 PR を受け付ける場合 | CONTRIBUTING.md のチェックリストと対応させる。AGPL/GPL/LGPL プロジェクトは CLA 同意チェックボックスを末尾に追加（§4.6 参照） |
+| `.github/PULL_REQUEST_TEMPLATE.md` | OSS で外部 PR を受け付ける場合 | AGPL/GPL/LGPL プロジェクトは [GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) に従い CLA 同意チェックボックスを末尾に追加する |
 
-### 5.2 Required Sections: README.md（template repo の説明）
+### 5.2 Required Sections: README.md
 
 `README.md` / `README-jp.md` はこのテンプレートリポジトリ自体を説明するファイル。
 
@@ -144,65 +133,20 @@ AGPL/GPL/LGPL を採用する場合の準 CLA 設定（`CONTRIBUTING.md` + PR �
 10. **ドキュメント索引** — `docs/` 配下にドキュメントが存在する場合。ドキュメントのない規模のプロジェクトは省略可。
 11. **ライセンス** — ライセンス名と `LICENSE` ファイルへのリンク
 
-### 5.2a Required Sections: README_TEMPLATE.md（プロジェクト用 README 雛形）
+### 5.2a Required Sections: README_TEMPLATE.md
 
 `README_TEMPLATE.md` / `README_TEMPLATE-jp.md` はプロジェクト化後に `README.md` へリネームして使う雛形。
 構成は [PROJECT_README_GUIDELINES.md](PROJECT_README_GUIDELINES.md) §1 に従う。プレースホルダ（`{user}`・`{repo}` 等）を用いて未記入箇所を明示する。
 
 > プロジェクト化後の初期セットアップ（リネーム・プレースホルダ置換）の手順は `AI_CONTEXT.md` の初期セットアップセクションに記載すること。
 
-### 5.3 Badge Format: README.md（template repo の説明）
+### 5.3 Badge Format: README.md
 
-`README.md` のバッジは**言語宣言の直後**（§5.2 位置 3）に、**ライセンス → CI → dev-charter** の順で配置する。
-URL はこのテンプレートリポジトリ自身を指す実際の値に置き換える（プレースホルダのままにしない）。
+バッジの種類・書式・順序は [PROJECT_README_GUIDELINES.md](PROJECT_README_GUIDELINES.md) の「Badge Format」を正本とする。`README.md` では URL をこのテンプレートリポジトリ自身を指す実際の値に置き換え、プレースホルダを残さない。ワークフローファイルが複数ある場合はメインの CI ワークフローのみ掲載する。
 
-**ライセンスバッジ（§4 のライセンス選択に対応する行を使用）:**
+### 5.3a Badge Format: README_TEMPLATE.md
 
-| ライセンス | バッジ |
-|---|---|
-| MIT | `[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)` |
-| All Rights Reserved | `[![License: All Rights Reserved](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](LICENSE)` |
-| AGPL v3 | `[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)` |
-| GPL v3 | `[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)` |
-| LGPL v3 | `[![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](LICENSE)` |
-| CC BY 4.0 | `[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)` |
-| CC BY-SA 4.0 | `[![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](LICENSE)` |
-| CC BY-ND 4.0 | `[![License: CC BY-ND 4.0](https://img.shields.io/badge/License-CC%20BY--ND%204.0-lightgrey.svg)](LICENSE)` |
-| CC BY-NC-SA 4.0 | `[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)` |
-| CC BY-NC-ND 4.0 | `[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](LICENSE)` |
-
-ライセンスバッジのリンク先は常にリポジトリルートの `LICENSE` ファイル。
-
-**CI バッジ:**
-
-```
-[![CI](https://github.com/{user}/{repo}/actions/workflows/{workflow}.yml/badge.svg)](https://github.com/{user}/{repo}/actions/workflows/{workflow}.yml)
-```
-
-`{user}` / `{repo}` / `{workflow}` をこのテンプレートリポジトリの値に置き換える。ワークフローファイルが複数ある場合はメインの CI ワークフローのみ掲載する。
-
-**dev-charter バッジ（dev-charter を導入済みの場合）:**
-
-```
-[![Charter Check](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml)
-```
-
-`{user}` / `{repo}` をこのテンプレートリポジトリのリポジトリ情報に置き換える。
-
-### 5.3a Badge Format: README_TEMPLATE.md（プロジェクト用 README 雛形）
-
-`README_TEMPLATE.md` のバッジは URL を**プレースホルダのまま残す**。プロジェクト化後に置換する。
-
-```
-[![CI](https://github.com/{user}/{repo}/actions/workflows/{workflow}.yml/badge.svg)](https://github.com/{user}/{repo}/actions/workflows/{workflow}.yml)
-[![Charter Check](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/[USERNAME]?style=social)](https://github.com/sponsors/[USERNAME])
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/[BMC_USERNAME])
-```
-
-ライセンスバッジはプロジェクトが引き継ぐライセンスに合わせた行を埋め込む（URL に `{user}/{repo}` がないため置換不要）。
-
-サポートセクションは README に設けず、バッジで代替する。`[USERNAME]` / `[BMC_USERNAME]` はプロジェクト化後に置換するプレースホルダ（§5.5 参照）。
+バッジの書式は [PROJECT_README_GUIDELINES.md](PROJECT_README_GUIDELINES.md) の「Badge Format」を使用する。`README_TEMPLATE.md` では `{user}`・`{repo}`・`{workflow}`・`[USERNAME]`・`[BMC_USERNAME]` をプロジェクト化後に置換するプレースホルダとして残す。ライセンスバッジはテンプレートが引き継がせるライセンスに対応する実際の行を埋め込む。
 
 ### 5.4 Conditional Sections
 
@@ -214,7 +158,7 @@ URL はこのテンプレートリポジトリ自身を指す実際の値に置�
 | インストール | ビルド成果物あり + OSS 公開、またはストア・ギャラリー配布（App Store / Chrome Web Store / Alfred Gallery 等）がある場合 | 「一行概要」の直後 |
 | 使い方 | CLI・ライブラリ・拡張機能等でコマンド体系または API 使用例がある | 「クイックスタート」の直後 |
 | カスタマイズ手順 | 初回セットアップで必須の編集がある | 「ドキュメント索引」の直後 |
-| AI 支援開発 | Claude Code / Copilot を使用 + `AI_CONTEXT.md` が存在 | 「ドキュメント索引」の直後 |
+| AI 支援開発 | AI ツールを使用 + `AI_CONTEXT.md` が存在 | 「ドキュメント索引」の直後 |
 | リリース手順 | ビルド成果物あり + 配布プロセスがある | 「ライセンス」の直前 |
 
 ### 5.5 Information Gathering When AI Generates README
@@ -230,7 +174,7 @@ README 生成に必要な情報を教えてください:
 4. リポジトリ名: [例: swift-app-template]
 5. 技術スタック: [例: Swift 5.9 / iOS 17 / SwiftUI]
 6. ビルド成果物: [あり(.app / .ipa / .whl / .alfredworkflow / .zip 等) / なし]
-7. AI 対応: [Claude Code / GitHub Copilot / なし]
+7. AI 対応: [Claude Code / Codex / GitHub Copilot / Gemini CLI / なし]
 ```
 
 ### 5.6 Validation Checklist
@@ -278,7 +222,7 @@ README 作成後、以下を確認する。
 5. [LEGAL_POLICY.md](../LEGAL_POLICY.md) に従い `LICENSE` ファイルを作成する。AGPL/GPL/LGPL を採用する場合は [GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) の準 CLA 設定（`CONTRIBUTING.md` + PR テンプレートへの同意チェックボックス）も行う
 6. §5.2 に従い `README-jp.md`（日本語正本）と `README.md`（英語版）を作成する（template repo 自体の説明）
 7. §5.2a に従い `README_TEMPLATE-jp.md`（日本語正本）と `README_TEMPLATE.md`（英語版）を作成する（プロジェクト用雛形）
-8. AI 対応の場合は `AI_CONTEXT.md`・`CLAUDE.md`・`GEMINI.md` を作成する。`AI_CONTEXT.md` には以下の初期セットアップ手順を含めること:
+8. AI 対応の場合は `AI_CONTEXT.md` と、使用するツールに対応する `CLAUDE.md`・`GEMINI.md`・`AGENTS.md` を作成する。`AI_CONTEXT.md` には以下の初期セットアップ手順を含めること:
    - GitHub リポジトリ設定を最優先で適用する（テンプレートからの作成時はすべての設定が初期化されるため）
    - `README_TEMPLATE-jp.md` → `README-jp.md` にリネーム（旧 `README-jp.md` を削除）
    - `README_TEMPLATE.md` → `README.md` にリネーム（旧 `README.md` を削除）

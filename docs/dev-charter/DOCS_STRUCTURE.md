@@ -24,6 +24,7 @@ project-root/
 ├── AI_CONTEXT.md                    # AI エントリーポイント
 ├── CLAUDE.md                        # @AI_CONTEXT.md + Claude Code 固有設定
 ├── GEMINI.md                        # @AI_CONTEXT.md + Gemini CLI 固有設定
+├── AGENTS.md                        # AI_CONTEXT.md 読み込み指示 + Codex 固有設定
 ├── .github/
 │   └── copilot-instructions.md      # AI_CONTEXT.md 参照 + Copilot 固有設定
 └── docs/
@@ -51,6 +52,7 @@ project-root/
 | `AI_CONTEXT.md` | AI エントリーポイント（後述） |
 | `CLAUDE.md` | `@AI_CONTEXT.md` + Claude Code 固有設定 |
 | `GEMINI.md` | `@AI_CONTEXT.md` + Gemini CLI 固有設定 |
+| `AGENTS.md` | `AI_CONTEXT.md` 読み込み指示 + Codex 固有設定 |
 | `.github/copilot-instructions.md` | `AI_CONTEXT.md` 参照 + Copilot 固有設定 |
 
 > 各ファイルの読者は包含関係にある。開発者は README も参照し、外部コントリビューターは README・DEVELOPING も参照し、AI はすべてを参照する。
@@ -81,7 +83,7 @@ AI ツール設定ファイルの詳細な構成仕様（セクション定義�
 
 プロジェクト内の `docs/` ディレクトリに配置する標準ファイルを定める。
 
-### Common Files (全プロジェクト共通)
+### Common Files
 
 | ファイル | 内容 |
 |---|---|
@@ -142,7 +144,7 @@ _最終更新: YYYY-MM-DD_
 
 ### docs/maintenance.md
 
-ローカル LLM で `docs/` ファイルをメンテナンスするためのプロンプト集。
+ローカル LLM で `docs/` ファイルの更新案を作るためのプロンプト集。
 インストール時に AI がプロジェクトの技術スタック（言語・ビルドツール等）に合わせて生成する。
 
 含める内容：
@@ -158,12 +160,12 @@ _最終更新: YYYY-MM-DD_
 手順：
 1. [調査ステップ（ディレクトリ構造確認・主要ファイルの読み込み等）]
 2. [既存ファイルを読む（存在する場合）]
-3. [フォーマット仕様を明示したうえで、ファイルを上書き保存する]
+3. [フォーマット仕様に沿った更新案を、根拠となるファイルパスとともに出力する]
 
 注意：[制約・注意事項]
 ```
 
-> ローカル LLM はファイルへの保存を省略しやすいため、「上書き保存する」を手順の最終ステップとして明示する。
+> ローカル LLM は読み取り専用で使用する。主担当 AI が根拠と実ファイルを照合し、確認済みの更新案だけを保存する。
 
 ---
 

@@ -13,29 +13,7 @@ AI支援ソフトウェアプロジェクトのための共有開発憲章。
 
 ## Documents
 
-| ファイル | 内容 |
-|---|---|
-| [CHARTER_INDEX.md](CHARTER_INDEX.md) | 憲章ドキュメントのインデックス（トピック → ファイル対応表） |
-| [PRINCIPLES.md](PRINCIPLES.md) | 開発哲学・デザイン・アーキテクチャ原則 |
-| [CODE_STYLE.md](CODE_STYLE.md) | コードスタイル |
-| [AI_COLLABORATION_RULES.md](AI_COLLABORATION_RULES.md) | AI 協働ルールと役割分担 |
-| [AI_CONTEXT_HIERARCHY.md](AI_CONTEXT_HIERARCHY.md) | AI コンテキスト優先階層 |
-| [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) | AI コンテキストファイルの構成仕様（AI_CONTEXT.md・各ツール設定ファイル） |
-| [DOCS_STRUCTURE.md](DOCS_STRUCTURE.md) | プロジェクトのドキュメント構成（root ファイル・DEVELOPING.md/CONTRIBUTING.md の責務分離・docs/ 標準構成・AI_CONTEXT.md 参照順） |
-| [LANGUAGE_POLICY.md](LANGUAGE_POLICY.md) | 言語ポリシー（正本＝日本語） |
-| [LOCALIZATION_POLICY.md](LOCALIZATION_POLICY.md) | ローカライゼーションポリシー |
-| [PROJECT_LIFECYCLE.md](PROJECT_LIFECYCLE.md) | プロジェクトライフサイクルと体制 |
-| [UI_GUIDELINES.md](UI_GUIDELINES.md) | UI ガイドライン・カラー・アイコン |
-| [MONETIZATION_POLICY.md](MONETIZATION_POLICY.md) | マネタイズポリシーとプラットフォーム別方針 |
-| [SECURITY_POLICY.md](SECURITY_POLICY.md) | セキュリティポリシーとフック設定リファレンス |
-| [LEGAL_POLICY.md](LEGAL_POLICY.md) | ライセンス選択基準・テンプレート（Closed / MIT / AGPL・GPL・LGPL） |
-| [topics/CI_POLICY.md](topics/CI_POLICY.md) | CI job設計方針・Branch Protection Ruleset |
-| [topics/GITHUB_SETTINGS.md](topics/GITHUB_SETTINGS.md) | GitHub リポジトリ設定確認（Ruleset・Sponsors） |
-| [topics/GITHUB_CONTRIBUTING.md](topics/GITHUB_CONTRIBUTING.md) | Issue・PR・CONTRIBUTING.md・PRテンプレート・準CLA（OSS向け） |
-| [topics/TEMPLATE_README_GUIDELINES.md](topics/TEMPLATE_README_GUIDELINES.md) | GitHub テンプレートリポジトリの README 設計規約（開発環境・言語・LICENSE・必須セクション） |
-| [topics/PROJECT_README_GUIDELINES.md](topics/PROJECT_README_GUIDELINES.md) | テンプレートから作成したプロジェクトの README 整備手順 |
-| [topics/PYTHON_DEV_ENV.md](topics/PYTHON_DEV_ENV.md) | Python 開発環境構成（pyenv・uv・ruff・mypy・pytest） |
-| [topics/PYTHON_CLI.md](topics/PYTHON_CLI.md) | Python CLI 実装方針（typer・pydantic-settings・XDG設定） |
+憲章ドキュメントの一覧とトピック別の参照先は、正本である [CHARTER_INDEX.md](CHARTER_INDEX.md) を参照してください。
 
 ## How to Use
 

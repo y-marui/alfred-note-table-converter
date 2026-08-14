@@ -46,6 +46,7 @@ git config hooks.skip-policy-check true
 | SSH 秘密鍵・クラウドトークンのコミット | 層1 + 層2（gitleaks） | 認証情報の漏洩防止 |
 | ローカル絶対パスのハードコード | 層2 | 環境依存コードの防止 |
 | 500 KB を超えるファイル | 層2 | リポジトリの肥大化防止 |
+| Markdown の H2〜H6 に日本語を使用 | 層2 | セクションヘッダ言語の統一 |
 
 `.env` の正しい扱い方：`.env` は絶対にコミットしない。ダミー値のみを含む `.env.example` をコミットする。
 
@@ -74,30 +75,49 @@ API_KEY=your-api-key-here
 
 ### Code Review
 
-- `main` に到達するコミットは必ず他の開発者がレビューする。
+- `main` に到達するコミットは [AI_COLLABORATION_RULES.md](AI_COLLABORATION_RULES.md) のレビュー経路に従って独立した確認を受ける。複数人開発では別の開発者の承認を必須とし、個人開発では実装担当と異なる AI によるレビューとオーナーの最終確認で代替できる。
 - 認証・認可・暗号化・データアクセスに関わる変更はセキュリティレビューを必須とする。
 
 ---
 
 ## Setup Steps
 
-新規リポジトリに本憲章を適用する場合：
+新規リポジトリに本憲章を適用し、`.pre-commit-config.yaml` がまだ存在しない場合：
 
-```sh
-# 1. セキュリティ設定ファイルを dev-charter からコピー
-cp docs/dev-charter/.pre-commit-config.yaml .
+```bash
+set -euo pipefail
+
+# 1. 既存設定を誤って上書きしないことを確認する
+if [ -e .pre-commit-config.yaml ]; then
+  echo ".pre-commit-config.yaml は既に存在します。既存設定へ必要フックを統合してください。" >&2
+  exit 1
+fi
+
+# 2. セキュリティ設定ファイルと共通検証スクリプトを取り込む
 cp docs/dev-charter/.gitleaks.toml .
+mkdir -p scripts
+cp docs/dev-charter/scripts/check-markdown-heading-language.sh scripts/
+chmod +x scripts/check-markdown-heading-language.sh
 
-# 2. pre-commit フックをインストール
+# 3. dev-charter 固有のフックを除いた設定を生成する
+awk '
+  /BEGIN DEV-CHARTER ONLY/ { skip = 1; next }
+  /END DEV-CHARTER ONLY/ { skip = 0; next }
+  !skip { print }
+' docs/dev-charter/.pre-commit-config.yaml > .pre-commit-config.yaml
+
+# 4. pre-commit フックをインストール
 #    core.hooksPath を使用している場合（グローバルフックが pre-commit を呼ぶ場合）は
-#    pre-commit install は不要。手順 3 で pre-commit が正しく動作することを確認する。
+#    pre-commit install は不要。手順 5 で pre-commit が正しく動作することを確認する。
 git config core.hooksPath 2>/dev/null \
-  && echo "core.hooksPath が設定されています。手順 3 に進んでください。" \
+  && echo "core.hooksPath が設定されています。手順 5 に進んでください。" \
   || pre-commit install
 
-# 3. 動作確認（core.hooksPath の有無にかかわらず必須）
+# 5. 動作確認（core.hooksPath の有無にかかわらず必須）
 pre-commit run --all-files
 ```
+
+既存の `.pre-commit-config.yaml` がある場合は上書きせず、dev-charter の設定から `BEGIN DEV-CHARTER ONLY`〜`END DEV-CHARTER ONLY` を除いたフックを既存設定へ統合する。リポジトリ固有の言語・フレームワーク用フックは維持すること。
 
 CI での実行例（GitHub Actions）：
 
@@ -114,6 +134,7 @@ CI での実行例（GitHub Actions）：
 |---|---|
 | `.pre-commit-config.yaml` | pre-commit フック定義（セキュリティ＋品質） |
 | `.gitleaks.toml` | gitleaks カスタムルール設定 |
+| `scripts/check-markdown-heading-language.sh` | Markdown セクションヘッダの言語検証 |
 | `SECURITY_POLICY.md` | このドキュメント |
 
 ---
