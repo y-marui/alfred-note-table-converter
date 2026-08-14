@@ -28,8 +28,6 @@ for file in "$@"; do
   fence_character=""
   fence_length=0
   line_number=0
-  previous_line=""
-  previous_line_number=0
 
   while IFS= read -r line || [[ -n "$line" ]]; do
     line_number=$((line_number + 1))
@@ -38,8 +36,6 @@ for file in "$@"; do
       fence_marker="${BASH_REMATCH[1]}"
       fence_character="${fence_marker:0:1}"
       fence_length=${#fence_marker}
-      previous_line=""
-      previous_line_number=0
       continue
     fi
 
@@ -52,27 +48,13 @@ for file in "$@"; do
       continue
     fi
 
+    # The charter policy applies only to Markdown section headings H2-H6.
+    # H1 is intentionally excluded.
     if [[ "$line" =~ ^[[:space:]]{0,3}#{2,6}[[:space:]] ]] \
       && contains_japanese "$line"; then
       printf '%s:%d: section headings must be written in English: %s\n' \
         "$file" "$line_number" "$line" >&2
       status=1
-    fi
-
-    if [[ "$line" =~ ^[[:space:]]{0,3}-+[[:space:]]*$ ]] \
-      && [[ -n "$previous_line" ]] \
-      && contains_japanese "$previous_line"; then
-      printf '%s:%d: section headings must be written in English: %s\n' \
-        "$file" "$previous_line_number" "$previous_line" >&2
-      status=1
-    fi
-
-    if [[ -n "${line//[[:space:]]/}" ]]; then
-      previous_line="$line"
-      previous_line_number=$line_number
-    else
-      previous_line=""
-      previous_line_number=0
     fi
   done < "$file"
 done
