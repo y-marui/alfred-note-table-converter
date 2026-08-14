@@ -10,14 +10,13 @@ status=0
 opening_fence_pattern='^[[:space:]]{0,3}(`{3,}|~{3,})'
 
 contains_japanese() {
-  python - "$1" <<'PY'
+  python3 - "$1" <<'PY'
 import sys
 
 text = sys.argv[1]
 has_japanese = any(
-    "\u3040" <= ch <= "\u30ff"
+    "\u3000" <= ch <= "\u30ff"
     or "\u4e00" <= ch <= "\u9fff"
-    or ch in {"々", "ー"}
     for ch in text
 )
 raise SystemExit(0 if has_japanese else 1)
