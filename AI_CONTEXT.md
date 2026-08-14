@@ -6,7 +6,7 @@
 
 ---
 
-## プロジェクト概要
+## Project Overview
 
 Alfred 5 Script Filter ワークフロー用の OSS テンプレート。
 Python 3.11+、レイヤードアーキテクチャ、CI/CD 完備。
@@ -24,20 +24,20 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 
 ---
 
-## 憲章参照
+## Charter References
 
 憲章参照: `docs/dev-charter/CHARTER_INDEX.md` でトピックを特定してから該当ファイルのみ読む
 
 ---
 
-## ドキュメント同期ルール（Document Sync Rule）
+## Document Sync Rule
 
 仕様・ルール・構成に変更が生じたとき、変更と同じ作業内で関連ドキュメントを更新する。
 対象は `docs/` 内のファイルに限らず、`AI_CONTEXT.md`・`README.md` 等のルートファイルも含む。
 
 ---
 
-## AI コンテキスト優先順位（AI_CONTEXT_HIERARCHY）
+## AI Context Hierarchy
 
 1. タスクコンテキスト（Issue / Pull Request）
 2. **プロジェクトコンテキスト（このファイル・プロジェクトドキュメント）** ← ここ
@@ -46,14 +46,14 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 
 ---
 
-## 開発原則（PRINCIPLES）
+## Applied Charter Principles
 
-### 基本哲学
+### Basic Philosophy
 - **ローカルファースト** — Alfred ワークフローはオフラインで動作することを前提にする
 - **インフラ最小化** — サーバーレス、外部依存なし（vendor/ に完結）
 - **小さく始める** — 機能追加は必要性が確認されてから
 
-### コード設計
+### Code Design
 - **変更範囲は必要最小限** — Over-engineering しない
 - **YAGNI** — 今必要ない機能は実装しない
 - **DRY** — 2回の重複では抽象化しない。3回目で検討する
@@ -63,7 +63,7 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 
 ---
 
-## コードスタイル（CODE_STYLE）
+## Code Style
 
 - コメントは **「なぜそうするか」のみ** 書く。コードから自明な処理には書かない
 - ruff + black、行長 100
@@ -72,38 +72,30 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 
 ---
 
-## AI 協働ルール（AI_COLLABORATION_RULES）
+## Project-Specific Rules
 
-### AI 行動原則
+### AI Behavior
 - **Scope 厳守** — 会話のタスク・ゴールを AI が勝手に変更しない
 - **不明点は作業前に1回でまとめて質問する** — 推測で進めない
 
-### コーディング前の確認必須項目
+### Pre-Coding Checklist
 - ゴール（完了条件）
 - 言語・FW・バージョン制約
 - 新規 or 既存コード修正
 - テストの要否
 - 影響範囲
 
-### エラー対応
+### Error Handling
 - **原因分析 → 修正方針説明 → 実装** の順で進める
 - エラーログ・スタックトレースは全文確認してから対応
 - デバッグ用の `print` 文は本番コードに残さない
 
-### AIツールの役割分担
-
-| ツール | 担当 |
-|---|---|
-| Claude Code | プロジェクト立ち上げ・大規模変更・アーキテクチャ設計・リファクタリング |
-| GitHub Copilot | バグ修正・細かな実装補助・単体テスト作成 |
-| Gemini CLI | プライバシーポリシー作成・更新 / ストア説明文 / 審査用ドキュメント / プロジェクト全体のドキュメント管理 |
-
-### 作業スタンス
+### Working Stance
 
 - 大きな変更前に方針を説明してから着手する
 - **不要な依存追加禁止** — 既存の依存で解決できないか先に検討する
 
-### dev-charter 変更ルール
+### dev-charter Update Rule
 
 `docs/dev-charter/` 配下のファイルを**直接編集しない**。
 
@@ -111,13 +103,21 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 - `git subtree pull` によるアップデートのみ許可する
 - プロジェクト固有のルールは `AI_CONTEXT.md` または専用ファイルに記載する
 
-### AI 並用時のルール
+### Multi-AI Usage
 - Claude Code 作業中は Copilot 提案を**参考程度**に（盲目的に受け入れない）
 - Copilot の提案がプロジェクト規約に反する場合は無視し、Claude Code でレビュー後採用
 
 ---
 
-## 言語ポリシー（LANGUAGE_POLICY）
+## AI Tool Assignments
+
+- **使用ツール**: Claude Code、GitHub Copilot、Gemini CLI
+- **標準担当の正本**: `docs/dev-charter/AI_COLLABORATION_RULES.md` の「AI Tool Responsibilities」と「Rules for Multi-AI Usage」
+- **プロジェクト固有の上書き**: なし
+
+---
+
+## Language Policy
 
 このプロジェクトは **OSS** のため、**英語を主言語**とする。
 
@@ -129,7 +129,7 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 
 ---
 
-## ローカライゼーション（LOCALIZATION_POLICY）
+## Localization Policy
 
 Alfred ワークフローは現時点では UI テキストのローカライゼーション機能を持たない。
 将来的に対応する場合の優先言語順:
@@ -142,7 +142,7 @@ Alfred ワークフローは現時点では UI テキストのローカライゼ
 
 ---
 
-## プロジェクトライフサイクル（PROJECT_LIFECYCLE）
+## Project Lifecycle
 
 - 規模: 個人〜3人。アジャイルで迅速な意思決定
 - **コミット粒度** — 機能単位・動作確認 OK 後にコミット
@@ -151,7 +151,7 @@ Alfred ワークフローは現時点では UI テキストのローカライゼ
 
 ---
 
-## UI ガイドライン（UI_GUIDELINES）
+## UI Guidelines
 
 Alfred Script Filter のレスポンス（JSON items）に適用するルール:
 
@@ -162,7 +162,7 @@ Alfred Script Filter のレスポンス（JSON items）に適用するルール:
 
 ---
 
-## マネタイズ（MONETIZATION_POLICY）
+## Monetization Policy
 
 OSS プロジェクトのため、以下の方式を採用する:
 
@@ -174,19 +174,20 @@ README.md のバッジ行に GitHub Sponsors と Buy Me a Coffee バッジを掲
 
 ---
 
-## セキュリティ（SECURITY_POLICY）
+## Security Policy
 
-### 二層構造
+### Two-Layer Architecture
 1. **個人 git フック**（`~/.config/git/hooks/pre-commit`）— 開発者個人のマシン全体に適用
 2. **per-repo pre-commit フック**（`.pre-commit-config.yaml`）— チーム強制・CI でも動作
 
-### 自動ブロック項目
+### Automated Blocks
 - `.env` ファイルのコミット（`.env.example` は許可）
 - SSH 秘密鍵・クラウドトークン（gitleaks で検知）
 - ローカル絶対パスのハードコード（環境依存コードの防止）
 - 500 KB を超えるファイル
+- Markdown の H2〜H6 見出しに日本語を使用
 
-### 手動遵守事項
+### Manual Requirements
 - API キー・パスワードをコードに書かない（Alfred の暗号化キーチェーンを使う）
 - AI に秘密情報を含むファイルやコードを渡さない
 - AI が生成したコードは必ずレビューしてからコミットする
@@ -196,7 +197,7 @@ README.md のバッジ行に GitHub Sponsors と Buy Me a Coffee バッジを掲
 
 ---
 
-## 開発コマンド
+## Development Commands
 
 ```bash
 make install          # dev 依存関係をインストール
@@ -208,7 +209,7 @@ make build            # dist/*.alfredworkflow を生成
 make vendor           # workflow/vendor/ を更新
 ```
 
-## リリース手順
+## Release Process
 
 ```bash
 # pyproject.toml のバージョンを更新

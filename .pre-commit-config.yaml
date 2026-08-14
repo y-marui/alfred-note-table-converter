@@ -76,6 +76,15 @@ repos:
             \.pre-commit-config\.yaml$
           )
 
+  # Markdown section headings
+  - repo: local
+    hooks:
+      - id: check-markdown-heading-language
+        name: Check Markdown section heading language
+        language: script
+        entry: scripts/check-markdown-heading-language.sh
+        files: '\.md$'
+
   # Type checking (runs mypy against src/)
   - repo: local
     hooks:

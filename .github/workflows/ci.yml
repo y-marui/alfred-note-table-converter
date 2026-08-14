@@ -78,7 +78,7 @@ jobs:
           path: htmlcov/
 
   build:
-    name: Build workflow package
+    name: Build
     runs-on: macos-latest
     needs: [security, lint, test]
 
