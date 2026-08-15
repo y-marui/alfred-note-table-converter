@@ -22,8 +22,6 @@ on:
     paths:
       - ".github/workflows/check-charter.yml"
       - "VERSION"
-  schedule:
-    - cron: "40 3 * * 1"  # Every Monday at 03:40 UTC
 
 jobs:
   check:
@@ -31,14 +29,48 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: read
 
     steps:
+      # pull_request / push triggers fire on every PR and every push to main;
+      # skip if a check already succeeded within the last 7 days so busy repos
+      # don't re-check on every single event. schedule / workflow_dispatch
+      # always run (steps.throttle.outputs.skip stays empty in that case).
+      - name: Skip if checked recently
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        id: throttle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          WORKFLOW_FILE=$(basename "$(echo "${{ github.workflow_ref }}" | sed 's/@.*$//')")
+          LAST=$(gh api "repos/${{ github.repository }}/actions/workflows/${WORKFLOW_FILE}/runs?status=success&per_page=1" \
+            --jq '.workflow_runs[0].updated_at // empty' 2>/dev/null || echo "")
+
+          if [ -z "$LAST" ]; then
+            echo "No prior successful run found"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          DAYS=$(( ( $(date -u +%s) - $(date -u -d "$LAST" +%s) ) / 86400 ))
+          echo "Last successful check: ${LAST} (${DAYS} day(s) ago)"
+
+          if [ "$DAYS" -lt 7 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout (full history required for git subtree)
+        if: steps.throttle.outputs.skip != 'true'
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Check VERSION
+        if: steps.throttle.outputs.skip != 'true'
         id: versions
         run: |
           PREFIX="${{ inputs.prefix }}"
@@ -72,7 +104,7 @@ jobs:
           fi
 
       - name: Update branch
-        if: steps.versions.outputs.outdated == 'true'
+        if: steps.throttle.outputs.skip != 'true' && steps.versions.outputs.outdated == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -112,7 +144,7 @@ jobs:
           git push origin "${BRANCH}" --force-with-lease
 
       - name: Create PR
-        if: steps.versions.outputs.outdated == 'true'
+        if: steps.throttle.outputs.skip != 'true' && steps.versions.outputs.outdated == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

@@ -71,7 +71,7 @@ dev-charter の本体。他プロジェクトが `git subtree` で取り込む�
 - **設定済み**（グローバルフックが pre-commit を呼ぶ）：`pre-commit install` 不要。`pre-commit run --all-files` で動作確認
 - **未設定**：`pre-commit install` 後に `pre-commit run --all-files` で動作確認
 
-pre-commit は、シークレット・ローカル絶対パス・VERSION 日付・Markdown の H2〜H6 の見出し言語・シェルスクリプトを機械的に検証する。日英文書の意味的一致など判断を要する項目は、AI または人間がレビューする。
+pre-commit は、シークレット・ローカル絶対パス・VERSION 日付・ローカル dev-charter バージョン（sibling `../dev-charter` との比較）・Markdown の H2〜H6 の見出し言語・シェルスクリプトを機械的に検証する。日英文書の意味的一致など判断を要する項目は、AI または人間がレビューする。
 
 確認コマンド：`git config core.hooksPath`
 
