@@ -97,23 +97,31 @@ update-charter:
 ## Version Check (CI)
 
 `.github/workflows/dev-charter-check.yml` をプロジェクトに追加すると、
-毎週自動で最新バージョンを確認し、古い場合は update PR を作成します。
+PR作成や main への push をきっかけに最新バージョンを確認し、古い場合は update PR を作成します
+（直近7日以内に成功したチェックがあればスキップするため、活発な repo でも毎回チェックが走ることはありません）。
 
 ```yaml
 name: Dev Charter
 on:
-  schedule:
-    - cron: "23 3 * * 1"  # 毎週月曜 3:23 UTC — minute/hour/day-of-week はランダムな値に変更してください
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   check:
     name: Check
+    if: github.actor != 'dependabot[bot]'
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
     permissions:
       contents: write
       pull-requests: write
+      actions: read
 ```
+
+> **Note:** dependabot が作成した PR ではスキップされます（依存関係更新だけが動いている間はチェック不要という判断）。
+> repo が完全に静止している間はチェックが走らないため、活動に関わらず定期的に確認したい場合は
+> 上記に加えて低頻度の `schedule`（例：月1回）を併用してください。
 
 > **Note:** Branch Protection で direct push が禁止されている場合は、
 > GitHub Actions bot の bypass rule を追加してください

@@ -96,24 +96,34 @@ update-charter:
 
 ## Version Check (CI)
 
-Add `.github/workflows/dev-charter-check.yml` to your project to automatically
-check for updates weekly and open a PR when a new version is available.
+Add `.github/workflows/dev-charter-check.yml` to your project to check for updates
+when a PR is opened or a commit is pushed to main, and open an update PR if outdated
+(the check is skipped if one already succeeded within the last 7 days, so busy repos
+don't re-check on every single event).
 
 ```yaml
 name: Dev Charter
 on:
-  schedule:
-    - cron: "23 3 * * 1"  # Every Monday at 03:23 UTC — change to your own random minute/hour/day-of-week
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   check:
     name: Check
+    if: github.actor != 'dependabot[bot]'
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
     permissions:
       contents: write
       pull-requests: write
+      actions: read
 ```
+
+> **Note:** Dependabot PRs are skipped — dependency-only activity doesn't warrant a
+> charter check. If your repository goes fully quiet, no check will run. If you want a
+> guaranteed periodic check regardless of activity, add a low-frequency `schedule`
+> (e.g. monthly) alongside this.
 
 > **Note:** If your repository has Branch Protection rules that prevent direct pushes,
 > add a bypass rule for the GitHub Actions bot
