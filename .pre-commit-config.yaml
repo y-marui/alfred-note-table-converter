@@ -91,6 +91,19 @@ repos:
   # END DEV-CHARTER ONLY
 
   # ----------------------------------------------------------------
+  # Local dev-charter version check
+  # (blocks if sibling ../dev-charter is newer, warns if older)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-local-charter-version
+        name: Check local dev-charter version
+        language: script
+        entry: scripts/check-local-charter-version.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
   # Markdown section headings
   # ----------------------------------------------------------------
   - repo: local
