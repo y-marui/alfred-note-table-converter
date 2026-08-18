@@ -104,6 +104,20 @@ repos:
         always_run: true
 
   # ----------------------------------------------------------------
+  # Charter CI template check
+  # (blocks if .github/workflows/dev-charter-check.yml drifted from the
+  # template documented in the installed dev-charter's README-jp.md)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-ci-template
+        name: Check charter CI template
+        language: script
+        entry: scripts/check-charter-ci-template.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
   # Markdown section headings
   # ----------------------------------------------------------------
   - repo: local
@@ -116,10 +130,47 @@ repos:
 
   # ----------------------------------------------------------------
   # Shell scripts
+  # (Lints the staged (index) content rather than the working-tree
+  # bytes: on Windows checkouts with core.autocrlf=true, git's clean
+  # filter already normalizes CRLF->LF on `git add`, so the index is
+  # LF even though the working tree shows CRLF. This avoids false
+  # SC1017 hits from the local checkout while still catching real
+  # CRLF committed with core.autocrlf=false.)
   # ----------------------------------------------------------------
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
+  - repo: local
     hooks:
       - id: shellcheck
-        args: ["--severity=warning"]
+        name: shellcheck
+        language: python
+        additional_dependencies: ["shellcheck-py==0.11.0.1"]
+        entry: >-
+          bash -c 'status=0; for f in "$@"; do
+          git show ":$f" | shellcheck --severity=warning - 2>&1 | sed "s|^In - |In $f |";
+          [ "${PIPESTATUS[1]}" -eq 0 ] || status=1;
+          done; exit $status' --
+        types: [shell]
         exclude: '\.zsh$'
+        require_serial: true
+
+  # ----------------------------------------------------------------
+  # PowerShell scripts
+  # (PSScriptAnalyzer, installed locally on first run. Skipped in CI —
+  # see ci.yml's SKIP env — it isn't required to gate merges; it exists
+  # for local parity with the Linux/macOS shellcheck coverage above,
+  # for scripts/*.ps1 counterparts of the bash scripts.)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: powershell-lint
+        name: PowerShell script lint (PSScriptAnalyzer)
+        language: system
+        entry: >-
+          bash -c '
+          if ! command -v pwsh >/dev/null 2>&1; then
+          echo "warning: pwsh not found; skipping PowerShell lint" >&2;
+          exit 0;
+          fi;
+          pwsh -NoProfile -NonInteractive -File scripts/check-powershell-lint.ps1 "$@"
+          ' --
+        files: '\.ps1$'
+        require_serial: true

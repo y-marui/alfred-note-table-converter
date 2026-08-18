@@ -208,7 +208,6 @@ README 作成後、以下を確認する。
     [ ] 日本語版・英語版が同一コミットで更新されているか
 
 [ ] AI_CONTEXT.md にリネーム・プレースホルダ置換の初期セットアップ手順が記載されているか
-[ ] .github/workflows/dev-charter-check.yml が存在する場合、AI_CONTEXT.md に `on.schedule.cron` のランダム化手順が記載されているか
 ```
 
 ---
@@ -227,7 +226,6 @@ README 作成後、以下を確認する。
    - `README_TEMPLATE-jp.md` → `README-jp.md` にリネーム（旧 `README-jp.md` を削除）
    - `README_TEMPLATE.md` → `README.md` にリネーム（旧 `README.md` を削除）
    - プレースホルダ（`{user}`・`{repo}` 等）の置換（CI バッジ・dev-charter バッジを含む）
-   - `.github/workflows/dev-charter-check.yml` が存在する場合は `on.schedule.cron` をランダムな曜日・時・分に変更する（複数プロジェクトの同時実行を避けるため）
 9. `.github/copilot-instructions.md` を作成する（Copilot 使用時）
 10. GitHub 公開プロジェクトの場合は `.github/FUNDING.yml` を作成する（[MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) 参照）
 
