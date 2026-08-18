@@ -31,6 +31,12 @@ Run from your project root:
 bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
 ```
 
+On Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.ps1 | iex
+```
+
 The script automates the git subtree setup and, if Claude Code is available,
 guides you through the initial setup (INSTALL_CHECKLIST).
 
@@ -86,12 +92,22 @@ Run docs/dev-charter/UPDATE_CHECKLIST.md
 
 ## Makefile helper
 
+`git subtree pull` fails if the working tree has uncommitted changes, so this
+target automatically stashes before running and pops afterward.
+
 ```
+.PHONY: update-charter
 update-charter:
 	git remote | grep -q '^dev-charter$$' || \
 	  git remote add dev-charter https://github.com/y-marui/dev-charter
 	git fetch dev-charter
-	git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+	@STASHED=0; \
+	if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$$(git ls-files --others --exclude-standard)" ]; then \
+		git stash push -u -m "update-charter"; \
+		STASHED=1; \
+	fi; \
+	git subtree pull --prefix=docs/dev-charter dev-charter main --squash; \
+	if [ "$$STASHED" = "1" ]; then git stash pop; fi
 ```
 
 ## Version Check (CI)
@@ -103,6 +119,7 @@ don't re-check on every single event).
 
 ```yaml
 name: Dev Charter
+
 on:
   pull_request:
   push:
