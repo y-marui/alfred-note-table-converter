@@ -23,6 +23,8 @@
 - topics/TEMPLATE_README_GUIDELINES.md     → README.md と README_TEMPLATE.md を更新（テンプレートリポジトリのみ）
 - topics/GITHUB_SETTINGS.md                → リポジトリ設定を適用（gh コマンドが使える場合はコマンドで、使えない場合は GitHub UI から）
 - topics/CI_POLICY.md                      → .github/workflows/ を確認・更新
+- .github/workflows/check-charter.yml      → 呼び出し側の .github/workflows/dev-charter-check.yml を同期し、permissions を含む呼び出し条件を確認
+- README.md / README-jp.md の Version Check (CI) → 記載例と呼び出し側ワークフローを同期（旧名 .github/workflows/check-charter.yml も確認）
 - SECURITY_POLICY.md                       → セキュリティフック・スキャン設定を確認
 - LEGAL_POLICY.md                          → ライセンスファイルを確認
 - その他のポリシーファイル                  → 内容に変更があれば AI コンテキストを更新
@@ -54,6 +56,8 @@ Common areas affected by file:
 - topics/TEMPLATE_README_GUIDELINES.md      → update README.md and README_TEMPLATE.md (template repos only)
 - topics/GITHUB_SETTINGS.md                 → apply repository settings (gh commands if available, otherwise GitHub UI)
 - topics/CI_POLICY.md                       → review and update .github/workflows/
+- .github/workflows/check-charter.yml       → synchronize the caller .github/workflows/dev-charter-check.yml and verify caller requirements, including permissions
+- Version Check (CI) in README.md / README-jp.md → synchronize the documented example with the caller workflow (also check the legacy .github/workflows/check-charter.yml name)
 - SECURITY_POLICY.md                        → review security hook and scan configuration
 - LEGAL_POLICY.md                           → verify license files
 - Other policy files                        → update AI context if the policy changed meaningfully
