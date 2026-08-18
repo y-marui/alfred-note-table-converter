@@ -17,7 +17,8 @@ dev-charter の本体。他プロジェクトが `git subtree` で取り込む�
 ### Technology Stack
 
 - Markdown：憲章・ガイドライン・チェックリスト
-- Bash：インストール・バージョン検証スクリプト
+- Bash：インストール・バージョン検証スクリプト（CI・pre-commit の実行基盤）
+- PowerShell：上記スクリプトの `.ps1` 版（`scripts/*.ps1`）。ローカル Windows 環境向けの並行実装で、CI では未使用（#57 参照）
 - GitHub Actions / pre-commit：CI・セキュリティ・文書品質の検証
 - アプリケーション用のランタイム・フレームワーク：なし
 

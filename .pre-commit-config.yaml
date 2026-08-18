@@ -76,6 +76,20 @@ repos:
             \.pre-commit-config\.yaml$
           )
 
+  # ----------------------------------------------------------------
+  # Charter CI template check
+  # (blocks if .github/workflows/dev-charter-check.yml drifted from the
+  # template documented in the installed dev-charter's README-jp.md)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-ci-template
+        name: Check charter CI template
+        language: script
+        entry: scripts/check-charter-ci-template.sh
+        pass_filenames: false
+        always_run: true
+
   # Markdown section headings
   - repo: local
     hooks:
@@ -96,6 +110,29 @@ repos:
         additional_dependencies: ["mypy>=1.0"]
         types: [python]
         pass_filenames: false
+
+  # ----------------------------------------------------------------
+  # PowerShell scripts
+  # (PSScriptAnalyzer, installed locally on first run. Skipped in CI —
+  # see ci.yml's SKIP env — it isn't required to gate merges; it exists
+  # for local parity with the Linux/macOS shellcheck coverage above,
+  # for scripts/*.ps1 counterparts of the bash scripts.)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: powershell-lint
+        name: PowerShell script lint (PSScriptAnalyzer)
+        language: system
+        entry: >-
+          bash -c '
+          if ! command -v pwsh >/dev/null 2>&1; then
+          echo "warning: pwsh not found; skipping PowerShell lint" >&2;
+          exit 0;
+          fi;
+          pwsh -NoProfile -NonInteractive -File scripts/check-powershell-lint.ps1 "$@"
+          ' --
+        files: '\.ps1$'
+        require_serial: true
 
   # ----------------------------------------------------------------
   # Local dev-charter version check

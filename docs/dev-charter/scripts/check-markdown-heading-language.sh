@@ -10,7 +10,12 @@ status=0
 opening_fence_pattern='^[[:space:]]{0,3}(`{3,}|~{3,})'
 
 contains_japanese() {
-  printf '%s\n' "$1" | grep -Eq '[ぁ-んァ-ヶ一-龠々ー]'
+  # grep -E / bash's [[ =~ ]] mishandle multibyte character-class ranges on
+  # some platforms (e.g. Git for Windows' bundled grep/bash): the CJK range
+  # ー-一-龠 spuriously matches unrelated characters like an em dash (—).
+  # Perl's \x{...} codepoint escapes compare actual Unicode codepoints, not
+  # locale-dependent byte collation, so they don't have this problem.
+  perl -CSDA -e 'exit(($ARGV[0] =~ /[\x{3041}-\x{3093}\x{30A1}-\x{30F6}\x{4E00}-\x{9FA0}\x{3005}\x{30FC}]/) ? 0 : 1)' "$1"
 }
 
 for file in "$@"; do

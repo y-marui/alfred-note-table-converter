@@ -27,8 +27,6 @@ docs/dev-charter/ 内の全ファイルを読み、このプロジェクトを�
           （README_TEMPLATE-jp.md / README-jp.md が存在する場合も同様に処理する）
           - CI バッジ URL をこのリポジトリを指すように更新する（テンプレートリポジトリのままにしない）
           - dev-charter バッジ URL をこのリポジトリを指すように更新する
-       3. .github/workflows/dev-charter-check.yml の cron スケジュールをランダムな曜日・時・分に変更する
-          （テンプレートから作成した複数プロジェクトが同時刻に実行されないようにするため）
    - テンプレートリポジトリ: docs/dev-charter/topics/TEMPLATE_README_GUIDELINES.md を読み
      README.md（template repo の説明）と README_TEMPLATE.md（プロジェクト用 README 雛形）を両方検証する
      （いずれか存在しない場合は新規作成する）
@@ -79,8 +77,6 @@ Read all files in docs/dev-charter/, explore this project, then do the following
           (apply the same for README_TEMPLATE-jp.md / README-jp.md if present)
           - Update CI badge URL to point to this repository (not the template)
           - Update dev-charter badge URL to point to this repository
-       3. Randomize the cron schedule in .github/workflows/dev-charter-check.yml
-          (set a random day of week, hour, and minute to avoid all template-based projects running at the same time)
    - Template repository: read docs/dev-charter/topics/TEMPLATE_README_GUIDELINES.md and validate both
      README.md (template repo description) and README_TEMPLATE.md (project README template)
      (create either file if missing)
