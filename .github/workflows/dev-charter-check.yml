@@ -4,8 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  schedule:
-    - cron: "47 21 * * 0"  # 毎週 Sun 21:47 UTC
   workflow_dispatch:
 
 jobs:
@@ -13,8 +11,6 @@ jobs:
     name: Check
     if: github.actor != 'dependabot[bot]'
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
-    with:
-      prefix: docs/dev-charter
     permissions:
       contents: write
       pull-requests: write
