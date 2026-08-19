@@ -25,6 +25,7 @@ on:
 
 jobs:
   check:
+    name: Check
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -186,3 +187,24 @@ jobs:
             --assignee "${{ github.repository_owner }}" \
             --draft || \
             gh pr list --head update-charter --base main --json number --jq length | grep -q '^[1-9]'
+
+      # Fails the check on purpose. This workflow is event-driven (no
+      # schedule trigger), so if we only opened the update PR above and
+      # returned success here, an outdated charter would never actually
+      # block anything -- it'd just leave a draft PR sitting unnoticed
+      # while unrelated PRs keep merging. Failing loudly on the PR/push
+      # that triggered this check forces it to be dealt with.
+      - name: Fail if outdated
+        if: steps.throttle.outputs.skip != 'true' && steps.versions.outputs.outdated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PR_NUM=$(gh pr list --repo "${{ github.repository }}" --head update-charter --base main --json number --jq '.[0].number // empty')
+          echo "::error::dev-charter is outdated (local VERSION does not match remote ${{ steps.versions.outputs.remote }})."
+          if [ -n "$PR_NUM" ]; then
+            echo "::error::An update PR is ready: #${PR_NUM}. Merge it (or apply docs/dev-charter/UPDATE_CHECKLIST.md manually), then re-run this check."
+          else
+            echo "::error::Could not find/create the update-charter PR. Run 'make update-charter' (or git subtree pull) manually."
+          fi
+          exit 1
