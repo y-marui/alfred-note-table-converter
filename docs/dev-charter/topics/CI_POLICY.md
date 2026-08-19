@@ -37,6 +37,13 @@
 - 実体のあるビルド作業がある場合は `build` job を用意し、`gate` の `needs` に含める
 - 単一job（lint/test 相当すら分けない極小プロジェクト）でも `gate` は省略しない。
   ビルド・検証の実処理をそのまま `gate` の中で行ってよい
+  - **`*-template` リポジトリ（`git subtree pull` の取り込み元ではなく、GitHub の
+    テンプレート機能や単純コピーで他プロジェクトの出発点として使われるリポジトリ）には
+    この単一job省略を適用しない。** 単一jobが許されるのは、それ自体が完結した
+    純粋に極小な**スタンドアロン**プロジェクトの場合のみ。`*-template`
+    リポジトリはそこから実プロジェクトが構築される前提のため、最初から
+    `security`/`lint`/`test`/`build`/`gate` の完全な構成にしておく方が良い出発点になる
+    （単一jobのまま複製されると、後から分割する手間を新プロジェクト側に残してしまう）
 - Ruleset設定：`Required Checks`（`gate` job の `name`）のみ指定（全リポジトリ共通）
 
 この方針により、job を増減しても Ruleset の変更が不要になる（`gate` という役割・名前が
@@ -106,7 +113,7 @@ gate:
 
 **単一job（極小プロジェクト）：** ビルド・検証の実処理を `gate`（`name: Required Checks`）の
 中に直接書く。job を分ける必要がないだけで、Ruleset に登録する名前は常に `Required Checks`
-のまま変わらない。
+のまま変わらない。**`*-template` リポジトリには適用しない**（[Job Design](#job-design)参照）。
 
 ### Cost Optimization (Path Filtering)
 
