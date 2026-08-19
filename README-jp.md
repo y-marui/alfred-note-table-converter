@@ -121,6 +121,7 @@ name: Dev Charter
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
@@ -128,7 +129,7 @@ on:
 jobs:
   check:
     name: Check
-    if: github.actor != 'dependabot[bot]'
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
     permissions:
       contents: write
@@ -139,6 +140,10 @@ jobs:
 > **Note:** dependabot が作成した PR ではスキップされます（依存関係更新だけが動いている間はチェック不要という判断）。
 > repo が完全に静止している間はチェックが走らないため、活動に関わらず定期的に確認したい場合は
 > 上記に加えて低頻度の `schedule`（例：月1回）を併用してください。
+
+> **Note:** Draft PR ではスキップされます（draft はそもそもマージできないため、チェックが
+> 未報告のままでもリスクがない）。`on.pull_request.types` の `ready_for_review` により、
+> draft を解除した際は改めて実行されます。
 
 > **Note:** Branch Protection で direct push が禁止されている場合は、
 > GitHub Actions bot の bypass rule を追加してください

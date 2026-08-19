@@ -1,5 +1,11 @@
 # CI Policy
 
+> **TODO（暫定メモ、2026-08-19）:** `swift-closed-template` の `ci.yml` の `on:` に
+> `develop` ブランチへの参照が残っているが、`develop` ブランチ運用は既にやめており
+> （現存せず、`DEVELOPING.md` 等にも記載なし）、設定だけが取り残されている。
+> `swift-closed-template` とそこから派生した各 swift-* リポジトリの `ci.yml` から
+> 削除する。この CI ポリシー更新とは別作業として扱う。
+
 ## Naming Convention
 
 | 対象 | 規則 | 例 |
@@ -16,68 +22,220 @@
 | `security` | `Security scan (pre-commit)` | pre-commit によるシークレット検知・静的解析 |
 | `lint` | `Lint` | コードスタイル・フォーマット検査 |
 | `test` | `Test` / `Test (pytest)` など | ユニットテスト・インテグレーションテスト |
-| `build` | `Build` | 全 job の集約、ビルド成果物の生成、またはインストール可能性の検証 |
+| `build`（任意） | `Build` | ビルド成果物の生成、またはインストール可能性の検証 |
+| `gate` | `Required Checks` | 全 job の集約ゲート（後述）。必ず存在する |
 
-`build` は全 job の集約点として必ず最後に配置し、Branch Protection の必須ステータスチェックに登録する。
+`gate` は全 job の集約点として必ず最後に配置し、Branch Protection（Ruleset）の必須ステータス
+チェックには常に `Required Checks` を登録する（`Build` ではない）。job 名に `build` を
+使うのは、実際にビルド成果物を作る job（任意・実体のあるビルドがない場合は省略）だけ。
 
 ## Job Design
 
 **CIのjob構成とRuleset設定を分離し、Ruleset管理を最小化する。**
 
-- 複数jobの場合：最後に `build` jobを配置し、`needs` で全依存を定義する
-- 単一jobの場合：そのjobを `build` と命名する
-- Ruleset設定：`build` のみ指定（全リポジトリ共通）
+- 集約ゲート `gate` job を必ず最後に配置し、`needs` で全依存を定義する
+- 実体のあるビルド作業がある場合は `build` job を用意し、`gate` の `needs` に含める
+- 単一job（lint/test 相当すら分けない極小プロジェクト）でも `gate` は省略しない。
+  ビルド・検証の実処理をそのまま `gate` の中で行ってよい
+- Ruleset設定：`Required Checks`（`gate` job の `name`）のみ指定（全リポジトリ共通）
 
-この方針により、jobを追加してもRulesetの変更が不要になる。
+この方針により、job を増減しても Ruleset の変更が不要になる（`gate` という役割・名前が
+常に固定されているため）。
 
-### Job Pattern
+### `gate` Is a Gate, Not Just a `needs` Aggregation
 
-**複数job（推奨）：**
+> **注意（過去の誤り）:** 以前このドキュメントは、集約 job（当時は `build` という名前
+> だった）について「いずれかの job が失敗すると skip され、マージ不可になる」と説明して
+> いたが、これは誤り。GitHub の Ruleset / Branch Protection の `required_status_checks` は、
+> 必須チェックが **`skipped` で完了した場合はブロックしない**（`failure` の場合のみ
+> ブロックする）。集約 job が `needs: [security, lint, test]` のみで暗黙の `if: success()`
+> に依存していると、依存 job が失敗したときに集約 job 自体は `skipped` として完了し、
+> Ruleset 上は「必須チェックを満たした」と扱われて **失敗したままマージできてしまう**。
+> 2026-08 に実際の運用で発覚した。
+
+正しい実装は、`gate` を **常に実行するゲート job**（`if: always()`）にし、`needs.*.result`
+を明示的に検査して `failure`/`cancelled` があれば自身を `failure` として終了させる。
 
 ```yaml
-name: CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-jobs:
-  security:
-    name: Security scan (pre-commit)
-    # pre-commit run --all-files を実行する
-    # gitleaks 等のシークレット検知フックを含める
-    # gitleaks はフル履歴が必要なため fetch-depth: 0 を指定する
-    # ...
-
-  lint:
-    name: Lint
-    # ...
-
-  test:
-    name: Test
-    # ...
-
-  build:
-    name: Build
-    needs: [security, lint, test]
-    # ...
+gate:
+  name: Required Checks
+  needs: [security, lint, test]   # build 等があれば追加
+  if: always()
+  runs-on: ubuntu-latest   # ゲートは判定のみなので常に最安ランナーでよい
+  steps:
+    - name: Verify required jobs succeeded
+      run: |
+        for result in "${{ needs.security.result }}" "${{ needs.lint.result }}" "${{ needs.test.result }}"; do
+          if [ "$result" != "success" ]; then
+            echo "::error::a required job did not succeed (got: $result)"
+            exit 1
+          fi
+        done
 ```
 
-`build` が全jobの集約点となる。いずれかが失敗すると `build` がskipされ、マージ不可になる。
-
-**単一job：** そのjobを `build` と命名する。
-
-**ビルド成果物が存在しない場合（純粋なライブラリ等）：** `build` jobでインストール可能性を検証する。
+ビルド成果物の生成やインストール可能性の検証など、実体のあるビルド作業がある場合は、
+それを `build` job に書き、`gate` の `needs` に追加する。`gate` 自体は判定専用に保ち、
+`build`・`lint`・`test` と同じ高コストなランナー（`macos-latest` 等）で起動させない
+（[Cost Optimization](#cost-optimization-path-filtering) 参照）。
 
 ```yaml
 build:
   name: Build
   needs: [security, lint, test]
+  runs-on: macos-latest
   steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v4
     - run: pip install -e .
     - run: python -c "import mypackage"
+
+gate:
+  name: Required Checks
+  needs: [security, lint, test, build]
+  if: always()
+  runs-on: ubuntu-latest
+  steps:
+    - name: Verify required jobs succeeded
+      run: |
+        for result in "${{ needs.security.result }}" "${{ needs.lint.result }}" "${{ needs.test.result }}" "${{ needs.build.result }}"; do
+          if [ "$result" != "success" ]; then
+            echo "::error::a required job did not succeed (got: $result)"
+            exit 1
+          fi
+        done
 ```
+
+**単一job（極小プロジェクト）：** ビルド・検証の実処理を `gate`（`name: Required Checks`）の
+中に直接書く。job を分ける必要がないだけで、Ruleset に登録する名前は常に `Required Checks`
+のまま変わらない。
+
+### Cost Optimization (Path Filtering)
+
+`docs/**` や `*.md` のみの変更（例：`git subtree pull` による dev-charter 更新、README
+の修正）では、`lint`/`test`/`build` のような高コストな job（特に `macos-latest`
+等の高額ランナー）を実行する必要がない。
+
+**ワークフロー単位の `paths-ignore` は使わない。** ワークフロー自体がトリガーされないと
+必須ステータスチェックが一切報告されず、PR が `Expected — Waiting for status to be
+reported` のまま永久にブロックされる（`gate`＝`Required Checks` が Ruleset の必須チェック
+である場合）。
+
+代わりに [dorny/paths-filter](https://github.com/dorny/paths-filter) で変更内容を判定し、
+**job-level の `if:`** で `lint`/`test`/`build` をスキップする。`security`
+（pre-commit）は ubuntu-latest で安価な上、pre-commit 自身の `files:`/`types:` で
+変更ファイルに応じて各フックが自動的にスキップされるため、job 単位でのフィルタは不要。
+
+```yaml
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  changes:
+    name: Detect changes
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          predicate-quantifier: 'some-with-excludes'
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!LICENSE'
+              - '!.gitignore'
+              - '!.github/FUNDING.yml'
+              - '!.github/CODEOWNERS'
+              - '!.github/ISSUE_TEMPLATE/**'
+              - '!.github/*_TEMPLATE.md'
+              - '!.github/pull_request_template.md'
+              - '!.github/copilot-instructions.md'
+              - '!.github/workflows/dev-charter-check.yml'
+              - '!.github/workflows/auto-assign-self.yml'
+
+  security:
+    name: Security scan (pre-commit)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    # パスでのフィルタなし。pre-commit 自身が変更ファイルに応じて自動スキップする
+    # ...
+
+  lint:
+    name: Lint
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    # ...
+
+  test:
+    name: Test
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    # ...
+
+  build:
+    name: Build
+    needs: [changes, security, lint, test]
+    if: needs.changes.outputs.code == 'true'
+    # ...
+
+  gate:
+    name: Required Checks
+    needs: [changes, security, lint, test, build]
+    # draft は always() でも実行しない: draft はそもそもマージ不可なので、
+    # チェックが未報告のままでも「詰まる」リスクがない（docs-only スキップとは
+    # 違い、gate 自体を丸ごとスキップしてよい）
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required jobs succeeded
+        run: |
+          if [ "${{ needs.security.result }}" != "success" ]; then
+            echo "::error::security did not succeed (got: ${{ needs.security.result }})"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.code }}" != "true" ]; then
+            echo "docs/config-only change; nothing further to verify"
+            exit 0
+          fi
+          for result in "${{ needs.lint.result }}" "${{ needs.test.result }}" "${{ needs.build.result }}"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::a required job did not succeed (got: $result)"
+              exit 1
+            fi
+          done
+```
+
+### Draft PRs
+
+`ready_for_review` を `on.pull_request.types` に加えた上で、`changes`・`security`・`gate`
+に draft スキップの `if:` を付ける（`lint`/`test`/`build` は `changes` 経由で連鎖的に
+スキップされる）。デフォルトの `pull_request` トリガーは `opened`/`synchronize`/`reopened`
+のみで `ready_for_review` を含まないため、これを忘れると draft 解除時に再実行されず、
+古い（未評価の）ステータスのまま残ってしまう。
+
+`gate` を `if: always()` のままにせず draft でスキップしてよい理由：docs-only スキップは
+「コードが変わっていないので中身の検証は不要だが、必須チェックとしての合否報告は必要」
+（`gate` 自体は動いて `exit 0` する）。draft は「そもそも GitHub がマージを許可しない」ため、
+必須チェックが一切報告されなくてもブロック待ちにならない。よって `gate` ごとスキップできる。
+
+`.github/workflows/dev-charter-check.yml` も同様に draft をスキップする（[Version Check
+(CI)](../README.md#version-check-ci) 参照）。
+
+**依存ロックファイル（`uv.lock` / `package-lock.json` / `Package.resolved` 等）は
+skip 対象に含めない。** ロックファイルの更新は依存パッケージのバージョン変更そのものであり、
+実際に lint/test/build を回して初めて壊れていないか確認できる。Dependabot の PR を含め、
+これらの変更は常にフル CI を実行する。
+
+`Makefile` はほとんどのプロジェクトで CI から直接呼ばれない（`ci.yml` は各コマンドを直接
+実行する）ため skip 対象に含めてよいが、CI が `make` 経由でビルド・テストを呼んでいる
+プロジェクトでは対象から除外すること。
 
 ### Artifact Retention
 
@@ -103,27 +261,70 @@ Rules:
 ☑ Require a pull request before merging
   └ Required approvals: 0（個人開発）/ 1以上（複数人）
 ☑ Require status checks to pass before merging
-  └ Status checks: Build (GitHub Actions)
+  └ Status checks: Required Checks (GitHub Actions)
+  └ Status checks: Check / check (GitHub Actions)
 ☑ Require conversation resolution before merging
 ☑ Block force pushes
 ☑ Restrict deletions
 ```
+
+`Check / check` は `.github/workflows/dev-charter-check.yml` が呼び出す再利用ワークフロー
+（`check-charter.yml`）のチェック名。`ci.yml` とは別ワークフローファイルのため `gate` の
+`needs` には含められない（`needs` は同一ワークフローファイル内でしか機能しない）ので、
+Ruleset には別エントリとして登録する。
+
+このチェックは「dev-charter が最新でない」場合も **意図的に失敗する**（`update-charter` の
+draft PR を自動作成した上で `exit 1`）。schedule トリガーが無くなり `pull_request`/`push`
+イベント駆動のみになったため、成功で終わらせてしまうと更新 PR が誰にも気づかれないまま
+放置され、無関係な PR がどんどんマージされてしまう。失敗させることで「今動いている PR/push」
+の場で必ず対応を迫る。
+
+それ以外の失敗条件（リモート `VERSION` の取得失敗・ローカル `VERSION` の欠落・push や
+PR 作成時のエラー・GitHub Actions の課金ブロックなど）ももちろん失敗する。
+
+### Bypass for Billing-Blocked CI (Private Repos, Provisional)
+
+Private リポジトリは GitHub Actions の課金対象（Public リポジトリは無料）。開発リソースが
+限られる個人開発では、支払い方法・spending limit の問題で CI が丸ごと失敗し、必須チェック
+がブロックされたままになることがある（`~/.ai/AI_CONTEXT.md` の GitHub セクションに同様の
+運用メモあり：課金エラーによる CI 失敗はコード側の問題ではないため無視してよい）。
+
+暫定処置として、Private リポジトリの `main-protection` Ruleset に **Repository admin の
+bypass（PR 経由のみ）** を追加してよい（Ruleset の `bypass_actors` に以下を追加）：
+
+```json
+{
+  "actor_id": 5,
+  "actor_type": "RepositoryRole",
+  "bypass_mode": "pull_request"
+}
+```
+
+- `actor_id: 5` は Repository admin ロール（個人リポジトリでは実質オーナー本人）
+- `bypass_mode: "pull_request"` — 直接 push は引き続き禁止。PR 経由でのマージ時のみ
+  必須チェックをバイパスできる（`"always"` にはしない）
+- Public リポジトリには適用しない（CI が無料で課金ブロックが起きないため不要）
+- ローカルで `pre-commit run` 等により変更内容を確認済みの場合のみ使う。CI が本当に
+  コードの問題で落ちているときの緊急回避には使わない
+- 設定は GitHub の Settings → Rules → Rulesets（または `gh api` で既存 Ruleset 全体を
+  取得し、`bypass_actors` だけを差し替えて `PUT` する）から行う。既存フィールドを
+  壊さないよう、必ず現在の Ruleset 定義を取得してから更新すること
 
 ### Status Check Configuration
 
 Rulesetの「Require status checks to pass before merging」でチェックを追加する際は、**名前とソースの両方を正しく指定**する。
 
 **チェック名：**
-GitHub Actions のステータスチェック名は、job の **`name` フィールドの値**（`Build`）で決まる。
-job ID（`build`）ではないため注意。
+GitHub Actions のステータスチェック名は、job の **`name` フィールドの値**（`Required Checks`）
+で決まる。job ID（`gate`）ではないため注意。
 
 ```yaml
 jobs:
-  build:
-    name: Build   # ← Rulesetに登録する名前はこの値
+  gate:
+    name: Required Checks   # ← Rulesetに登録する名前はこの値
 ```
 
-job `name` を省略した場合は job ID がチェック名になる（例：`build`）。
+job `name` を省略した場合は job ID がチェック名になる（例：`gate`）。
 
 **ソース（Source）：**
 チェック名を入力後、**ソースを `GitHub Actions` に指定する**（"Any source" のままにしない）。
@@ -132,8 +333,8 @@ job `name` を省略した場合は job ID がチェック名になる（例：`
 Rulesetの設定画面では以下のように表示される：
 
 ```
-Check name:  Build
+Check name:  Required Checks
 Source:      GitHub Actions
 ```
 
-集約 job の `name` は説明を追加せず、常に `Build` とする。個別 job の表示名は必要に応じて説明を追加してよい。
+集約ゲート job の `name` は説明を追加せず、常に `Required Checks` とする。個別 job の表示名は必要に応じて説明を追加してよい。

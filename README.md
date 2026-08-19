@@ -122,6 +122,7 @@ name: Dev Charter
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
@@ -129,7 +130,7 @@ on:
 jobs:
   check:
     name: Check
-    if: github.actor != 'dependabot[bot]'
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
     permissions:
       contents: write
@@ -141,6 +142,10 @@ jobs:
 > charter check. If your repository goes fully quiet, no check will run. If you want a
 > guaranteed periodic check regardless of activity, add a low-frequency `schedule`
 > (e.g. monthly) alongside this.
+
+> **Note:** Draft PRs are skipped (a draft can't be merged anyway, so there's no risk
+> in leaving the check unreported). `ready_for_review` in `on.pull_request.types` makes
+> sure taking a PR out of draft re-triggers a real run.
 
 > **Note:** If your repository has Branch Protection rules that prevent direct pushes,
 > add a bypass rule for the GitHub Actions bot
