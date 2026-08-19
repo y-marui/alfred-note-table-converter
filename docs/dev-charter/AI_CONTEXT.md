@@ -46,9 +46,14 @@ dev-charter の本体。他プロジェクトが `git subtree` で取り込む�
 
 - **正本は日本語**。英語版（README.md）は翻訳。日本語版と英語版は同一コミットで更新する（`LANGUAGE_POLICY.md` 参照）
 - **Conventional Commits**（feat/fix/docs/chore）でコミットする
-- **コミット前に `VERSION` を今日の日付（UTC、`YYYY-MM-DD`）に更新する**。1日に複数回リリースしない（日付がバージョン識別子のため）。pre-commit フックが自動検証する
-  - ローカルの更新コマンド：`UPDATE=1 bash scripts/check-version-date.sh`（`VERSION` を UTC 日付で更新）
-  - **クラウド/エージェント環境**：ローカルの pre-commit フックが動作しない。CI の自動更新ワークフロー（`.github/workflows/update-version.yml`）が `VERSION` を自動的に更新してコミットするため、漏れた場合は CI が補完する。エージェントは可能な限り手動で VERSION を更新するのが望ましい
+- **`VERSION` は UTC の時間単位（`YYYY-MM-DDThhZ`）で管理する**。同じ日に複数回の意味のある更新が
+  あっても、時間が違えば別バージョンとして区別できる（分単位にしないのは、pre-commit フックが
+  書き込む時刻と実際の `git commit` 時刻が数秒ズレることがあり、分単位だと境界を跨いで
+  マージ時に CI が失敗するリスクがあるため）
+  - pre-commit フックが `end-of-file-fixer` と同様に**自動で書き換える**（コミット前に手動で
+    更新する必要はない。フックが未ステージの変更を作った場合は `git add VERSION` して
+    コミットし直す）
+  - **クラウド/エージェント環境**：ローカルの pre-commit フックが動作しない。CI の自動更新ワークフロー（`.github/workflows/update-version.yml`）が `VERSION` を自動的に更新してコミットするため、漏れた場合は CI が補完する。手動で更新する場合は `UPDATE=1 bash scripts/check-version-date.sh`
 - **新規ドキュメントを追加するとき**は正本の索引である `CHARTER_INDEX.md` を更新する
 - **憲章に追加できる原則・ルール**は複数の異なるプロジェクトに適用できるものに限る（1プロジェクト固有のルールは不可）
 - **dev-charter 全ドキュメントのセクションヘッダ**：日本語ドキュメントでも英語で記載する

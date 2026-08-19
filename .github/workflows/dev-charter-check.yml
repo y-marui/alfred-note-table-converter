@@ -2,6 +2,7 @@ name: Dev Charter
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
@@ -9,7 +10,7 @@ on:
 jobs:
   check:
     name: Check
-    if: github.actor != 'dependabot[bot]'
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
     permissions:
       contents: write
