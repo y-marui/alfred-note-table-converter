@@ -1,54 +1,21 @@
-# Dev Charter
+# Dev Charter (full)
 
 > **This is the reference (English) version.**
 > For the canonical (Japanese) version, see [README-jp.md](README-jp.md).
 
-[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
-[![check-charter CI](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml)
-
-Shared development charter for AI-assisted software projects.
-
-This repository defines common philosophy, architecture principles,
-and development rules used across projects.
-
-## Documents
-
-See the canonical [CHARTER_INDEX.md](CHARTER_INDEX.md) for the complete document list and topic-to-file lookup table.
-
-## How to Use
-
-1. Pull dev-charter into `docs/dev-charter/` via `git subtree`
-2. Have the AI read the charter and generate `AI_CONTEXT.md` and agent config files at the project root
-3. After charter updates, run `git subtree pull` and have the AI sync the context files
-
-See [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) for the structure spec.
-
-## Quick Install
-
-Run from your project root:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
-```
-
-On Windows PowerShell:
-
-```powershell
-irm https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.ps1 | iex
-```
-
-The script automates the git subtree setup and, if Claude Code is available,
-guides you through the initial setup (INSTALL_CHECKLIST).
-
-> **Note:** To customize the install path or branch, use environment variables:
-> `CHARTER_PREFIX=path/to/charter bash <(curl -fsSL .../install.sh)`
+The **full** variant of [dev-charter](https://github.com/y-marui/dev-charter)
+(the whole charter). Includes software-project-specific content — Python dev
+environment, UI design, monetization policy, and so on. See
+[CHARTER_INDEX.md](CHARTER_INDEX.md) for what's included. If you need a
+lighter variant for documentation-only repositories, consider the `lite`
+branch instead.
 
 ## Install (git subtree)
 
 ```
 git remote add dev-charter https://github.com/y-marui/dev-charter
 git fetch dev-charter
-git subtree add --prefix=docs/dev-charter dev-charter main --squash
+git subtree add --prefix=docs/dev-charter dev-charter full --squash
 ```
 
 After installing, paste the following prompt into your AI tool:
@@ -57,13 +24,28 @@ After installing, paste the following prompt into your AI tool:
 Run docs/dev-charter/INSTALL_CHECKLIST.md
 ```
 
+The Quick Install one-liner does the same thing:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+```
+
 ## Update
 
-If the `dev-charter` remote is not set up (e.g., after cloning the project), add it first:
+Re-running the Quick Install one-liner also works for updates — it detects
+the existing install and its branch (here, full), then runs `git subtree
+pull` for you (stashing/restoring uncommitted changes as needed, and falling
+back to a full re-sync for template-repo checkouts):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+```
+
+To update manually instead: if the `dev-charter` remote is not set up (e.g., after cloning the project), add it first:
 
 ```
 git remote add dev-charter https://github.com/y-marui/dev-charter
-git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 ```
 
 > **Note (projects created from a template repository):**
@@ -73,10 +55,10 @@ git subtree pull --prefix=docs/dev-charter dev-charter main --squash
 > ```bash
 > git remote add dev-charter https://github.com/y-marui/dev-charter || true
 > git fetch dev-charter
-> SPLIT=$(git rev-parse dev-charter/main)
+> SPLIT=$(git rev-parse dev-charter/full)
 > rm -rf docs/dev-charter/
 > mkdir -p docs/dev-charter/
-> git archive dev-charter/main | tar -x -C docs/dev-charter/
+> git archive dev-charter/full | tar -x -C docs/dev-charter/
 > git add docs/dev-charter/
 > git commit -m "Squashed 'docs/dev-charter/' content from commit ${SPLIT}
 >
@@ -88,26 +70,6 @@ After updating, paste the following prompt into your AI tool:
 
 ```
 Run docs/dev-charter/UPDATE_CHECKLIST.md
-```
-
-## Makefile helper
-
-`git subtree pull` fails if the working tree has uncommitted changes, so this
-target automatically stashes before running and pops afterward.
-
-```
-.PHONY: update-charter
-update-charter:
-	git remote | grep -q '^dev-charter$$' || \
-	  git remote add dev-charter https://github.com/y-marui/dev-charter
-	git fetch dev-charter
-	@STASHED=0; \
-	if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$$(git ls-files --others --exclude-standard)" ]; then \
-		git stash push -u -m "update-charter"; \
-		STASHED=1; \
-	fi; \
-	git subtree pull --prefix=docs/dev-charter dev-charter main --squash; \
-	if [ "$$STASHED" = "1" ]; then git stash pop; fi
 ```
 
 ## Version Check (CI)
@@ -136,7 +98,34 @@ jobs:
       contents: write
       pull-requests: write
       actions: read
+
+  gate:
+    name: Dev Charter
+    needs: [check]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify dev-charter check did not fail
+        run: |
+          result="${{ needs.check.result }}"
+          if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+            echo "::error::dev-charter check did not succeed (got: $result)"
+            exit 1
+          fi
+          echo "check result: $result (skipped is fine — draft or dependabot)"
 ```
+
+full is this workflow's default `branch` input, so you don't need to set
+`with: branch: full` explicitly.
+
+> **Note:** `check` is skipped for Dependabot PRs and draft PRs (see below). `gate`
+> treats a `skipped` result as fine in both cases and always reports a `Dev Charter`
+> status (matching this workflow's own `name:`). Register `Dev Charter` — not `Check /
+> check` — as the required status check in Branch Protection (Ruleset); see
+> [CI_POLICY.md's Ruleset section](topics/CI_POLICY.md#branch-protection-ruleset).
+> Registering the `check` job itself is unsafe: when it's skipped, the `Check / check`
+> context is never reported at all, so the PR sits at "Expected — Waiting for status to
+> be reported" forever.
 
 > **Note:** Dependabot PRs are skipped — dependency-only activity doesn't warrant a
 > charter check. If your repository goes fully quiet, no check will run. If you want a
@@ -151,13 +140,32 @@ jobs:
 > add a bypass rule for the GitHub Actions bot
 > (Settings > Rules > Rulesets > Bypass list > GitHub Actions).
 
+## Makefile helper
+
+`git subtree pull` fails if the working tree has uncommitted changes, so this
+target automatically stashes before running and pops afterward.
+
+This target doesn't need to remember whether you installed `full` or `lite`
+(or another distribution branch added later). It auto-detects the installed
+branch every time from the existing `docs/dev-charter/CHARTER_INDEX.md`'s
+`# Charter Index (<branch>)` marker (generated by `scripts/publish-branch.sh`;
+absence of a marker means `full`), which prevents the accident of updating a
+full install with lite or vice versa.
+
+```
+.PHONY: update-charter
+update-charter:
+	CHARTER_UPDATE_ONLY=1 bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+```
+
+`CHARTER_UPDATE_ONLY=1` means that if this target is ever run before
+anything is installed, it won't silently install `full` — it asks which
+branch you want instead (or errors out with guidance in a non-interactive
+environment).
+
 ## Badge for Adopting Projects
 
 Place this badge in your project README to show dev-charter update health.
-
-### Workflow Status Badge
-
-Shows whether dev-charter is up to date.
 
 ```markdown
 [![Charter Check](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml)

@@ -88,6 +88,20 @@ repos:
         entry: scripts/check-version-date.sh
         pass_filenames: false
         always_run: true
+
+  # ----------------------------------------------------------------
+  # charter manifest check
+  # (every file listed in src/CHARTER_INDEX.md must be tagged in
+  # scripts/charter-manifest.txt for the distribution branches)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-manifest
+        name: Check charter manifest
+        language: script
+        entry: scripts/check-charter-manifest.sh
+        pass_filenames: false
+        always_run: true
   # END DEV-CHARTER ONLY
 
   # ----------------------------------------------------------------
@@ -104,6 +118,21 @@ repos:
         always_run: true
 
   # ----------------------------------------------------------------
+  # Block direct edits under the installed dev-charter subtree
+  # (only `git subtree add`/`pull --squash` may touch it; those bypass
+  # commit hooks entirely, so anything this hook sees staged under the
+  # prefix is a direct edit)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-subtree-edit
+        name: Block direct edits under dev-charter subtree
+        language: script
+        entry: scripts/check-charter-subtree-edit.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
   # Charter CI template check
   # (blocks if .github/workflows/dev-charter-check.yml drifted from the
   # template documented in the installed dev-charter's README-jp.md)
@@ -116,6 +145,112 @@ repos:
         entry: scripts/check-charter-ci-template.sh
         pass_filenames: false
         always_run: true
+
+  # ----------------------------------------------------------------
+  # Language pair sync (LANGUAGE_POLICY.md)
+  # (blocks if a <name>-jp.<ext> / <name>.<ext> pair is edited on only
+  # one side while the other side already exists in the repo)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-language-pair-sync
+        name: Check language pair sync
+        language: script
+        entry: scripts/check-language-pair-sync.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # LICENSE file exists (LEGAL_POLICY.md)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-license-exists
+        name: Check LICENSE file exists
+        language: script
+        entry: scripts/check-license-exists.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # .env.example / .gitignore consistency (SECURITY_POLICY.md)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-dotenv-gitignore
+        name: Check .env.example / .gitignore consistency
+        language: script
+        entry: scripts/check-dotenv-gitignore.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Language pair header/footer (LANGUAGE_POLICY.md)
+  # (checks canonical/reference declarations and edit-rule footers on
+  # <name>-jp.<ext> / <name>.<ext> pairs; keyword-based, not exact match)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-language-pair-footer
+        name: Check language pair header/footer
+        language: script
+        entry: scripts/check-language-pair-footer.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # AI_CONTEXT.md reference (AI_TOOL_SETUP.md)
+  # (CLAUDE.md/GEMINI.md/AGENTS.md/.github/copilot-instructions.md must
+  # reference AI_CONTEXT.md when it exists)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-ai-context-reference
+        name: Check AI_CONTEXT.md reference
+        language: script
+        entry: scripts/check-ai-context-reference.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Python package management (topics/PYTHON_DEV_ENV.md)
+  # (blocks requirements.txt / missing uv.lock when pyproject.toml exists)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-python-package-management
+        name: Check Python package management
+        language: script
+        entry: scripts/check-python-package-management.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # README/LICENSE/FUNDING placeholders (topics/PROJECT_README_GUIDELINES.md)
+  # (template repos with README_TEMPLATE.md are exempt)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-readme-placeholders
+        name: Check README/LICENSE/FUNDING placeholders
+        language: script
+        entry: scripts/check-readme-placeholders.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Conventional Commits message format (PROJECT_LIFECYCLE.md)
+  # (commit-msg stage: requires `pre-commit install --hook-type
+  # commit-msg` in addition to the default pre-commit stage install —
+  # see SECURITY_POLICY.md Setup Steps for the core.hooksPath caveat)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-conventional-commit
+        name: Check conventional commit message
+        language: script
+        entry: scripts/check-conventional-commit.sh
+        stages: [commit-msg]
 
   # ----------------------------------------------------------------
   # Markdown section headings
@@ -173,4 +308,10 @@ repos:
           pwsh -NoProfile -NonInteractive -File scripts/check-powershell-lint.ps1 "$@"
           ' --
         files: '\.ps1$'
+        # Adopting projects install this subtree read-only (see
+        # check-charter-subtree-edit.sh); its own scripts/*.ps1 aren't
+        # something the adopter can fix, so skip them by default. Assumes
+        # the default CHARTER_PREFIX (docs/dev-charter) — adjust this
+        # pattern if installed elsewhere.
+        exclude: '^docs/dev-charter/'
         require_serial: true
