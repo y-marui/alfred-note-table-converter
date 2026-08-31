@@ -28,7 +28,7 @@ class ApiClient:
     """Minimal HTTP client using stdlib urllib (no third-party deps).
 
     For complex APIs, replace urllib with ``requests`` or ``httpx``
-    and add them to requirements.txt.
+    and add them to vendor-requirements.txt.
     """
 
     def __init__(self, base_url: str = _BASE_URL, timeout: float = 5.0) -> None:

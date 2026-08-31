@@ -104,7 +104,7 @@ At build time (`make build`):
 ├── src/              ← copied from repo src/
 │   ├── alfred/
 │   └── app/
-└── vendor/           ← pip install -r requirements.txt -t vendor/
+└── vendor/           ← pip install -r vendor-requirements.txt -t vendor/
 ```
 
 The entire `.build/` directory is zipped to `dist/<name>-<version>.alfredworkflow`.
