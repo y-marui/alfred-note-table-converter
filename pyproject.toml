@@ -5,7 +5,7 @@ description = "Alfred Workflow development template"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-# Runtime dependencies - also add to requirements.txt for vendor install
+# Runtime dependencies - also add to vendor-requirements.txt for vendor install
 dependencies = []
 
 [project.urls]

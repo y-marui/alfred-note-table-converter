@@ -23,11 +23,17 @@
 | `lint` | `Lint` | コードスタイル・フォーマット検査 |
 | `test` | `Test` / `Test (pytest)` など | ユニットテスト・インテグレーションテスト |
 | `build`（任意） | `Build` | ビルド成果物の生成、またはインストール可能性の検証 |
-| `gate` | `Required Checks` | 全 job の集約ゲート（後述）。必ず存在する |
+| `gate` | ワークフロー自身の `name`（例：`CI`、`Dev Charter`） | 全 job の集約ゲート（後述）。必ず存在する |
 
-`gate` は全 job の集約点として必ず最後に配置し、Branch Protection（Ruleset）の必須ステータス
-チェックには常に `Required Checks` を登録する（`Build` ではない）。job 名に `build` を
-使うのは、実際にビルド成果物を作る job（任意・実体のあるビルドがない場合は省略）だけ。
+`gate` は全 job の集約点として必ず最後に配置し、その `name` はワークフロー自身の `name`
+（トップレベルの `name:`）と同じ文字列にする。Branch Protection（Ruleset）の必須ステータス
+チェックには常にこの値（例：`ci.yml` なら `CI`）を登録する（`Build` ではない）。job 名に
+`build` を使うのは、実際にビルド成果物を作る job（任意・実体のあるビルドがない場合は省略）だけ。
+
+1リポジトリに複数のワークフローファイルがある場合（`ci.yml` と `dev-charter-check.yml` の
+併用など）、各ワークフローの `name:` は互いに異なる値にする。`gate` の `name` をワークフロー
+自身の `name` と一致させる規則により、複数の `gate` が同じチェック名を報告して Ruleset 上で
+衝突する事態を自然に避けられる。
 
 ## Job Design
 
@@ -44,10 +50,10 @@
     リポジトリはそこから実プロジェクトが構築される前提のため、最初から
     `security`/`lint`/`test`/`build`/`gate` の完全な構成にしておく方が良い出発点になる
     （単一jobのまま複製されると、後から分割する手間を新プロジェクト側に残してしまう）
-- Ruleset設定：`Required Checks`（`gate` job の `name`）のみ指定（全リポジトリ共通）
+- Ruleset設定：ワークフロー自身の `name`（`gate` job の `name` と一致）のみ指定（全リポジトリ共通）
 
-この方針により、job を増減しても Ruleset の変更が不要になる（`gate` という役割・名前が
-常に固定されているため）。
+この方針により、job を増減しても Ruleset の変更が不要になる（`gate` の `name` はワークフロー
+自身の `name` に固定されており、job 構成の変更とは独立しているため）。
 
 ### `gate` Is a Gate, Not Just a `needs` Aggregation
 
@@ -65,7 +71,7 @@
 
 ```yaml
 gate:
-  name: Required Checks
+  name: CI   # ワークフロー自身の name: と同じ値にする
   needs: [security, lint, test]   # build 等があれば追加
   if: always()
   runs-on: ubuntu-latest   # ゲートは判定のみなので常に最安ランナーでよい
@@ -96,7 +102,7 @@ build:
     - run: python -c "import mypackage"
 
 gate:
-  name: Required Checks
+  name: CI
   needs: [security, lint, test, build]
   if: always()
   runs-on: ubuntu-latest
@@ -111,9 +117,10 @@ gate:
         done
 ```
 
-**単一job（極小プロジェクト）：** ビルド・検証の実処理を `gate`（`name: Required Checks`）の
-中に直接書く。job を分ける必要がないだけで、Ruleset に登録する名前は常に `Required Checks`
-のまま変わらない。**`*-template` リポジトリには適用しない**（[Job Design](#job-design)参照）。
+**単一job（極小プロジェクト）：** ビルド・検証の実処理を `gate`（`name` はワークフロー自身の
+`name` と同じ値、例：`CI`）の中に直接書く。job を分ける必要がないだけで、Ruleset に登録する
+名前はワークフローの `name` のまま変わらない。**`*-template` リポジトリには適用しない**
+（[Job Design](#job-design)参照）。
 
 ### Cost Optimization (Path Filtering)
 
@@ -123,8 +130,8 @@ gate:
 
 **ワークフロー単位の `paths-ignore` は使わない。** ワークフロー自体がトリガーされないと
 必須ステータスチェックが一切報告されず、PR が `Expected — Waiting for status to be
-reported` のまま永久にブロックされる（`gate`＝`Required Checks` が Ruleset の必須チェック
-である場合）。
+reported` のまま永久にブロックされる（`gate` の `name`（ワークフロー自身の `name`）が
+Ruleset の必須チェックである場合）。
 
 代わりに [dorny/paths-filter](https://github.com/dorny/paths-filter) で変更内容を判定し、
 **job-level の `if:`** で `lint`/`test`/`build` をスキップする。`security`
@@ -193,7 +200,7 @@ jobs:
     # ...
 
   gate:
-    name: Required Checks
+    name: CI
     needs: [changes, security, lint, test, build]
     # draft は always() でも実行しない: draft はそもそもマージ不可なので、
     # チェックが未報告のままでも「詰まる」リスクがない（docs-only スキップとは
@@ -268,26 +275,68 @@ Rules:
 ☑ Require a pull request before merging
   └ Required approvals: 0（個人開発）/ 1以上（複数人）
 ☑ Require status checks to pass before merging
-  └ Status checks: Required Checks (GitHub Actions)
-  └ Status checks: Check / check (GitHub Actions)
+  └ Status checks: CI (GitHub Actions)
+  └ Status checks: Dev Charter (GitHub Actions)
 ☑ Require conversation resolution before merging
 ☑ Block force pushes
 ☑ Restrict deletions
 ```
 
-`Check / check` は `.github/workflows/dev-charter-check.yml` が呼び出す再利用ワークフロー
-（`check-charter.yml`）のチェック名。`ci.yml` とは別ワークフローファイルのため `gate` の
-`needs` には含められない（`needs` は同一ワークフローファイル内でしか機能しない）ので、
-Ruleset には別エントリとして登録する。
+`Dev Charter` は `.github/workflows/dev-charter-check.yml`（[Version Check
+(CI)](../README.md#version-check-ci) 参照）の `gate` job の `name`（ワークフロー自身の
+`name: Dev Charter` と一致させたもの。[§ Naming Convention](#naming-convention)参照）。
+同ワークフローの `check` job は `.github/workflows/dev-charter-check.yml` が呼び出す
+再利用ワークフロー（`check-charter.yml`）で、Dependabot PR・draft PR では job-level の
+`if:` でスキップされる。`ci.yml` とは別ワークフローファイルのため `gate` の `needs` には
+含められない（`needs` は同一ワークフローファイル内でしか機能しない）ので、Ruleset には
+別エントリとして登録する。`ci.yml` 側の `gate`（`name: CI`）と名前が異なるため、複数
+ワークフローの `gate` を同一 Ruleset に登録しても衝突しない。
 
-このチェックは「dev-charter が最新でない」場合も **意図的に失敗する**（`update-charter` の
-draft PR を自動作成した上で `exit 1`）。schedule トリガーが無くなり `pull_request`/`push`
-イベント駆動のみになったため、成功で終わらせてしまうと更新 PR が誰にも気づかれないまま
-放置され、無関係な PR がどんどんマージされてしまう。失敗させることで「今動いている PR/push」
-の場で必ず対応を迫る。
+**`Check / check` を直接 Ruleset に登録してはいけない。** `check` は `uses:` で再利用
+ワークフローを呼ぶ job のため、GitHub は再利用ワークフロー側の job が実際に開始されて
+初めて `Check / check` という複合チェック名を生成する。job-level の `if:` が false（全
+Dependabot PR）になると再利用ワークフローが一度も呼ばれず、`Check / check` というコンテ
+キスト自体が `skipped` としてすら報告されない。Ruleset は `Check / check` が報告される
+のを待ち続け、該当 PR は `Expected — Waiting for status to be reported` のまま永久に
+ブロックされる（`gate` の `needs` を欠いた集約 job が `skipped` を `success` 扱いされる
+[§ `gate` Is a Gate, Not Just a `needs` Aggregation](#gate-is-a-gate-not-just-a-needs-aggregation)
+とは逆に、こちらは「単独 job をそのまま Ruleset に登録すると `skipped` が一切報告されない」
+という別種の罠）。`gate` job（普通の job のため `check` の実行有無に関わらず必ず自身の
+チェック名を報告する）を挟み、`needs.check.result` を検査して `skipped` は成功扱い、
+`failure`/`cancelled` のみ失敗させることで回避する（実装は [Version Check
+(CI)](../README.md#version-check-ci) のテンプレート参照。2026-08 に実際に発覚・修正、
+詳細は [Issue #81](https://github.com/y-marui/dev-charter/issues/81)）。
+
+`check` job（`check-charter.yml`）自体は「dev-charter が最新でない」場合も **意図的に
+失敗する**（`update-charter` の draft PR を自動作成した上で `exit 1`）。schedule トリガー
+が無くなり `pull_request`/`push` イベント駆動のみになったため、成功で終わらせてしまうと
+更新 PR が誰にも気づかれないまま放置され、無関係な PR がどんどんマージされてしまう。失敗
+させることで「今動いている PR/push」の場で必ず対応を迫る。`gate` はこの `failure` を
+そのまま自身の失敗として伝播するため、Ruleset 上のブロック効果は維持される。
 
 それ以外の失敗条件（リモート `VERSION` の取得失敗・ローカル `VERSION` の欠落・push や
 PR 作成時のエラー・GitHub Actions の課金ブロックなど）ももちろん失敗する。
+
+### Epic Branch Ruleset
+
+複数ステップ・sub-issue を持つ大規模な改修用の `epic/<name>` ブランチ（[PROJECT_LIFECYCLE.md](../PROJECT_LIFECYCLE.md) の Branch Strategy 参照）にも、パターンマッチで `main-protection` と同じRulesetを適用する：
+
+```
+Name: epic-protection
+Target: epic/*
+Enforcement: Active
+
+Rules:
+☑ Require a pull request before merging
+  └ Required approvals: 0（個人開発）/ 1以上（複数人）
+☑ Require status checks to pass before merging
+  └ Status checks: CI (GitHub Actions)
+☑ Require conversation resolution before merging
+☑ Block force pushes
+☑ Restrict deletions
+```
+
+`epic/<name>` から `main` へのPRには、通常どおり `main-protection` のRulesetがそのまま適用される。
 
 ### Bypass for Billing-Blocked CI (Private Repos, Provisional)
 
@@ -322,13 +371,15 @@ bypass（PR 経由のみ）** を追加してよい（Ruleset の `bypass_actors
 Rulesetの「Require status checks to pass before merging」でチェックを追加する際は、**名前とソースの両方を正しく指定**する。
 
 **チェック名：**
-GitHub Actions のステータスチェック名は、job の **`name` フィールドの値**（`Required Checks`）
-で決まる。job ID（`gate`）ではないため注意。
+GitHub Actions のステータスチェック名は、job の **`name` フィールドの値**（`gate` の場合、
+ワークフロー自身の `name:` と同じ値。例：`CI`）で決まる。job ID（`gate`）ではないため注意。
 
 ```yaml
+name: CI   # ワークフロー自身の name:
+
 jobs:
   gate:
-    name: Required Checks   # ← Rulesetに登録する名前はこの値
+    name: CI   # ← Rulesetに登録する名前はこの値。ワークフローの name: と一致させる
 ```
 
 job `name` を省略した場合は job ID がチェック名になる（例：`gate`）。
@@ -340,8 +391,8 @@ job `name` を省略した場合は job ID がチェック名になる（例：`
 Rulesetの設定画面では以下のように表示される：
 
 ```
-Check name:  Required Checks
+Check name:  CI
 Source:      GitHub Actions
 ```
 
-集約ゲート job の `name` は説明を追加せず、常に `Required Checks` とする。個別 job の表示名は必要に応じて説明を追加してよい。
+集約ゲート job の `name` は説明を追加せず、常にそのワークフロー自身の `name:` と同じ値にする。個別 job の表示名は必要に応じて説明を追加してよい。

@@ -71,7 +71,7 @@ router.register("my")(my_cmd.handle)
 
 ## Adding a third-party dependency
 
-1. Add to `requirements.txt`
+1. Add to `vendor-requirements.txt`
 2. Run `make vendor`
 3. Import in your code — the vendor path is added by `entry.py`
 

@@ -26,6 +26,9 @@
 - .github/workflows/check-charter.yml      → 呼び出し側の .github/workflows/dev-charter-check.yml を同期し、permissions を含む呼び出し条件を確認
 - README.md / README-jp.md の Version Check (CI) → 記載例と呼び出し側ワークフローを同期（旧名 .github/workflows/check-charter.yml も確認）
 - SECURITY_POLICY.md                       → セキュリティフック・スキャン設定を確認
+- docs/dev-charter/scripts/*.sh（SECURITY_POLICY.md の Setup Steps に従って
+  scripts/ へコピー済みの場合）→ 変更されたファイルを再コピーして同期する
+  （`cp docs/dev-charter/scripts/<ファイル名>.sh scripts/`）
 - LEGAL_POLICY.md                          → ライセンスファイルを確認
 - その他のポリシーファイル                  → 内容に変更があれば AI コンテキストを更新
 
@@ -59,6 +62,9 @@ Common areas affected by file:
 - .github/workflows/check-charter.yml       → synchronize the caller .github/workflows/dev-charter-check.yml and verify caller requirements, including permissions
 - Version Check (CI) in README.md / README-jp.md → synchronize the documented example with the caller workflow (also check the legacy .github/workflows/check-charter.yml name)
 - SECURITY_POLICY.md                        → review security hook and scan configuration
+- docs/dev-charter/scripts/*.sh (if copied into your own scripts/ per
+  SECURITY_POLICY.md Setup Steps) → re-copy the changed file(s) to keep your
+  scripts/ in sync (`cp docs/dev-charter/scripts/<file>.sh scripts/`)
 - LEGAL_POLICY.md                           → verify license files
 - Other policy files                        → update AI context if the policy changed meaningfully
 
