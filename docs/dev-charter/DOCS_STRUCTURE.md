@@ -83,6 +83,8 @@ AI ツール設定ファイルの詳細な構成仕様（セクション定義�
 
 プロジェクト内の `docs/` ディレクトリに配置する標準ファイルを定める。
 
+`docs/` は「現在こうなっている」という恒久的な情報のみを扱う。TODO・バックログ・スプリント計画・ロードマップ等の一時的な情報は含めず、GitHub の Issues/Sub-issues/Milestones/Projects (v2) で管理する（[topics/GITHUB_PROJECT_MANAGEMENT.md](topics/GITHUB_PROJECT_MANAGEMENT.md) 参照）。
+
 ### Common Files
 
 | ファイル | 内容 |

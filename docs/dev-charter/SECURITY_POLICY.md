@@ -49,6 +49,15 @@ git config hooks.skip-policy-check true
 | Markdown の H2〜H6 に日本語を使用 | 層2 | セクションヘッダ言語の統一 |
 | ローカル `../dev-charter` チェックアウトより古い dev-charter のままコミット | 層2 | dev-charter 追従漏れの防止 |
 | `.github/workflows/dev-charter-check.yml` が README の CI テンプレートと不一致のままコミット | 層2 | 採用先 CI 設定の追従漏れの防止 |
+| `docs/dev-charter/` 配下の直接編集（`git subtree pull` 以外の変更） | 層2（ローカルのみ。CI の `pre-commit run --all-files` はステージ済み差分が空になるため未対応） | INSTALL_CHECKLIST.md の遵守 |
+| `<name>-jp.<ext>` / `<name>.<ext>` ペアの片側のみ更新 | 層2（ローカルのみ。理由は上記と同様） | LANGUAGE_POLICY.md の日英同時更新ルールの遵守 |
+| `LICENSE` ファイルの欠如 | 層2 | LEGAL_POLICY.md の遵守（ライセンスなし公開の防止） |
+| `.env.example`/`.env.sample`/`.env.template` があるのに `.gitignore` が `.env` を無視していない | 層2 | `.env` 誤コミットの一次防御 |
+| コミットメッセージが Conventional Commits 形式でない | 層2（commit-msg ステージ。`core.hooksPath` 使用時は個人の dotfiles 側の追加対応が無い限り機能しない） | PROJECT_LIFECYCLE.md の遵守 |
+| 日英ペアドキュメントの冒頭宣言・末尾フッターの欠如 | 層2 | LANGUAGE_POLICY.md の遵守 |
+| `AI_CONTEXT.md` があるのに `CLAUDE.md`/`GEMINI.md`/`AGENTS.md`/`.github/copilot-instructions.md` がそれを参照していない | 層2 | AI_TOOL_SETUP.md の遵守 |
+| `pyproject.toml` があるのに `requirements.txt` が存在する、または `uv.lock` が無い | 層2 | topics/PYTHON_DEV_ENV.md の遵守 |
+| `LICENSE`/`.github/FUNDING.yml`/`README` にプレースホルダ（`[YEAR]` 等）が残っている | 層2（テンプレートリポジトリ自体は対象外） | topics/PROJECT_README_GUIDELINES.md の遵守 |
 
 `.env` の正しい扱い方：`.env` は絶対にコミットしない。ダミー値のみを含む `.env.example` をコミットする。
 
@@ -84,6 +93,14 @@ API_KEY=your-api-key-here
 
 ## Setup Steps
 
+> **lite 版を導入している場合**：以下の手順が取り込む `.gitleaks.toml` /
+> `scripts/*.sh` / `.pre-commit-config.yaml` は `lite` ブランチには含まれない
+> （`scripts/publish-branch.sh` は full ブランチにのみこれらを同梱する）。
+> Layer 2 の自動化（pre-commit フックによるチーム強制）が必要な場合は `full`
+> 版を導入すること。lite のみを導入している場合は、本セクションの
+> 手順は実行できないため、Layer 1 の個人フックと「Manual Compliance Policy」
+> 節の手動遵守で代替する。
+
 新規リポジトリに本憲章を適用し、`.pre-commit-config.yaml` がまだ存在しない場合：
 
 ```bash
@@ -104,6 +121,24 @@ cp docs/dev-charter/scripts/check-local-charter-version.sh scripts/
 chmod +x scripts/check-local-charter-version.sh
 cp docs/dev-charter/scripts/check-charter-ci-template.sh scripts/
 chmod +x scripts/check-charter-ci-template.sh
+cp docs/dev-charter/scripts/check-charter-subtree-edit.sh scripts/
+chmod +x scripts/check-charter-subtree-edit.sh
+cp docs/dev-charter/scripts/check-language-pair-sync.sh scripts/
+chmod +x scripts/check-language-pair-sync.sh
+cp docs/dev-charter/scripts/check-license-exists.sh scripts/
+chmod +x scripts/check-license-exists.sh
+cp docs/dev-charter/scripts/check-dotenv-gitignore.sh scripts/
+chmod +x scripts/check-dotenv-gitignore.sh
+cp docs/dev-charter/scripts/check-conventional-commit.sh scripts/
+chmod +x scripts/check-conventional-commit.sh
+cp docs/dev-charter/scripts/check-language-pair-footer.sh scripts/
+chmod +x scripts/check-language-pair-footer.sh
+cp docs/dev-charter/scripts/check-ai-context-reference.sh scripts/
+chmod +x scripts/check-ai-context-reference.sh
+cp docs/dev-charter/scripts/check-python-package-management.sh scripts/
+chmod +x scripts/check-python-package-management.sh
+cp docs/dev-charter/scripts/check-readme-placeholders.sh scripts/
+chmod +x scripts/check-readme-placeholders.sh
 
 # 3. dev-charter 固有のフックを除いた設定を生成する
 awk '
@@ -113,11 +148,20 @@ awk '
 ' docs/dev-charter/.pre-commit-config.yaml > .pre-commit-config.yaml
 
 # 4. pre-commit フックをインストール
-#    core.hooksPath を使用している場合（グローバルフックが pre-commit を呼ぶ場合）は
-#    pre-commit install は不要。手順 5 で pre-commit が正しく動作することを確認する。
+#    pre-commit ステージ（大半のフック）は core.hooksPath 使用時
+#    （グローバルフックが pre-commit を呼ぶ場合）は個別インストール不要。
+#    commit-msg ステージ（check-conventional-commit）は別途
+#    `pre-commit install --hook-type commit-msg` が要る。ただし
+#    core.hooksPath 設定時は pre-commit がこのインストールを拒否する
+#    （"Cowardly refusing to install hooks with core.hooksPath set"）。
+#    その場合、commit-msg ステージのフックはグローバルフック側
+#    （例: ~/.config/git/hooks/commit-msg）で
+#    `pre-commit run --hook-stage commit-msg --commit-msg-filename "$1"`
+#    を呼ぶよう個人の dotfiles 側に別途実装しない限り機能しない
+#    （本リポジトリのスコープ外）。
 git config core.hooksPath 2>/dev/null \
-  && echo "core.hooksPath が設定されています。手順 5 に進んでください。" \
-  || pre-commit install
+  && echo "core.hooksPath が設定されています。pre-commit ステージは手順 5 で確認します。commit-msg ステージは上記コメント参照。" \
+  || { pre-commit install; pre-commit install --hook-type commit-msg; }
 
 # 5. 動作確認（core.hooksPath の有無にかかわらず必須）
 pre-commit run --all-files
@@ -130,7 +174,19 @@ CI での実行例（GitHub Actions）：
 ```yaml
 - name: Run pre-commit
   uses: pre-commit/action@v3.0.1
+  env:
+    # powershell-lint はローカル専用の補助チェック（.pre-commit-config.yaml 参照）で
+    # マージ条件には含めない。GitHub-hosted ubuntu-latest には pwsh が同梱されて
+    # おり、ローカル用の command -v pwsh ガードが効かないため、CI では明示的に
+    # スキップする。
+    SKIP: powershell-lint
 ```
+
+上記の `ci.yml` テンプレートを使わず独自に CI を構築する場合も、`pre-commit/action` を
+呼ぶステップには必ず `SKIP: powershell-lint` を設定すること。省略すると、`.ps1` が
+1つも無いプロジェクトでも `docs/dev-charter/scripts/*.ps1`（本憲章の subtree が
+持ち込むファイル）に対して GitHub-hosted ランナー上でのみ lint が走り、ローカルでは
+再現しない CI 専用の失敗になる。
 
 ---
 
@@ -143,6 +199,15 @@ CI での実行例（GitHub Actions）：
 | `scripts/check-markdown-heading-language.sh` | Markdown セクションヘッダの言語検証 |
 | `scripts/check-local-charter-version.sh` | ローカルの `../dev-charter` チェックアウトとの VERSION 差分をチェック（sibling が新しい場合はブロック、古い場合は警告） |
 | `scripts/check-charter-ci-template.sh` | `.github/workflows/dev-charter-check.yml` を README-jp.md の CI テンプレートと比較（不一致ならブロック） |
+| `scripts/check-charter-subtree-edit.sh` | `docs/dev-charter/` 配下がステージされていれば常にブロック（`git subtree add`/`pull --squash` はコミットフックを経由しないため誤検知しない） |
+| `scripts/check-language-pair-sync.sh` | `<name>-jp.<ext>` / `<name>.<ext>` ペアが片側のみステージされていればブロック |
+| `scripts/check-license-exists.sh` | リポジトリルートに `LICENSE*` が無ければブロック |
+| `scripts/check-dotenv-gitignore.sh` | `.env.example` 等があるのに `.gitignore` が `.env` を無視していなければブロック |
+| `scripts/check-conventional-commit.sh` | コミットメッセージが Conventional Commits 形式でなければブロック（commit-msg ステージ、merge/squash コミットは対象外） |
+| `scripts/check-language-pair-footer.sh` | 日英ペアドキュメントの冒頭宣言・末尾フッターの有無をキーワードベースで検証（ペアが両方存在する場合のみ） |
+| `scripts/check-ai-context-reference.sh` | `AI_CONTEXT.md` があるのに CLAUDE.md 等がそれを参照していなければブロック |
+| `scripts/check-python-package-management.sh` | `pyproject.toml` があるのに `requirements.txt` が存在する、または `uv.lock` が無ければブロック |
+| `scripts/check-readme-placeholders.sh` | `LICENSE`/`.github/FUNDING.yml`/`README` のプレースホルダ残留を検知（テンプレートリポジトリは対象外） |
 | `SECURITY_POLICY.md` | このドキュメント |
 
 ---
