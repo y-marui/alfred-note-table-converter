@@ -85,10 +85,10 @@ clean:
 # Dev Charter
 # ---------------------------------------------------------------------------
 update-charter:
-	CHARTER_UPDATE_ONLY=1 bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+	curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | CHARTER_UPDATE_ONLY=1 bash
 
 # ---------------------------------------------------------------------------
 # Alfred Workflow Notes
 # ---------------------------------------------------------------------------
 update-workflow-notes:
-	bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/alfred-workflow-template/main/scripts/install-workflow-notes.sh)
+	curl -fsSL https://raw.githubusercontent.com/y-marui/alfred-workflow-template/main/scripts/install-workflow-notes.sh | bash
