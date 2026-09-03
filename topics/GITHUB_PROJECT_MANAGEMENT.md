@@ -30,12 +30,15 @@
 
 リリース単位・締切単位で Issue/PR をグルーピングする。進捗率が自動集計されるため、`ROADMAP.md` に手動で進捗を書く必要がない。
 
+- PRを作成する際、[PROJECT_LIFECYCLE.md](../PROJECT_LIFECYCLE.md) の Git Workflow に従いリンクした関連issueに Milestone が設定済みの場合、PRにも同じ Milestone を設定する。新規に Milestone を作成するかどうかはこのルールの範囲外（都度判断する）
+
 ## Projects (v2)
 
 - ビューは Table / Board / Roadmap の3種。同じデータを用途に応じて切り替えて表示するだけで、実体の二重管理にはならない
 - カスタムフィールド（single-select・date・iteration 等）でスプリントや優先度を管理できる
 - built-in workflow で「条件一致時に自動追加」「クローズ時に自動アーカイブ」等を設定し、手動更新の漏れを防ぐ
 - 複数リポジトリを横断するロードマップが必要な場合に特に有効（Organization/User 単位で作成できる）
+- PRを作成する際、関連issueが既存の Project (v2) に含まれている場合（built-in workflow による自動追加が設定されていない限り）、PRにも同じ Project を追加する。新規に Project を作成するかどうかはこのルールの範囲外（都度判断する）
 
 ### Scale Guidance
 
