@@ -26,7 +26,7 @@ docs/dev-charter/INSTALL_CHECKLIST.md を実行して
 Quick Install のワンライナーでも同じことができる：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | bash
 ```
 
 ## Update
@@ -37,7 +37,7 @@ Quick Install のワンライナーを再実行するだけでも更新できる
 場合は完全な再同期にフォールバックする）：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | bash
 ```
 
 手動で更新する場合：`dev-charter` リモートが未設定の場合（プロジェクトを clone した直後など）は先に追加する：
@@ -51,9 +51,12 @@ git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 > GitHub テンプレートはファイルのみコピーし git 履歴を引き継がないため、`git subtree pull` は失敗します。
 > `check-charter.yml` ワークフローがこのケースを自動検出して対処します。
 > 手動で更新する場合は `git subtree pull` の代わりに以下を実行してください：
+> 作業ツリーが clean であることを確認してから実行してください（`git reset --hard HEAD` は未コミット変更を破棄します）。
 > ```bash
 > git remote add dev-charter https://github.com/y-marui/dev-charter || true
 > git fetch dev-charter
+> git reset --hard HEAD
+> git clean -fd docs/dev-charter/
 > SPLIT=$(git rev-parse dev-charter/full)
 > rm -rf docs/dev-charter/
 > mkdir -p docs/dev-charter/
@@ -152,7 +155,7 @@ full はこのワークフローの `branch` 入力の既定値なので、`with
 ```
 .PHONY: update-charter
 update-charter:
-	CHARTER_UPDATE_ONLY=1 bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+	curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | CHARTER_UPDATE_ONLY=1 bash
 ```
 
 `CHARTER_UPDATE_ONLY=1` により、万一まだ何も導入していない状態でこの

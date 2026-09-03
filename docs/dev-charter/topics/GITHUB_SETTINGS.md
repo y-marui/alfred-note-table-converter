@@ -10,6 +10,28 @@ GitHub リポジトリ設定の確認ガイド。テンプレートからプロ�
 - `gh` が使えない場合（GitHub Copilot・ブラウザ操作など）：「確認場所」の UI パスから手動で設定する
 - どちらの場合も、**設定を適用すること自体は必須**。コマンドが使えないことを理由にスキップしない
 
+## Repository Features
+
+**確認場所:** GitHub リポジトリ → Settings → General → Features
+
+### Wikis
+
+**設定値: ON（必ず有効にする）**
+
+```bash
+gh api -X PATCH repos/{owner}/{repo} -F has_wiki=true
+```
+
+### Projects
+
+**設定値: ON（必ず有効にする）**
+
+```bash
+gh api -X PATCH repos/{owner}/{repo} -F has_projects=true
+```
+
+> Issues・Discussions は本ドキュメントで統一値を定めない（プロジェクトごとに要否が異なるため）。Sponsorships は [Sponsors (FUNDING.yml)](#sponsors-fundingyml) で統一値を定めている。
+
 ## Branch Protection (Ruleset)
 
 [topics/CI_POLICY.md](CI_POLICY.md) で定義した Ruleset が正しく設定されているか確認する。
@@ -58,7 +80,7 @@ gh api -X PATCH repos/{owner}/{repo} -f delete_branch_on_merge=true
 
 ### Allow Auto-merge
 
-**設定値: ON（推奨）**
+**設定値: ON（必ず有効にする）**
 
 PR がすべてのステータスチェックを通過したとき自動マージできる機能を有効にする。Dependabot PR などの bot が作成する PR を自動処理する際に有用。
 
@@ -67,6 +89,13 @@ gh api -X PATCH repos/{owner}/{repo} -F allow_auto_merge=true
 ```
 
 > この設定を ON にしても各 PR が自動でマージされるわけではない。PR ごとに "Enable auto-merge" を選択した場合のみ自動マージが走る。
+
+> **注意:** Private リポジトリのうち、個人アカウントの通常の private リポジトリより
+> 制限が強い環境（例：private Organization が所有する private リポジトリの fork）
+> では、この設定が API 経由で `true` にならないことがある（エラーは返らず黙って
+> `false` のまま）。[main-protection Ruleset](#branch-protection-ruleset)と同様の
+> プラン・権限制限が疑われるが未確認。該当する場合は無理に追わず、既知の制限として
+> 記録だけして先送りしてよい。
 
 ## Actions: Workflow permissions
 
@@ -98,6 +127,50 @@ gh api -X PUT repos/{owner}/{repo}/actions/permissions/workflow \
 ```
 
 > このチェックボックスはリポジトリ作成時にデフォルトで OFF。`check-charter.yml` を導入する際は必ず ON になっているか確認すること。
+
+## Actions: Allowed Actions and Reusable Workflows
+
+**確認場所:** GitHub リポジトリ → Settings → Actions → General → Actions permissions
+
+**設定値:** `Allow y-marui, and select non-y-marui, actions and reusable workflows`
+（API では `allowed_actions: "selected"`）にする。デフォルトの `Allow all actions and
+reusable workflows` のままにせず、そのリポジトリの `.github/workflows/*.yml` が実際に
+使う非 `actions/*` の Action・reusable workflow だけを明示許可する。
+
+`actions/*`（GitHub 公式所有）は `github_owned_allowed: true` で自動的に許可されるため
+個別指定は不要。`y-marui/*` の Action・reusable workflow（同一オーナーの別リポジトリ）は
+`github_owned_allowed`ではカバーされないため、`patterns_allowed` へ明示的に列挙する。
+
+```bash
+gh api --method PUT repos/{owner}/{repo}/actions/permissions \
+  -F enabled=true -f allowed_actions=selected
+
+gh api --method PUT repos/{owner}/{repo}/actions/permissions/selected-actions \
+  --input - <<'EOF'
+{
+  "github_owned_allowed": true,
+  "verified_allowed": false,
+  "patterns_allowed": [
+    "dorny/paths-filter@v4",
+    "pre-commit/action@v3.0.1",
+    "astral-sh/setup-uv@v10.0.1",
+    "y-marui/dev-charter/.github/workflows/check-charter.yml@main"
+  ]
+}
+EOF
+```
+
+`patterns_allowed` の内容はリポジトリごとに異なる。全ワークフローファイルの `uses:` 行から
+`actions/*` 以外（`dorny/paths-filter`・`pre-commit/action`・`astral-sh/setup-uv`・
+`softprops/action-gh-release`・`y-marui/dev-charter` の reusable workflow など、実際に
+使っているものだけ）を集めて列挙する。
+
+> **重要な運用上の注意:** ワークフローに新しい非 `actions/*` Action を追加したら、**push
+> する前に** `patterns_allowed` へそのAction（`owner/repo@ref` の形）を追加すること。許可
+> リストの更新より先に push すると、そのワークフロー実行全体が `startup_failure`（ジョブの
+> エラーではなく「ワークフローファイルの問題」とだけ報告され、原因が分かりにくい）になる。
+> 既存の失敗した実行は再実行（rerun）できないため、許可リストを直してから空コミット等で
+> 改めて push し直す必要がある。
 
 ## PR Review Assignment (CODEOWNERS)
 
@@ -199,12 +272,12 @@ gh api -X PATCH repos/{owner}/{repo} \
 
 ## Sponsors (FUNDING.yml)
 
-GitHub Sponsors の設定状態はリポジトリの種別（テンプレート / プロジェクト）によって異なる。
+GitHub Sponsors の設定状態はリポジトリの種別（テンプレート / プロジェクト）によって異なる。**public/private の可視性は判定に関係しない**（private リポジトリでは Sponsor ボタン自体が外部に見えないが、設定値は同じ基準で ON にする）。
 
 | リポジトリ種別 | Features: Sponsorships | `.github/FUNDING.yml` の状態 | Sponsor ボタン |
 |---|---|---|---|
 | テンプレートリポジトリ | OFF | `[USERNAME]` プレースホルダーのまま | 非表示（意図的） |
-| プロジェクトリポジトリ | ON | 実際のユーザー名に置換済み | 表示される |
+| プロジェクトリポジトリ（public/private 問わず） | ON | 実際のユーザー名に置換済み | public では表示される（private では非表示） |
 
 ### Template Repository
 
@@ -218,6 +291,25 @@ GitHub Sponsors の設定状態はリポジトリの種別（テンプレート 
 **1. GitHub リポジトリ設定で Sponsorships を有効化**
 
 Settings → Features → Sponsorships にチェックを入れる。
+
+> **注意（AI 向け）:** この設定は REST API の `PATCH repos/{owner}/{repo}` に `has_sponsorships` のような
+> フィールドとして存在しない（`gh api -X PATCH ... -F has_sponsorships=true` は指定したこと自体は成功する
+> ように見えるが値が反映されない silent no-op になる）。GraphQL の `updateRepository` mutation の
+> `hasSponsorshipsEnabled` を使う。
+
+```bash
+REPO_ID=$(gh api graphql -f query='
+  query($owner:String!, $name:String!) {
+    repository(owner:$owner, name:$name) { id }
+  }' -f owner={owner} -f name={repo} -q '.data.repository.id')
+
+gh api graphql -f query='
+  mutation($id:ID!) {
+    updateRepository(input:{repositoryId:$id, hasSponsorshipsEnabled:true}) {
+      repository { hasSponsorshipsEnabled }
+    }
+  }' -f id="$REPO_ID"
+```
 
 **2. FUNDING.yml のプレースホルダーを置換**
 

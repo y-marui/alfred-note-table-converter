@@ -27,7 +27,7 @@ Run docs/dev-charter/INSTALL_CHECKLIST.md
 The Quick Install one-liner does the same thing:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | bash
 ```
 
 ## Update
@@ -38,7 +38,7 @@ pull` for you (stashing/restoring uncommitted changes as needed, and falling
 back to a full re-sync for template-repo checkouts):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | bash
 ```
 
 To update manually instead: if the `dev-charter` remote is not set up (e.g., after cloning the project), add it first:
@@ -52,9 +52,12 @@ git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 > GitHub templates copy files only — git history is not carried over — so `git subtree pull` will fail.
 > The `check-charter.yml` workflow detects this automatically and handles it.
 > For manual updates, use the following instead of `git subtree pull`:
+> Make sure the working tree is clean first (`git reset --hard HEAD` discards uncommitted changes).
 > ```bash
 > git remote add dev-charter https://github.com/y-marui/dev-charter || true
 > git fetch dev-charter
+> git reset --hard HEAD
+> git clean -fd docs/dev-charter/
 > SPLIT=$(git rev-parse dev-charter/full)
 > rm -rf docs/dev-charter/
 > mkdir -p docs/dev-charter/
@@ -155,7 +158,7 @@ full install with lite or vice versa.
 ```
 .PHONY: update-charter
 update-charter:
-	CHARTER_UPDATE_ONLY=1 bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+	curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | CHARTER_UPDATE_ONLY=1 bash
 ```
 
 `CHARTER_UPDATE_ONLY=1` means that if this target is ever run before

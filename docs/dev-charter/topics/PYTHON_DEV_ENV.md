@@ -102,14 +102,18 @@ testpaths = ["tests"]
 
 ## CI Integration
 
-`CI_POLICY.md` の job 構成に従い、以下を配置する：
+`CI_POLICY.md` の job 構成に従い、以下を配置する。`test` job の
+`strategy.matrix.python-version` 以外では、Pythonバージョンをリテラルで pin しない
+（`.python-version` を単一の情報源とする）。`actions/setup-python` を使う job
+（`security` 等）では、`python-version: "X.Y"` ではなく
+`python-version-file: ".python-version"` を指定する。
 
 ```yaml
 lint:
   name: Lint
   steps:
     - uses: actions/checkout@v7
-    - uses: astral-sh/setup-uv@v8
+    - uses: astral-sh/setup-uv@v10
     - run: uv sync --frozen
     - run: uv run ruff check .
     - run: uv run ruff format --check .
@@ -122,7 +126,9 @@ test:
       python-version: ["3.11", "3.12", "3.13", "3.14"]  # EOLまで6ヶ月以上あるバージョン
   steps:
     - uses: actions/checkout@v7
-    - uses: astral-sh/setup-uv@v8
+    - uses: astral-sh/setup-uv@v10
+      with:
+        python-version: ${{ matrix.python-version }}
     - run: uv sync --frozen
     - run: uv run pytest
 ```
