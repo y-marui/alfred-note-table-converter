@@ -17,21 +17,23 @@ dev-charter の各ドキュメントへのインデックス。
 | CLAUDE.md・GEMINI.md・AGENTS.md・AI_CONTEXT.md の構成方法 | `AI_TOOL_SETUP.md` |
 | コードコメントの書き方、スタイルガイド | `CODE_STYLE.md` |
 | docs/ 構成、file-map.md、architecture.md、AI_CONTEXT.md 参照順、CONTRIBUTING.md | `DOCS_STRUCTURE.md` |
-| dev-charter の初回導入手順 | `INSTALL_CHECKLIST.md` |
+| dev-charter の初回導入手順（full版） | `INSTALL_CHECKLIST.md` |
 | 言語選択（日本語・英語）、ドキュメントの正本、セクションヘッダ言語 | `LANGUAGE_POLICY.md` |
 | ライセンス選択（MIT・GPL・AGPL・CC）、著作権表記 | `LEGAL_POLICY.md` |
 | アプリの対応言語、ローカライズ方針 | `LOCALIZATION_POLICY.md` |
 | 収益化、App Store、GitHub Sponsors、Buy Me a Coffee | `MONETIZATION_POLICY.md` |
-| 設計哲学、YAGNI、DRY、依存最小化、スモールツール、ローカルファースト、オフライン | `PRINCIPLES.md` |
+| 変更設計の原則、YAGNI、DRY、既存パターンの踏襲、TODO管理 | `PRINCIPLES.md` |
 | チーム構成、git ワークフロー、Conventional Commits、ブランチ戦略、epic ブランチ、Draft PR、main の安定性 | `PROJECT_LIFECYCLE.md` |
 | シークレット管理、git フック、pre-commit、セキュリティ設定 | `SECURITY_POLICY.md` |
 | UI デザイン、カラーパレット、ダークモード、アイコン（SF Symbols・Material Symbols） | `UI_GUIDELINES.md` |
-| dev-charter の更新手順（subtree pull 後） | `UPDATE_CHECKLIST.md` |
-| GitHub Actions、CI ジョブ設計、ステータスチェック、Branch Protection | `topics/CI_POLICY.md` |
+| dev-charter の更新手順（subtree pull 後、full版） | `UPDATE_CHECKLIST.md` |
+| GitHub Actions、CI ジョブ設計、ステータスチェック、Branch Protection（full版） | `topics/CI_POLICY.md` |
 | OSS コントリビューション、Issue テンプレート、PR テンプレート、準 CLA | `topics/GITHUB_CONTRIBUTING.md` |
+| issue/PRテンプレート（lite版）、個人開発、チェックリスト | `topics/GITHUB_ISSUE_PR_TEMPLATES.md` |
 | TODO・バックログ・ロードマップ管理、Issues、Sub-issues、Milestones、Projects (v2) | `topics/GITHUB_PROJECT_MANAGEMENT.md` |
-| GitHub リポジトリ設定、Ruleset、Dependabot、FUNDING.yml | `topics/GITHUB_SETTINGS.md` |
+| GitHub リポジトリ設定、Ruleset、Dependabot、FUNDING.yml（full版） | `topics/GITHUB_SETTINGS.md` |
 | README の構成（テンプレートから作成したプロジェクト用） | `topics/PROJECT_README_GUIDELINES.md` |
 | Python CLI、typer、pydantic-settings、XDG 設定ファイル | `topics/PYTHON_CLI.md` |
 | Python 開発環境、pyenv、uv、ruff、mypy、pytest、py.typed、PEP 561 | `topics/PYTHON_DEV_ENV.md` |
+| 設計哲学、依存最小化、スモールツール、ローカルファースト、オフライン、UI | `topics/SOFTWARE_DESIGN_PRINCIPLES.md` |
 | README の構成（テンプレートリポジトリ自体の設計） | `topics/TEMPLATE_README_GUIDELINES.md` |

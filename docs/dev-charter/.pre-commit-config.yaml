@@ -76,6 +76,21 @@ repos:
             \.pre-commit-config\.yaml$
           )
 
+  # ----------------------------------------------------------------
+  # Block commits on the default branch
+  # (server-side Ruleset only stops direct pushes; this catches local
+  # commits onto main/master before that point — see CI_POLICY.md
+  # Branch Protection (Ruleset))
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-not-on-default-branch
+        name: Block commits on the default branch
+        language: script
+        entry: scripts/check-not-on-default-branch.sh
+        pass_filenames: false
+        always_run: true
+
   # BEGIN DEV-CHARTER ONLY
   # ----------------------------------------------------------------
   # VERSION date check
@@ -100,6 +115,32 @@ repos:
         name: Check charter manifest
         language: script
         entry: scripts/check-charter-manifest.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # <name>-<branch>.md variant のペア整合性チェック
+  # (variant が [full-exclude]・対応する基底ファイル・タグ重複無しを満たすか)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-variant-parity
+        name: Check branch variant parity
+        language: script
+        entry: scripts/check-variant-parity.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # lite (等) 配布ブランチからの相対リンク切れチェック
+  # (lite タグ付きファイルが full 限定ファイルへ相対リンクしていないか)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-lite-cross-references
+        name: Check lite cross-references
+        language: script
+        entry: scripts/check-lite-cross-references.sh
         pass_filenames: false
         always_run: true
   # END DEV-CHARTER ONLY
