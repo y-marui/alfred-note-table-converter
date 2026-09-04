@@ -106,6 +106,21 @@ repos:
         always_run: true
 
   # ----------------------------------------------------------------
+  # Block commits on the default branch
+  # (server-side Ruleset only stops direct pushes; this catches local
+  # commits onto main/master before that point — see CI_POLICY.md
+  # Branch Protection (Ruleset))
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-not-on-default-branch
+        name: Block commits on the default branch
+        language: script
+        entry: scripts/check-not-on-default-branch.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
   # Language pair sync (LANGUAGE_POLICY.md)
   # (blocks if a <name>-jp.<ext> / <name>.<ext> pair is edited on only
   # one side while the other side already exists in the repo)

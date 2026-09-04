@@ -46,14 +46,14 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 
 ---
 
-## Applied Charter Principles
+## Applied Charter Principles: Software Design
 
-### Basic Philosophy
 - **ローカルファースト** — Alfred ワークフローはオフラインで動作することを前提にする
 - **インフラ最小化** — サーバーレス、外部依存なし（vendor/ に完結）
 - **小さく始める** — 機能追加は必要性が確認されてから
 
-### Code Design
+## Applied Charter Principles: Change Design
+
 - **変更範囲は必要最小限** — Over-engineering しない
 - **YAGNI** — 今必要ない機能は実装しない
 - **DRY** — 2回の重複では抽象化しない。3回目で検討する
