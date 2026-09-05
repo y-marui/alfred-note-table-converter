@@ -1,22 +1,14 @@
 exclude: |
   (?x)^(
-    workflow/vendor/|
     \.git/|
     dist/|
-    __pycache__/|
+    \.build/|
+    go\.sum$|
     .*\.min\.js$|
     .*\.min\.css$
   )
 
 repos:
-  # Ruff: fast linter + formatter (replaces flake8, isort, pyupgrade, etc.)
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.7
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-
   # General file hygiene + security basics
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -188,7 +180,8 @@ repos:
 
   # ----------------------------------------------------------------
   # Python package management (topics/PYTHON_DEV_ENV.md)
-  # (blocks vendor-requirements.txt / missing uv.lock when pyproject.toml exists)
+  # (blocks vendor-requirements.txt / missing uv.lock when pyproject.toml
+  # exists; a no-op here since this project has no pyproject.toml)
   # ----------------------------------------------------------------
   - repo: local
     hooks:
@@ -235,16 +228,29 @@ repos:
         entry: scripts/check-markdown-heading-language.sh
         files: '\.md$'
 
-  # Type checking (runs mypy against src/)
+  # ----------------------------------------------------------------
+  # Go (repository-specific; not part of the shared dev-charter set)
+  # ----------------------------------------------------------------
   - repo: local
     hooks:
-      - id: mypy
-        name: mypy
-        language: python
-        entry: mypy
-        args: [src]
-        additional_dependencies: ["mypy>=1.0"]
-        types: [python]
+      - id: gofmt
+        name: gofmt
+        language: system
+        entry: >-
+          bash -c '
+          out=$(gofmt -l "$@");
+          if [ -n "$out" ]; then
+          echo "gofmt needs to be run on:";
+          echo "$out";
+          exit 1;
+          fi
+          ' --
+        types: [go]
+      - id: go-vet
+        name: go vet
+        language: system
+        entry: bash -c 'go vet ./...'
+        types: [go]
         pass_filenames: false
 
   # ----------------------------------------------------------------

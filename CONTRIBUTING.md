@@ -10,9 +10,9 @@ Thank you for contributing!
 ## Development setup
 
 ```bash
-git clone https://github.com/yourname/alfred-workflow-template
-cd alfred-workflow-template
-make install
+git clone https://github.com/y-marui/alfred-note-table-converter
+cd alfred-note-table-converter
+go build ./...
 ```
 
 ## Making changes
@@ -23,19 +23,17 @@ make install
 
 ```bash
 make lint
-make typecheck
 make test
-make build
+make build-workflow
 ```
 
-4. Test in Alfred: `make build` → double-click the `.alfredworkflow`
+4. Test in Alfred: `make build-workflow` → double-click the `.alfredworkflow`
 5. Open a PR using the template
 
 ## Code style
 
-- ruff + black enforced by CI
-- Type hints required on all public functions
-- Keep runtime dependencies minimal (they're vendored)
+- `gofmt` + `go vet` enforced by CI
+- Keep dependencies minimal — `go.mod` has none
 
 ## Commit guidelines
 
@@ -48,18 +46,17 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 feat: add clipboard copy action
-fix: cache miss on special characters in query
-chore: update ruff to 0.5.0
-docs: add examples to usage.md
-refactor: simplify router dispatch logic
+fix: preserve alignment on multi-row conversion
+chore: bump go.mod toolchain version
+docs: add examples to specification.md
+refactor: simplify command dispatch logic
 ```
 
 ## Pull Request checklist
 
 - [ ] `make lint` passes
-- [ ] `make typecheck` passes
 - [ ] `make test` passes
-- [ ] `make build` succeeds
+- [ ] `make build-workflow` succeeds
 - [ ] New commands have tests
-- [ ] `docs/usage.md` updated if user-facing changes
+- [ ] `docs/specification.md` updated if user-facing changes
 - [ ] `CHANGELOG.md` entry added under `[Unreleased]`

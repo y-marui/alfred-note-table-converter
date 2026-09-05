@@ -2,109 +2,64 @@
 
 ## Overview
 
-This workflow uses a layered architecture to keep Alfred-specific code isolated
-from business logic, making it easy to test and extend.
+An Alfred Workflow (Go): `cmd/note-table-converter-alfred` is the single
+universal (amd64+arm64) binary `workflow/info.plist` invokes. The `tbl`
+keyword is a plain Keyword input node, not a Script Filter — it feeds an
+Arguments and Variables node that sets the `clipboard_text` variable from
+Alfred's `{clipboard}` placeholder, which reaches this binary as an OS
+environment variable (Alfred passes workflow variables to Script/Script
+Filter nodes as env vars); the binary never reads the clipboard itself. That
+variable, together with the query (`$1`), is detected as a Markdown or LaTeX
+table, converted via `internal/tableconv`, and printed as Alfred Script
+Filter JSON via `internal/scriptfilter`. Selecting a result copies the
+converted table to the clipboard and pastes it via Alfred's own native
+Clipboard Output node (its `autopaste` option) — no Go code or separate Run
+Script/AppleScript step is involved in that step either; see
+[docs/specification.md](specification.md) for the full data flow.
+`scripts/build-workflow.sh` packages the binary with `workflow/info.plist`
+and `workflow/icon.png` into a `.alfredworkflow`.
 
-```
-Alfred
-  │  keyword + query
-  ▼
-workflow/scripts/entry.py       ← Alfred boundary (UI layer)
-  │
-  ▼
-src/alfred/safe_run.py          ← Exception safety wrapper
-  │
-  ▼
-src/app/core.py                 ← Application orchestrator
-  │
-  ▼
-src/alfred/router.py            ← Command dispatcher
-  │
-  ├─ search  → src/app/commands/search.py
-  ├─ open    → src/app/commands/open_cmd.py
-  ├─ config  → src/app/commands/config_cmd.py
-  └─ help    → src/app/commands/help_cmd.py
-                │
-                ▼
-            src/app/services/   ← Business logic + caching
-                │
-                ▼
-            src/app/clients/    ← External API / IO
-```
+This structure — a thin `cmd/` entry point over independently testable
+`internal/` packages, no generic command-router abstraction, Script Filter
+JSON via a small `scriptfilter` package — deliberately matches
+[y-marui/alfred-clean-invisible-text](https://github.com/y-marui/alfred-clean-invisible-text),
+[y-marui/alfred-markdown-ref](https://github.com/y-marui/alfred-markdown-ref),
+and [y-marui/alfred-password-generator](https://github.com/y-marui/alfred-password-generator),
+this author's other Alfred Workflows already implemented in Go. This workflow
+itself was originally a Python implementation
+([`src/alfred`/`src/app`](https://github.com/y-marui/alfred-note-table-converter/tree/v0.1.0/src));
+see `CHANGELOG.md`'s `[Unreleased]` entry for what changed and why in that
+rewrite.
 
-## Layers
+## Entry Points
 
-### UI Layer (`workflow/`)
+- `cmd/note-table-converter-alfred` — a single command, no subcommands. The
+  query following the `tbl` keyword (e.g. `""`, `"open repo"`, `"config
+  reset"`, `"help"`) determines behavior; see
+  [docs/specification.md](specification.md#commands).
 
-- `scripts/entry.py`: The only file Alfred executes directly.
-  - Sets up `sys.path` (vendor + src)
-  - Calls `safe_run(main)`
-  - No business logic here
+One Alfred trigger reaches it: the `tbl` keyword, wired in
+`workflow/info.plist` as a Keyword input → Arguments and Variables →
+(keyword-less) Script Filter chain — see
+[docs/specification.md](specification.md#alfred-object-graph).
 
-### Alfred SDK (`src/alfred/`)
+## Directory Structure
 
-Thin helpers that abstract Alfred-specific behavior.
-These are **not** application logic — they wrap Alfred's environment.
-
-| Module | Purpose |
+| Directory | Role |
 |---|---|
-| `response.py` | Build and emit Script Filter JSON |
-| `router.py` | Parse query → dispatch to command |
-| `safe_run.py` | Catch exceptions → show error item |
-| `cache.py` | TTL disk cache via `alfred_workflow_cache` |
-| `config.py` | Persistent config via `alfred_workflow_data` |
-| `logger.py` | File logger to `~/Library/Logs/Alfred/Workflow/` |
+| `cmd/note-table-converter-alfred/` | The binary Alfred invokes; recovers panics into a Script Filter error item and writes the response |
+| `internal/tableconvcmd/` | Query dispatch and the four command handlers (`convert`, `open`, `config`, `help`) — builds the Alfred result rows |
+| `internal/tableconv/` | Markdown ⇄ LaTeX table conversion, unit tested independently of Alfred |
+| `internal/scriptfilter/` | Alfred Script Filter JSON response types |
+| `workflow/` | `info.plist` (the Alfred object graph), `icon.png` |
+| `scripts/build-workflow.sh` | Builds the universal binary and packages `workflow/` into `dist/*.alfredworkflow` |
+| `scripts/extract-changelog.sh` | Extracts one version's notes from `CHANGELOG.md` for GitHub Releases |
+| `docs/` | Specification, file map |
+| `docs/dev-charter/` | Shared dev-charter (`git subtree`) |
 
-### Application Layer (`src/app/`)
+## Key Dependencies
 
-Pure Python business logic — no Alfred dependency.
-This layer can be tested without Alfred and run from the CLI.
-
-| Directory | Purpose |
-|---|---|
-| `commands/` | One module per Alfred command. Each has `handle(args: str) -> None` |
-| `services/` | Business logic coordinating between commands and clients |
-| `clients/` | Thin HTTP/IO wrappers for external APIs |
-| `core.py` | Wires router to commands — the dependency injection point |
-
-## Query Parsing
-
-Alfred sends the full query string to the script.
-The router splits it into `<command> <args>`:
-
-```
-"search foo bar"  →  command="search",  args="foo bar"
-"open repo"       →  command="open",    args="repo"
-"config"          →  command="config",  args=""
-"foo bar"         →  command="search",  args="foo bar" (default fallback)
-```
-
-## Dependency Flow
-
-```
-commands → services → clients → external APIs
-         ↘
-           alfred SDK (response, cache, config, logger)
-```
-
-Commands depend on services, not clients directly.
-Services own caching logic.
-Clients are stateless HTTP wrappers.
-
-## Packaging
-
-At build time (`make build`):
-
-```
-.build/               ← temporary build directory
-├── info.plist        ← version synced from pyproject.toml
-├── icon.png
-├── scripts/
-│   └── entry.py
-├── src/              ← copied from repo src/
-│   ├── alfred/
-│   └── app/
-└── vendor/           ← pip install -r vendor-requirements.txt -t vendor/
-```
-
-The entire `.build/` directory is zipped to `dist/<name>-<version>.alfredworkflow`.
+None. Every `internal/` package uses only the Go standard library
+(`regexp`, `strings`, `encoding/json`). Clipboard I/O is delegated entirely
+to Alfred's native nodes (see Overview) — no package shells out to
+`pbpaste`/`pbcopy`.

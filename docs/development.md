@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - macOS (required for Alfred)
-- Python 3.9+
+- Go (see `go.mod` for the toolchain version)
 - Alfred 5 with Powerpack
 - `jq` (optional, for pretty-printed dev output): `brew install jq`
 - `gh` CLI (required for releases): `brew install gh`
@@ -11,9 +11,9 @@
 ## Setup
 
 ```bash
-git clone https://github.com/yourname/your-workflow
-cd your-workflow
-make install
+git clone https://github.com/y-marui/alfred-note-table-converter
+cd alfred-note-table-converter
+go build ./...
 ```
 
 ## Daily workflow
@@ -21,64 +21,56 @@ make install
 ### Simulate Alfred locally
 
 ```bash
-make run Q="search foo"
-make run Q="open repo"
-make run Q="config"
-make run Q=""
+go run ./cmd/note-table-converter-alfred ""
+go run ./cmd/note-table-converter-alfred "open repo"
+go run ./cmd/note-table-converter-alfred "config"
+go run ./cmd/note-table-converter-alfred "help"
 ```
 
-This calls `scripts/dev.sh` which:
-1. Sets all `alfred_workflow_*` env vars to temp directories
-2. Calls `workflow/scripts/entry.py` with your query
-3. Pretty-prints the JSON output
+The default `convert` command reads the real clipboard (`pbpaste`), so copy a Markdown or LaTeX
+table before running it. Pipe through `jq` for pretty-printed JSON:
+
+```bash
+go run ./cmd/note-table-converter-alfred "" | jq .
+```
 
 ### Run tests
 
 ```bash
-make test          # fast
-make test-cov      # with coverage
+make test
 ```
 
 ### Lint and format
 
 ```bash
-make lint          # check
-make format        # auto-fix
-make typecheck     # mypy
+make lint          # gofmt -l + go vet
+make fmt           # gofmt -w (auto-fix)
 ```
 
 ## Adding a new command
 
-1. Create `src/app/commands/my_cmd.py`:
+1. Add a `handleFoo(args string) scriptfilter.Response` function to
+   `internal/tableconvcmd/tableconvcmd.go`:
 
-```python
-from alfred.response import item, output
-
-def handle(args: str) -> None:
-    output([item("My command", f"Args: {args}", arg=args)])
+```go
+func handleFoo(args string) scriptfilter.Response {
+	return scriptfilter.Response{
+		Items: []scriptfilter.Item{
+			{Title: "My command", Subtitle: "Args: " + args, Arg: args, Valid: scriptfilter.BoolPtr(true)},
+		},
+	}
+}
 ```
 
-2. Register in `src/app/core.py`:
-
-```python
-from app.commands import my_cmd
-router.register("my")(my_cmd.handle)
-```
-
-3. Add tests in `tests/test_commands.py`.
-
-4. Update `docs/usage.md` and `workflow/info.plist` keyword help.
-
-## Adding a third-party dependency
-
-1. Add to `vendor-requirements.txt`
-2. Run `make vendor`
-3. Import in your code — the vendor path is added by `entry.py`
+2. Register it in `Dispatch`'s switch statement.
+3. Add tests in `internal/tableconvcmd/tableconvcmd_test.go`.
+4. Update `README.md`/`README-jp.md`'s usage table, `docs/specification.md`, and
+   `workflow/info.plist`'s Script Filter `subtext`.
 
 ## Building the package
 
 ```bash
-make build
+make build-workflow
 ```
 
 Output: `dist/<name>-<version>.alfredworkflow`
@@ -88,21 +80,21 @@ or drag it into Alfred Preferences → Workflows.
 
 ## Testing in Alfred
 
-1. Build: `make build`
-2. Install: open `dist/*.alfredworkflow`
-3. Open Alfred, type your keyword
+1. Build: `make build-workflow`
+2. Install: `open dist/*.alfredworkflow`
+3. Open Alfred, type `tbl`
 
-To iterate quickly, you can also point Alfred's workflow directory directly
-at the `workflow/` folder during development (see Alfred docs on workflow
-symlinks), but the `make run` simulator is usually faster.
+During rapid iteration you can symlink `workflow/` to Alfred's workflow directory and rebuild the
+binary in place, but `go run ./cmd/note-table-converter-alfred "query"` is usually faster for
+logic changes.
 
 ## Releasing
 
 ```bash
-# 1. Update version in pyproject.toml
+# 1. Update version in workflow/info.plist
 # 2. Update CHANGELOG.md
 # 3. Commit
-git add pyproject.toml CHANGELOG.md
+git add workflow/info.plist CHANGELOG.md
 git commit -m "chore: release v1.2.3"
 
 # 4. Tag
@@ -110,20 +102,17 @@ git tag v1.2.3
 git push origin main --tags
 
 # GitHub Actions automatically builds and releases.
-# To release manually:
-make build
-make release
 ```
 
 ## AI Development Workflow
 
-This template is designed for AI-assisted development.
+This project is designed for AI-assisted development.
 
 ### Claude Code (major features, refactoring, tests)
 
 Claude Code reads `CLAUDE.md` at the project root for context.
 Use it for:
-- Implementing new commands and services
+- Implementing new commands and conversion logic
 - Refactoring existing code
 - Writing test suites
 - Reviewing architecture decisions
@@ -133,17 +122,17 @@ Use it for:
 Copilot works best for:
 - Fixing small bugs inline
 - Completing repetitive boilerplate
-- Suggesting type annotations
+- Suggesting struct/function signatures
 
 ### Gemini CLI (documentation)
 
 Use Gemini CLI for:
 - Generating/updating `README.md`
 - Writing `CHANGELOG.md` entries from git log
-- Creating usage examples in `docs/usage.md`
+- Creating usage examples in `docs/specification.md`
 
 Example:
 ```bash
-gemini "Update README.md based on the current source code in src/"
-gemini "Generate CHANGELOG entry for commits since v1.2.3"
+gemini "Update README.md based on the current source code in internal/"
+gemini "Generate CHANGELOG entry for commits since v1.0.0"
 ```

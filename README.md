@@ -14,7 +14,7 @@ An Alfred 5 workflow that converts tables between Markdown and LaTeX — directl
 ## Requirements
 
 - Alfred 5 (Powerpack required)
-- Python 3.11+
+- Go (see `go.mod` for the version)
 - [pre-commit](https://pre-commit.com/) (for development security hooks)
 
 ## Setup
@@ -22,8 +22,7 @@ An Alfred 5 workflow that converts tables between Markdown and LaTeX — directl
 ```bash
 git clone https://github.com/y-marui/alfred-note-table-converter
 cd alfred-note-table-converter
-make install
-make build
+make build-workflow
 ```
 
 Double-click `dist/*.alfredworkflow` to install in Alfred.
@@ -32,13 +31,14 @@ Double-click `dist/*.alfredworkflow` to install in Alfred.
 
 ```
 alfred-note-table-converter/
-├── src/
-│   ├── alfred/         # Alfred SDK (response, router, cache, config, logger, safe_run)
-│   └── app/            # Application layer (commands, services, clients)
-├── workflow/           # Alfred package (info.plist, scripts/entry.py, vendor/)
-├── tests/              # pytest test suite
-├── scripts/            # build.sh, dev.sh, release.sh, vendor.sh
-└── docs/               # Architecture and development documentation
+├── cmd/note-table-converter-alfred/  # Entry point for the binary Alfred invokes
+├── internal/
+│   ├── tableconv/      # Markdown ⇄ LaTeX conversion logic (no Alfred awareness)
+│   ├── tableconvcmd/   # Command dispatch + Script Filter response building
+│   └── scriptfilter/   # Alfred Script Filter JSON types
+├── workflow/           # Alfred package (info.plist, icon.png)
+├── scripts/            # build-workflow.sh, extract-changelog.sh
+└── docs/               # Architecture and specification documentation
 ```
 
 ## Usage
@@ -59,8 +59,9 @@ Press **Enter** to copy and paste the converted table.
 | Document | Description |
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | Full architecture and layer design |
-| [docs/development.md](docs/development.md) | Adding commands, managing dependencies, release |
-| [docs/usage.md](docs/usage.md) | End-user usage guide |
+| [docs/specification.md](docs/specification.md) | Functional specification and data flow |
+| [docs/file-map.md](docs/file-map.md) | File-level dependency map |
+| [docs/development.md](docs/development.md) | Adding commands, release process |
 
 ## Contributing
 
