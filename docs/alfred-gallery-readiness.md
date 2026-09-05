@@ -26,6 +26,7 @@ that submission is not blocked on our side whenever that step happens.
 | No self-installed external software | ✅ Done | `go.mod` has no third-party dependencies; nothing is fetched at runtime |
 | Icon ≥ 256×256 px | ✅ Done | `workflow/icon.png` is now 1024×1024 (previously 1024×1048, not square — cropped to match Alfred's square icon frame) |
 | Keyword ≥ 3 characters | ✅ Done | `tbl` (exactly 3) |
+| Category set | ✅ Done | `Productivity` — see [`docs/alfred-workflow-notes/workflow-object-schema.md`](docs/alfred-workflow-notes/workflow-object-schema.md#category) for the valid value list |
 | User Configuration over environment variables | ✅ N/A | Nothing today needs user-facing configuration |
 | English instructions in About/README | ✅ Done | `README.md` is the reference (English) version; `README-jp.md` is canonical |
 | README follows Gallery style guide | ✅ Done | `## Usage` opens with "via the `tbl` keyword" phrasing; the Enter action is a `<kbd>` bullet, not a table |
