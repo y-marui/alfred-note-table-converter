@@ -7,9 +7,6 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -105,7 +102,7 @@ jobs:
         run: go test ./...
 
   build:
-    name: Build workflow package
+    name: Build
     runs-on: macos-latest
     needs: [changes, security, lint, test]
     if: needs.changes.outputs.code == 'true'
