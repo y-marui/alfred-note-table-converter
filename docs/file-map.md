@@ -21,7 +21,6 @@ cmd/note-table-converter-alfred/main.go
             │    ├─ internal/tableconv.MDToLatex(clipboardText, quadrupleBackslash)
             │    └─ internal/tableconv.LaTeXToMD(clipboardText)
             ├─ handleOpen(args)
-            ├─ handleConfig(args)
             └─ handleHelp(args)
 ```
 
@@ -31,7 +30,7 @@ cmd/note-table-converter-alfred/main.go
 |---|---|---|
 | `internal/scriptfilter` | stdlib only | Alfred Script Filter JSON types (`Item`, `Response`) and `Write` |
 | `internal/tableconv` | stdlib only (`regexp`, `strings`, `bufio`) | Core Markdown ⇄ LaTeX conversion logic — `DetectFormat`, `MDToLatex`, `LaTeXToMD` |
-| `internal/tableconvcmd` | `internal/tableconv`, `internal/scriptfilter` | Query dispatch, the four command handlers |
+| `internal/tableconvcmd` | `internal/tableconv`, `internal/scriptfilter` | Query dispatch, the three command handlers |
 | `cmd/note-table-converter-alfred` | `internal/tableconvcmd`, `internal/scriptfilter` | Reads `os.Args[1]` and the `clipboard_text` env var, recovers panics, writes JSON to stdout |
 
 ## Tests
@@ -39,4 +38,4 @@ cmd/note-table-converter-alfred/main.go
 | File | Tests |
 |---|---|
 | `internal/tableconv/tableconv_test.go` | `DetectFormat`, `MDToLatex` (double hline placement, multibyte cells, quadruple-backslash mode, `<br>` expansion), `LaTeXToMD` (separator row, `<br>` continuation merge), and md↔latex roundtrips |
-| `internal/tableconvcmd/tableconvcmd_test.go` | Command dispatch (convert, open, config, help), clipboard-format branching, error items |
+| `internal/tableconvcmd/tableconvcmd_test.go` | Command dispatch (convert, open, help), clipboard-format branching, error items |

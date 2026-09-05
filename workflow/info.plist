@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>com.github.y-marui.alfred-note-table-converter</string>
+	<string>com.y-marui.alfred-note-table-converter</string>
 	<key>connections</key>
 	<dict>
 		<key>D4E5F6A7-B8C9-0123-DEF4-56789ABCDEF0</key>

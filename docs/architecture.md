@@ -34,8 +34,8 @@ rewrite.
 ## Entry Points
 
 - `cmd/note-table-converter-alfred` — a single command, no subcommands. The
-  query following the `tbl` keyword (e.g. `""`, `"open repo"`, `"config
-  reset"`, `"help"`) determines behavior; see
+  query following the `tbl` keyword (e.g. `""`, `"open repo"`, `"help"`)
+  determines behavior; see
   [docs/specification.md](specification.md#commands).
 
 One Alfred trigger reaches it: the `tbl` keyword, wired in
@@ -48,7 +48,7 @@ One Alfred trigger reaches it: the `tbl` keyword, wired in
 | Directory | Role |
 |---|---|
 | `cmd/note-table-converter-alfred/` | The binary Alfred invokes; recovers panics into a Script Filter error item and writes the response |
-| `internal/tableconvcmd/` | Query dispatch and the four command handlers (`convert`, `open`, `config`, `help`) — builds the Alfred result rows |
+| `internal/tableconvcmd/` | Query dispatch and the three command handlers (`convert`, `open`, `help`) — builds the Alfred result rows |
 | `internal/tableconv/` | Markdown ⇄ LaTeX table conversion, unit tested independently of Alfred |
 | `internal/scriptfilter/` | Alfred Script Filter JSON response types |
 | `workflow/` | `info.plist` (the Alfred object graph), `icon.png` |

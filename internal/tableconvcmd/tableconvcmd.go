@@ -5,7 +5,6 @@
 //
 //	tbl [convert]      — convert the clipboard table (default)
 //	tbl open <name>    — open a named shortcut
-//	tbl config [reset] — view or reset configuration
 //	tbl help           — show available commands
 package tableconvcmd
 
@@ -24,8 +23,6 @@ func Dispatch(query, clipboardText string) scriptfilter.Response {
 	switch strings.ToLower(command) {
 	case "open":
 		return handleOpen(args)
-	case "config":
-		return handleConfig(args)
 	case "help":
 		return handleHelp(args)
 	default:
@@ -133,35 +130,6 @@ func handleOpen(args string) scriptfilter.Response {
 	return scriptfilter.Response{Items: items}
 }
 
-// handleConfig shows current configuration, or clears it when args is
-// "reset". There are no app-level settings, so the non-reset response
-// always offers only the reset action itself.
-func handleConfig(args string) scriptfilter.Response {
-	if strings.ToLower(strings.TrimSpace(args)) == "reset" {
-		return scriptfilter.Response{
-			Items: []scriptfilter.Item{
-				{
-					Title:    "Configuration reset",
-					Subtitle: "All settings have been cleared",
-					Valid:    scriptfilter.BoolPtr(false),
-				},
-			},
-		}
-	}
-	return scriptfilter.Response{
-		Items: []scriptfilter.Item{
-			{
-				UID:          "config-reset",
-				Title:        "Reset all settings",
-				Subtitle:     "tbl config reset  — clear all stored configuration",
-				Arg:          "reset",
-				Autocomplete: "config reset",
-				Valid:        scriptfilter.BoolPtr(true),
-			},
-		},
-	}
-}
-
 type helpCommand struct {
 	cmd, desc, autocomplete string
 }
@@ -169,7 +137,6 @@ type helpCommand struct {
 var helpCommands = []helpCommand{
 	{"convert", "Convert clipboard table: Markdown <-> LaTeX (default)", "tbl convert"},
 	{"open <name>", "Open a named shortcut", "tbl open "},
-	{"config", "View or reset configuration", "tbl config"},
 	{"help", "Show this help", "tbl help"},
 }
 

@@ -1,4 +1,4 @@
-# Development Guide
+# Developing
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ cd alfred-note-table-converter
 go build ./...
 ```
 
-## Daily workflow
+## Daily Workflow
 
 ### Simulate Alfred locally
 
@@ -47,7 +47,7 @@ make lint          # gofmt -l + go vet
 make fmt           # gofmt -w (auto-fix)
 ```
 
-## Adding a new command
+## Adding a New Command
 
 1. Add a `handleFoo(args string) scriptfilter.Response` function to
    `internal/tableconvcmd/tableconvcmd.go`:
@@ -67,7 +67,7 @@ func handleFoo(args string) scriptfilter.Response {
 4. Update `README.md`/`README-jp.md`'s usage table, `docs/specification.md`, and
    `workflow/info.plist`'s Script Filter `subtext`.
 
-## Building the package
+## Building the Package
 
 ```bash
 make build-workflow
