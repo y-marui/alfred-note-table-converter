@@ -264,9 +264,7 @@ Alfred は Script Filter ノードからユニバーサル（amd64+arm64）バ�
 - Alfred の `variables` キー（environment variable）は使わない。Config Builder で代替できる場合は必ず Config Builder を使う
 - Config Builder の値は Alfred がスクリプト実行時に環境変数として自動で渡すため、スクリプト側では `os.Getenv()` で読める
 - 新しい設定項目を追加するときは以下の型から選ぶ: `textfield` / `checkbox` / `select` / `file` / `password`
-- 現在このワークフローに Config Builder 変数はない（`userconfigurationconfig` は空配列。`tbl config` /
-  `tbl config reset` コマンドは既存の永続設定ストアの名残で、実際には何も読み書きしない —
-  `docs/specification.md` 参照）
+- 現在このワークフローに Config Builder 変数はない（`userconfigurationconfig` は空配列）
 
 ### Code Style
 

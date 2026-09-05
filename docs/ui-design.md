@@ -73,14 +73,6 @@ arg:      <URL>
 valid:    true
 ```
 
-### `tbl config` / `tbl config reset`
-
-```
-title:    "Reset all settings" (tbl config)   |   "Configuration reset" (tbl config reset)
-subtitle: "wf config reset — clear all stored configuration" (tbl config)
-valid:    true (tbl config)   |   false (tbl config reset)
-```
-
 ### `tbl help`
 
 ```

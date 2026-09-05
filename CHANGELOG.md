@@ -7,12 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- `tbl config` / `tbl config reset` — this workflow has no persisted
+  settings, so the command never read or wrote any stored state; it always
+  showed a static "Reset all settings"/"Configuration reset" pair of items
+  that did nothing. Same dead-config-command pattern already removed from
+  `alfred-paste-formatted-date`. `tbl help` no longer lists it.
+
 ### Changed
 
 - **Breaking (implementation):** Reimplemented the workflow in Go
   (`cmd/note-table-converter-alfred` + `internal/tableconv`, `internal/tableconvcmd`,
   `internal/scriptfilter`), replacing the Python `src/alfred`/`src/app` implementation. The `tbl`
-  keyword, bundle ID, and the behavior of `convert`/`open`/`config`/`help` are unchanged.
+  keyword, bundle ID, and the behavior of `convert`/`open`/`help` are unchanged.
 - Clipboard reading no longer shells out to `pbpaste` (previously `internal/clipboard`, now
   removed). `tbl`'s keyword is now a plain Keyword input node feeding an Arguments and Variables
   node that sets a `clipboard_text` variable from Alfred's `{clipboard}` placeholder; a

@@ -51,7 +51,6 @@ alfred-note-table-converter/
 | `tbl` | クリップボードの形式を検出して変換（デフォルト） |
 | `tbl convert` | 同上（明示的） |
 | `tbl open <name>` | ショートカットを開く |
-| `tbl config` | 設定の確認 / リセット |
 | `tbl help` | コマンド一覧を表示 |
 
 ## Documentation

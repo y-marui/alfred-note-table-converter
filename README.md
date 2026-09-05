@@ -51,7 +51,6 @@ Press **Enter** to copy and paste the converted table.
 | `tbl` | Detect clipboard format and convert (default) |
 | `tbl convert` | Same as above (explicit) |
 | `tbl open <name>` | Open a named shortcut |
-| `tbl config` | View or reset configuration |
 | `tbl help` | Show all commands |
 
 ## Documentation

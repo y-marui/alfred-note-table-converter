@@ -116,43 +116,6 @@ func TestDispatch_OpenUnknownShortcutShowsError(t *testing.T) {
 	}
 }
 
-func TestDispatch_ConfigShowsResetItem(t *testing.T) {
-	resp := Dispatch("config", "")
-	found := false
-	for _, it := range resp.Items {
-		if strings.Contains(it.Title, "Reset") {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("no item with Reset in title: %+v", resp.Items)
-	}
-}
-
-func TestDispatch_ConfigEmptySchemaShowsOnlyReset(t *testing.T) {
-	resp := Dispatch("config", "")
-	if len(resp.Items) != 1 {
-		t.Fatalf("len(Items) = %d, want 1", len(resp.Items))
-	}
-	if !strings.Contains(resp.Items[0].Title, "Reset") {
-		t.Errorf("Title = %q, want to contain Reset", resp.Items[0].Title)
-	}
-}
-
-func TestDispatch_ConfigResetShowsConfirmation(t *testing.T) {
-	resp := Dispatch("config reset", "")
-	if !strings.Contains(strings.ToLower(resp.Items[0].Title), "reset") {
-		t.Errorf("Title = %q, want to contain reset", resp.Items[0].Title)
-	}
-}
-
-func TestDispatch_ConfigUnknownSubcommandShowsCurrentConfig(t *testing.T) {
-	resp := Dispatch("config unknown-subcommand", "")
-	if len(resp.Items) == 0 {
-		t.Errorf("len(Items) = 0, want > 0")
-	}
-}
-
 func TestDispatch_HelpShowsAllCommands(t *testing.T) {
 	resp := Dispatch("help", "")
 	if len(resp.Items) != len(helpCommands) {

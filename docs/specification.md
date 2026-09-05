@@ -74,21 +74,11 @@ all available names, when nothing matches.
 
 ---
 
-### `tbl config` / `tbl config reset`
-
-**Trigger:** `tbl config`, `tbl config reset`
-
-**Behavior:** This workflow declares no persisted settings, so `tbl config` always shows a single
-valid "Reset all settings" item (`arg="reset"`), and `tbl config reset` always shows a single
-invalid "Configuration reset" confirmation item — neither reads nor writes any stored state.
-
----
-
 ### `tbl help`
 
 **Trigger:** `tbl help`
 
-**Behavior:** Display all four commands above with descriptions and autocomplete strings
+**Behavior:** Display all three commands above with descriptions and autocomplete strings
 (`valid: false`).
 
 ## Conversion Rules (`internal/tableconv`)
