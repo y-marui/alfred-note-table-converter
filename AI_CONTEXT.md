@@ -1,4 +1,4 @@
-# AI_CONTEXT.md — alfred-workflow-template
+# AI_CONTEXT.md — alfred-note-table-converter
 
 > このファイルは開発憲章（`docs/dev-charter/`）をこのプロジェクト向けにまとめたものです。
 > AIツールはセッション開始時にこのファイルを読むことで、憲章全体を参照しなくても
@@ -8,16 +8,17 @@
 
 ## Project Overview
 
-Alfred 5 Script Filter ワークフロー用の OSS テンプレート。
-Python 3.11+、レイヤードアーキテクチャ、CI/CD 完備。
+Alfred 5 Script Filter ワークフロー。クリップボード上の表を Markdown ⇄ LaTeX で相互変換する。
+Go（`cmd/`, `internal/` レイアウト）、CI/CD 完備。
 対象: 個人〜3人規模の開発チーム。
 
 ```
-src/alfred/     ← Alfred SDK（response / router / cache / config / logger / safe_run）
-src/app/        ← アプリケーション層（commands / services / clients）
-workflow/       ← Alfred パッケージ（info.plist / scripts/entry.py / vendor/）
-tests/          ← pytest テストスイート
-scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
+cmd/note-table-converter-alfred/  ← Alfred が実行するバイナリのエントリポイント
+internal/tableconv/    ← Markdown ⇄ LaTeX 変換ロジック（Alfred非依存）
+internal/tableconvcmd/ ← コマンドdispatch + Script Filter応答の組み立て
+internal/scriptfilter/ ← Alfred Script Filter JSON型
+workflow/              ← Alfred パッケージ（info.plist / icon.png）
+scripts/               ← build-workflow.sh / extract-changelog.sh
 ```
 
 詳細アーキテクチャ: `docs/architecture.md`
@@ -49,7 +50,7 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 ## Applied Charter Principles: Software Design
 
 - **ローカルファースト** — Alfred ワークフローはオフラインで動作することを前提にする
-- **インフラ最小化** — サーバーレス、外部依存なし（vendor/ に完結）
+- **インフラ最小化** — サーバーレス、外部依存なし（`go.mod` に依存ゼロ）
 - **小さく始める** — 機能追加は必要性が確認されてから
 
 ## Applied Charter Principles: Change Design
@@ -66,9 +67,8 @@ scripts/        ← build.sh / dev.sh / release.sh / vendor.sh
 ## Code Style
 
 - コメントは **「なぜそうするか」のみ** 書く。コードから自明な処理には書かない
-- ruff + black、行長 100
-- すべての public 関数に型ヒント必須
-- 各モジュール先頭に `from __future__ import annotations`
+- `gofmt`（CI で強制）+ `go vet`
+- Alfred 非依存の純粋ロジックと Alfred glue（`internal/*cmd`）を分離する
 
 ---
 
@@ -200,19 +200,17 @@ README.md のバッジ行に GitHub Sponsors と Buy Me a Coffee バッジを掲
 ## Development Commands
 
 ```bash
-make install          # dev 依存関係をインストール
-make run Q="search foo"  # Alfred をローカルでシミュレート
-make test             # テスト実行
-make lint             # ruff + black チェック
-make typecheck        # mypy
-make build            # dist/*.alfredworkflow を生成
-make vendor           # workflow/vendor/ を更新
+go run ./cmd/note-table-converter-alfred ""  # Alfred をローカルでシミュレート
+make test             # go test ./...
+make lint             # gofmt -l + go vet
+make fmt              # gofmt -w（自動修正）
+make build-workflow   # dist/*.alfredworkflow を生成
 ```
 
 ## Release Process
 
 ```bash
-# pyproject.toml のバージョンを更新
+# workflow/info.plist の version を更新
 git tag v1.2.3
 git push --tags
 # GitHub Actions が .alfredworkflow を生成して GitHub Release を作成

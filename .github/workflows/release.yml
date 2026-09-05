@@ -20,24 +20,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-go@v7
         with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: Install dev dependencies
-        run: pip install -e ".[dev]"
+          go-version-file: go.mod
 
       - name: Run tests
-        run: pytest --tb=short
+        run: go test ./...
 
       - name: Build .alfredworkflow
-        run: ./scripts/build.sh
+        run: make build-workflow
 
       - name: Extract release notes from CHANGELOG.md
         id: changelog
         run: |
-          NOTES=$(python3 scripts/extract_changelog.py "$GITHUB_REF_NAME")
+          NOTES=$(scripts/extract-changelog.sh "$GITHUB_REF_NAME")
           {
             echo "notes<<CHANGELOG_EOF"
             echo "$NOTES"

@@ -1,94 +1,31 @@
-.PHONY: help install hooks lint format typecheck test test-cov vendor build deploy release run clean update-charter update-workflow-notes
+.PHONY: build test lint fmt build-workflow precommit update-charter update-workflow-notes
 
-# Default target
-help:
-	@echo "Alfred Workflow Template - Development Commands"
-	@echo ""
-	@echo "  make install     Install dev dependencies"
-	@echo "  make hooks       Install pre-commit hooks"
-	@echo "  make lint        Run ruff linter"
-	@echo "  make format      Auto-format with black + ruff --fix"
-	@echo "  make typecheck   Run mypy type checker"
-	@echo "  make test        Run tests"
-	@echo "  make test-cov    Run tests with coverage report"
-	@echo "  make vendor      Install runtime deps into workflow/vendor/"
-	@echo "  make build       Build .alfredworkflow package"
-	@echo "  make deploy      Build and install into Alfred"
-	@echo "  make release     Create GitHub Release (requires git tag)"
-	@echo "  make run Q=''    Simulate Alfred with query Q"
-	@echo "  make clean       Remove build artifacts"
-	@echo "  make update-charter  Pull latest dev-charter via git subtree"
-	@echo "  make update-workflow-notes  Pull latest alfred-workflow-notes via git subtree"
-	@echo ""
+build:
+	go build ./...
 
-# ---------------------------------------------------------------------------
-# Setup
-# ---------------------------------------------------------------------------
-install:
-	uv sync --extra dev
-
-hooks:
-	uv run pre-commit install
-
-# ---------------------------------------------------------------------------
-# Code quality
-# ---------------------------------------------------------------------------
-lint:
-	uv run ruff check src/ tests/
-
-format:
-	uv run ruff format src/ tests/
-	uv run ruff check --fix src/ tests/
-
-typecheck:
-	uv run mypy src/
-
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
 test:
-	uv run pytest
+	go test ./...
 
-test-cov:
-	uv run pytest --cov=src --cov-report=term-missing --cov-report=html
+lint:
+	@out=$$(gofmt -l .); \
+	if [ -n "$$out" ]; then \
+		echo "gofmt needs to be run on:"; \
+		echo "$$out"; \
+		exit 1; \
+	fi
+	go vet ./...
 
-# ---------------------------------------------------------------------------
-# Build
-# ---------------------------------------------------------------------------
-vendor:
-	./scripts/vendor.sh
+fmt:
+	gofmt -w .
 
-build: vendor
-	./scripts/build.sh
+build-workflow:
+	scripts/build-workflow.sh
 
-deploy: build
-	@open dist/*.alfredworkflow
+precommit:
+	pre-commit run --all-files
 
-release:
-	./scripts/release.sh
-
-# ---------------------------------------------------------------------------
-# Local dev
-# ---------------------------------------------------------------------------
-run:
-	@./scripts/dev.sh "$(Q)"
-
-# ---------------------------------------------------------------------------
-# Maintenance
-# ---------------------------------------------------------------------------
-clean:
-	rm -rf .build dist/ .coverage htmlcov/ .mypy_cache/ .pytest_cache/
-	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-	find . -name "*.pyc" -delete
-
-# ---------------------------------------------------------------------------
-# Dev Charter
-# ---------------------------------------------------------------------------
 update-charter:
 	curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh | CHARTER_UPDATE_ONLY=1 bash
 
-# ---------------------------------------------------------------------------
-# Alfred Workflow Notes
-# ---------------------------------------------------------------------------
 update-workflow-notes:
 	curl -fsSL https://raw.githubusercontent.com/y-marui/alfred-workflow-template/main/scripts/install-workflow-notes.sh | bash

@@ -14,7 +14,7 @@ Alfred 5 ワークフロー — クリップボードにある表を Markdown �
 ## Requirements
 
 - Alfred 5（Powerpack が必要）
-- Python 3.11+
+- Go（バージョンは `go.mod` を参照）
 - [pre-commit](https://pre-commit.com/)（開発用セキュリティフック）
 
 ## Setup
@@ -22,8 +22,7 @@ Alfred 5 ワークフロー — クリップボードにある表を Markdown �
 ```bash
 git clone https://github.com/y-marui/alfred-note-table-converter
 cd alfred-note-table-converter
-make install
-make build
+make build-workflow
 ```
 
 `dist/*.alfredworkflow` をダブルクリックして Alfred にインストールします。
@@ -32,13 +31,14 @@ make build
 
 ```
 alfred-note-table-converter/
-├── src/
-│   ├── alfred/         # Alfred SDK (response, router, cache, config, logger, safe_run)
-│   └── app/            # アプリケーション層 (commands, services, clients)
-├── workflow/           # Alfred パッケージ (info.plist, scripts/entry.py, vendor/)
-├── tests/              # pytest テストスイート
-├── scripts/            # build.sh, dev.sh, release.sh, vendor.sh
-└── docs/               # アーキテクチャ・開発ドキュメント
+├── cmd/note-table-converter-alfred/  # Alfred が実行するバイナリのエントリポイント
+├── internal/
+│   ├── tableconv/      # Markdown ⇄ LaTeX 変換ロジック（Alfred非依存）
+│   ├── tableconvcmd/   # コマンドdispatch + Script Filter応答の組み立て
+│   └── scriptfilter/   # Alfred Script Filter JSON型
+├── workflow/           # Alfred パッケージ (info.plist, icon.png)
+├── scripts/            # build-workflow.sh, extract-changelog.sh
+└── docs/               # アーキテクチャ・仕様ドキュメント
 ```
 
 ## Usage
@@ -59,8 +59,9 @@ alfred-note-table-converter/
 | ドキュメント | 内容 |
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | アーキテクチャ全体設計 |
-| [docs/development.md](docs/development.md) | コマンド追加・依存関係管理・リリース手順 |
-| [docs/usage.md](docs/usage.md) | エンドユーザー向け利用ガイド |
+| [docs/specification.md](docs/specification.md) | 機能仕様・データフロー |
+| [docs/file-map.md](docs/file-map.md) | ファイル単位の依存関係マップ |
+| [docs/development.md](docs/development.md) | コマンド追加・リリース手順 |
 
 ## Contributing
 
