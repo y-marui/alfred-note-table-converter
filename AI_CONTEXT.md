@@ -17,6 +17,7 @@ AI はタスク開始時に以下の順で参照する:
 - `docs/file-map.md`（ファイルレベルの依存関係 ※情報が足りない・古い場合は適宜探索し、追記・更新する）
 - `docs/specification.md`（機能仕様・データフロー）
 - `docs/ui-design.md`（UI 設計・コンポーネント仕様）
+- `docs/alfred-gallery-readiness.md`（Alfred Gallery 提出基準のチェックリストと未対応項目）
 
 不明点は `docs/dev-charter/CHARTER_INDEX.md` → 該当ファイルの順で参照する。
 

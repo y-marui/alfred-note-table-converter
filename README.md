@@ -43,8 +43,9 @@ alfred-note-table-converter/
 
 ## Usage
 
-Copy a Markdown or LaTeX table to the clipboard, then trigger `tbl` in Alfred.
-Press **Enter** to copy and paste the converted table.
+Convert a Markdown or LaTeX table on the clipboard via the `tbl` keyword.
+
+* <kbd>↩︎</kbd> Copy and paste the converted table
 
 | Command | Description |
 |---|---|
