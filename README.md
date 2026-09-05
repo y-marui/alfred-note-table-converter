@@ -61,7 +61,9 @@ Press **Enter** to copy and paste the converted table.
 | [docs/architecture.md](docs/architecture.md) | Full architecture and layer design |
 | [docs/specification.md](docs/specification.md) | Functional specification and data flow |
 | [docs/file-map.md](docs/file-map.md) | File-level dependency map |
-| [docs/development.md](docs/development.md) | Adding commands, release process |
+| [docs/ui-design.md](docs/ui-design.md) | Alfred result item UI conventions |
+| [docs/configuration-builder.md](docs/configuration-builder.md) | This project's Configuration Builder settings |
+| [DEVELOPING.md](DEVELOPING.md) | Adding commands, release process |
 
 ## Contributing
 

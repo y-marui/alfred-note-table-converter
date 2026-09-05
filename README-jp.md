@@ -61,7 +61,9 @@ alfred-note-table-converter/
 | [docs/architecture.md](docs/architecture.md) | アーキテクチャ全体設計 |
 | [docs/specification.md](docs/specification.md) | 機能仕様・データフロー |
 | [docs/file-map.md](docs/file-map.md) | ファイル単位の依存関係マップ |
-| [docs/development.md](docs/development.md) | コマンド追加・リリース手順 |
+| [docs/ui-design.md](docs/ui-design.md) | Alfred結果アイテムのUI設計指針 |
+| [docs/configuration-builder.md](docs/configuration-builder.md) | このプロジェクトのConfiguration Builder設定 |
+| [DEVELOPING.md](DEVELOPING.md) | コマンド追加・リリース手順 |
 
 ## Contributing
 
