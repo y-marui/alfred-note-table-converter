@@ -43,8 +43,9 @@ alfred-note-table-converter/
 
 ## Usage
 
-クリップボードに Markdown または LaTeX の表をコピーし、Alfred で `tbl` を起動します。
-**Enter** を押すと、変換した表をコピー＆ペーストします。
+`tbl` キーワードで、クリップボード上の Markdown または LaTeX の表を変換します。
+
+* <kbd>↩︎</kbd> 変換した表をコピー＆ペースト
 
 | コマンド | 説明 |
 |---|---|
