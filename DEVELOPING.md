@@ -104,6 +104,11 @@ git push origin main --tags
 # GitHub Actions automatically builds and releases.
 ```
 
+If Actions can't run (e.g. a billing/spending-limit issue), `make release`
+builds the tag at HEAD and publishes the same GitHub Release from this
+machine instead, prompting for confirmation before pushing the tag or
+creating the release.
+
 ## AI Development Workflow
 
 This project is designed for AI-assisted development.
