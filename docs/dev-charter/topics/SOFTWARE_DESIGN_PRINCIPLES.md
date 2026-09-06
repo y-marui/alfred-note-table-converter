@@ -18,7 +18,7 @@
 
 ## CLI Usability
 
-言語・フレームワークによらず、CLIコマンドを実装する場合の最低限のユーザビリティ方針。実装の詳細は言語別のtopicsファイル（Pythonは[PYTHON_CLI.md](PYTHON_CLI.md)）を参照。
+言語・フレームワークによらず、CLIコマンドを実装する場合の最低限のユーザビリティ方針。実装の詳細は言語別のtopicsファイル（Pythonは[PYTHON_CLI.md](python/PYTHON_CLI.md)）を参照。
 
 - **MUST**：`--help` を実装する
 - **MUST**：`--version` を実装する

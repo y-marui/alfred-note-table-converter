@@ -21,8 +21,17 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 if ($branch -eq 'main' -or $branch -eq 'master' -or ($defaultBranch -and $branch -eq $defaultBranch)) {
+    # 表示用にホームディレクトリ配下のパスは ~ に短縮する
+    # （no-hardcoded-local-paths と同様、絶対パスをそのまま出さない配慮）。
+    $scriptDir = $PSScriptRoot
+    if ($HOME -and $scriptDir -eq $HOME) {
+        $scriptDir = '~'
+    } elseif ($HOME -and $scriptDir.StartsWith($HOME + [System.IO.Path]::DirectorySeparatorChar)) {
+        $scriptDir = '~' + $scriptDir.Substring($HOME.Length)
+    }
     Write-Host "error: デフォルトブランチ (${branch}) への直接コミットはブロックされています。"
-    Write-Host '  作業用ブランチを作成してください: git checkout -b work/<short-description>'
+    Write-Host "  次のコマンドでブランチを作成してそちらに移動してください: pwsh $scriptDir/new-branch.ps1 <branch-name>"
+    Write-Host '  （ステージ済み・未ステージの変更はそのまま新ブランチに引き継がれます）'
     exit 1
 }
 
