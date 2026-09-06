@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # PowerShell counterpart of check-python-package-management.sh (same behavior).
-# topics/PYTHON_DEV_ENV.md: "pyproject.toml で依存関係を管理する
+# topics/python/PYTHON_DEV_ENV.md: "pyproject.toml で依存関係を管理する
 # （requirements.txt は使用しない）" "uv.lock をリポジトリに含め、
 # 再現性を担保する" を機械的に検証する。
 #
@@ -16,13 +16,13 @@ $status = 0
 
 if (Test-Path (Join-Path $repoRoot 'requirements.txt') -PathType Leaf) {
     Write-Host 'error: requirements.txt が存在します。'
-    Write-Host '  (topics/PYTHON_DEV_ENV.md: pyproject.toml で依存関係を管理する。requirements.txt は使用しない)'
+    Write-Host '  (topics/python/PYTHON_DEV_ENV.md: pyproject.toml で依存関係を管理する。requirements.txt は使用しない)'
     $status = 1
 }
 
 if (-not (Test-Path (Join-Path $repoRoot 'uv.lock') -PathType Leaf)) {
     Write-Host 'error: pyproject.toml があるのに uv.lock がありません。'
-    Write-Host '  (topics/PYTHON_DEV_ENV.md: uv.lock をリポジトリに含め、再現性を担保する)'
+    Write-Host '  (topics/python/PYTHON_DEV_ENV.md: uv.lock をリポジトリに含め、再現性を担保する)'
     $status = 1
 }
 

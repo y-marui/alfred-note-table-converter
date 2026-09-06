@@ -61,6 +61,19 @@ line-length = 88
 select = ["E", "F", "I", "UP"]
 ```
 
+`docs/dev-charter/` 配下（`git subtree` で取り込んだ vendored コピー）はlint対象から除外する。
+ruffのデフォルト除外リストを保持するため、`exclude`（置換）ではなく`extend-exclude`（追加）を使う：
+
+```toml
+[tool.ruff]
+extend-exclude = ["docs/dev-charter"]
+```
+
+**pre-commitでの重複実行（任意）:** `astral-sh/ruff-pre-commit` をローカルフックとして追加する
+運用も可。追加する場合、`rev:` は `pyproject.toml` の `[dependency-groups]` にある
+`ruff` のバージョン制約と大きく乖離させない（pre-commit実行時のruffと `make lint`/CI
+実行時のruffでバージョンが異なると、lint結果が一致しなくなるため）。
+
 ## Type Checking
 
 - **mypy** で静的型チェックを行う
@@ -71,6 +84,18 @@ select = ["E", "F", "I", "UP"]
 ```toml
 [tool.mypy]
 strict = true
+python_version = "3.11"  # requires-python の下限と揃える
+```
+
+依存ライブラリの型スタブが新しい構文（例: numpyのPEP 695 `type`文）を使っている場合、
+mypyの`python_version`をそのスタブが要求するバージョンまで引き上げてよい
+（`requires-python`のランタイム対応範囲自体は変えない。型チェック専用の設定であるため）。
+この場合はコメントで理由を明記する。
+
+```toml
+[tool.mypy]
+strict = true
+python_version = "3.12"  # numpyの型スタブがPEP 695構文を使用、mypyが3.12以降を要求するため
 ```
 
 ## Package Distribution (py.typed)
@@ -113,7 +138,9 @@ lint:
   name: Lint
   steps:
     - uses: actions/checkout@v7
-    - uses: astral-sh/setup-uv@v10
+    - uses: astral-sh/setup-uv@v10.0.1
+      with:
+        enable-cache: true
     - run: uv sync --frozen
     - run: uv run ruff check .
     - run: uv run ruff format --check .
@@ -126,9 +153,31 @@ test:
       python-version: ["3.11", "3.12", "3.13", "3.14"]  # EOLまで6ヶ月以上あるバージョン
   steps:
     - uses: actions/checkout@v7
-    - uses: astral-sh/setup-uv@v10
+    - uses: astral-sh/setup-uv@v10.0.1
       with:
+        enable-cache: true
         python-version: ${{ matrix.python-version }}
     - run: uv sync --frozen
     - run: uv run pytest
+```
+
+### `build` Job
+
+`CI_POLICY.md` の `build` job（任意）は「実体のあるビルド作業」がある場合に配置する。Pythonでは
+パッケージが**他プロジェクトから依存指定される・PyPI等で配布される**場合、`uv build` で
+wheel/sdistが実際に組み立てられることを検証する（`import` チェックだけでは
+`[build-system]`・`[tool.hatch.build]` の設定ミスや配布ファイル不足を検出できない）。
+単体のアプリケーション（配布を想定しないCLIツール・サービス等）では、`uv run python -c
+"import <pkg>"` によるインストール可能性の確認で十分とする。
+
+```yaml
+build:
+  name: Build
+  steps:
+    - uses: actions/checkout@v7
+    - uses: astral-sh/setup-uv@v10.0.1
+      with:
+        enable-cache: true
+    - run: uv sync --frozen
+    - run: uv build   # 配布パッケージの場合。非配布アプリでは import チェックでも可
 ```
