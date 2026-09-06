@@ -63,8 +63,9 @@ if ! git ls-remote --exit-code --tags origin "$TAG" >/dev/null 2>&1; then
   git push origin "$TAG"
 fi
 
+NOTES=$(scripts/extract-changelog.sh "$TAG")
 gh release create "$TAG" dist/*.alfredworkflow dist/checksums.txt \
   --title "$TAG" \
-  --generate-notes
+  --notes "$NOTES"
 
 echo "✓ Release $TAG created"
