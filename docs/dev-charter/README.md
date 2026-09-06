@@ -53,6 +53,9 @@ git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 > The `check-charter.yml` workflow detects this automatically and handles it.
 > For manual updates, use the following instead of `git subtree pull`:
 > Make sure the working tree is clean first (`git reset --hard HEAD` discards uncommitted changes).
+> The finishing commit is built in the same shape a real `git subtree` merge leaves behind
+> (`MERGE_HEAD` plus a trailer-carrying squash commit), so it isn't rejected if
+> `scripts/check-charter-subtree-edit.sh` is installed:
 > ```bash
 > git remote add dev-charter https://github.com/y-marui/dev-charter || true
 > git fetch dev-charter
@@ -63,11 +66,37 @@ git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 > mkdir -p docs/dev-charter/
 > git archive dev-charter/full | tar -x -C docs/dev-charter/
 > git add docs/dev-charter/
-> git commit -m "Squashed 'docs/dev-charter/' content from commit ${SPLIT}
+> MSG="Squashed 'docs/dev-charter/' content from commit ${SPLIT}
 >
 > git-subtree-dir: docs/dev-charter
 > git-subtree-split: ${SPLIT}"
+> SQUASH=$(git commit-tree "$(git write-tree)" -p "$SPLIT" -m "$MSG")
+> echo "$SQUASH" > "$(git rev-parse --git-path MERGE_HEAD)"
+> printf '%s\n' "$MSG" > "$(git rev-parse --git-path MERGE_MSG)"
+> git commit --no-edit
 > ```
+
+> **Note (the `git subtree pull` finishing commit is rejected by a pre-commit hook):**
+> If your local copies of `scripts/check-charter-subtree-edit.sh` etc. still predate a fix
+> carried by the update you're pulling in (e.g. a `MERGE_HEAD` exemption), the commit that
+> finishes the merge can get blocked, leaving `.git/MERGE_HEAD` in place. Trying to work
+> around this with a separate pre-sync commit doesn't help either — `docs/dev-charter/VERSION`
+> is still the old value at that point, so `check-local-charter-version.sh` blocks that too.
+> When `.git/MERGE_HEAD` is still present, finish that same merge instead of restarting it
+> (the Quick Install one-liner does this automatically when updating):
+> ```bash
+> # Re-copy only the files that differ from docs/dev-charter/scripts/ (keep them executable)
+> for f in scripts/*.sh scripts/*.ps1; do
+>   [ -e "$f" ] || continue
+>   incoming="docs/dev-charter/scripts/$(basename "$f")"
+>   [ -f "$incoming" ] && ! cmp -s "$f" "$incoming" && cp "$incoming" "$f" && chmod +x "$f"
+> done
+> git add scripts/
+> git commit --no-edit
+> ```
+> If there are conflicts under `docs/dev-charter/` (e.g. shared history was rewritten), that
+> tree is never meant to be hand-edited locally, so always take the incoming side first —
+> `git checkout --theirs -- docs/dev-charter/ && git add docs/dev-charter/` — then proceed as above.
 
 After updating, paste the following prompt into your AI tool:
 
@@ -91,6 +120,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:

@@ -52,6 +52,8 @@ git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 > `check-charter.yml` ワークフローがこのケースを自動検出して対処します。
 > 手動で更新する場合は `git subtree pull` の代わりに以下を実行してください：
 > 作業ツリーが clean であることを確認してから実行してください（`git reset --hard HEAD` は未コミット変更を破棄します）。
+> 最後の commit は、`scripts/check-charter-subtree-edit.sh` を導入済みならそれに拒否されないよう、
+> 実際の `git subtree` マージと同じ形（`MERGE_HEAD` ＋ trailer 付き squash commit）で作成します：
 > ```bash
 > git remote add dev-charter https://github.com/y-marui/dev-charter || true
 > git fetch dev-charter
@@ -62,11 +64,38 @@ git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 > mkdir -p docs/dev-charter/
 > git archive dev-charter/full | tar -x -C docs/dev-charter/
 > git add docs/dev-charter/
-> git commit -m "Squashed 'docs/dev-charter/' content from commit ${SPLIT}
+> MSG="Squashed 'docs/dev-charter/' content from commit ${SPLIT}
 >
 > git-subtree-dir: docs/dev-charter
 > git-subtree-split: ${SPLIT}"
+> SQUASH=$(git commit-tree "$(git write-tree)" -p "$SPLIT" -m "$MSG")
+> echo "$SQUASH" > "$(git rev-parse --git-path MERGE_HEAD)"
+> printf '%s\n' "$MSG" > "$(git rev-parse --git-path MERGE_MSG)"
+> git commit --no-edit
 > ```
+
+> **Note（`git subtree pull` の仕上げの commit が pre-commit フックに拒否される場合）:**
+> ローカルの `scripts/check-charter-subtree-edit.sh` 等が更新前の古い内容のままだと、
+> 取り込もうとしている変更自体に含まれる修正（例: `MERGE_HEAD` 例外）がまだ手元に無いため、
+> マージを完了させる commit がブロックされ、`.git/MERGE_HEAD` が残ったまま失敗することがあります。
+> 新しく別の pre-sync commit を先に作ろうとしても、今度は `docs/dev-charter/VERSION` が
+> まだ古いままなので `check-local-charter-version.sh` にブロックされます。
+> `.git/MERGE_HEAD` が残っている場合は、マージをやり直すのではなく完了させてください
+> （Quick Install のワンライナーで更新する場合はこの手順を自動で行います）：
+> ```bash
+> # docs/dev-charter/scripts/ と差分があるファイルだけ再コピーする（実行権限も維持）
+> for f in scripts/*.sh scripts/*.ps1; do
+>   [ -e "$f" ] || continue
+>   incoming="docs/dev-charter/scripts/$(basename "$f")"
+>   [ -f "$incoming" ] && ! cmp -s "$f" "$incoming" && cp "$incoming" "$f" && chmod +x "$f"
+> done
+> git add scripts/
+> git commit --no-edit
+> ```
+> `docs/dev-charter/` 配下に競合がある場合（共有履歴が組み替えられていた場合など）は、
+> このツリーはローカルで手編集しない前提のため、先に
+> `git checkout --theirs -- docs/dev-charter/ && git add docs/dev-charter/` で
+> 常に取り込み側を採用してから上記を実行してください。
 
 更新後、以下のプロンプトを AI ツールに貼り付けてください：
 
@@ -89,6 +118,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:

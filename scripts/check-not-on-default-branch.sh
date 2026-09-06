@@ -25,8 +25,16 @@ if git remote get-url origin >/dev/null 2>&1; then
 fi
 
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ] || { [ -n "$DEFAULT_BRANCH" ] && [ "$BRANCH" = "$DEFAULT_BRANCH" ]; }; then
+  SCRIPT_DIR=$(dirname "$0")
+  # 表示用にホームディレクトリ配下のパスは ~ に短縮する
+  # （no-hardcoded-local-paths と同様、絶対パスをそのまま出さない配慮）。
+  case "$SCRIPT_DIR" in
+    "$HOME") SCRIPT_DIR="~" ;;
+    "$HOME"/*) SCRIPT_DIR="~${SCRIPT_DIR#"$HOME"}" ;;
+  esac
   echo "error: デフォルトブランチ (${BRANCH}) への直接コミットはブロックされています。"
-  echo "  作業用ブランチを作成してください: git checkout -b work/<short-description>"
+  echo "  次のコマンドでブランチを作成してそちらに移動してください: bash ${SCRIPT_DIR}/new-branch.sh <branch-name>"
+  echo "  （ステージ済み・未ステージの変更はそのまま新ブランチに引き継がれます）"
   exit 1
 fi
 

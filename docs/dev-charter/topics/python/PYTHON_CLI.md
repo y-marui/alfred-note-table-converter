@@ -154,7 +154,7 @@ appname login --token "$API_TOKEN"
 ## Shell Completion
 
 `--help` / `--version` および shell completion の一般方針は
-[SOFTWARE_DESIGN_PRINCIPLES.md](SOFTWARE_DESIGN_PRINCIPLES.md) の CLI Usability を参照。
+[SOFTWARE_DESIGN_PRINCIPLES.md](../SOFTWARE_DESIGN_PRINCIPLES.md) の CLI Usability を参照。
 
 `typer`（Click基盤）は標準で `--install-completion` / `--show-completion` オプションを提供する。追加の実装なしに、この2つをそのまま使う。
 
