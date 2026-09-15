@@ -30,7 +30,7 @@ that submission is not blocked on our side whenever that step happens.
 | User Configuration over environment variables | ✅ N/A | Nothing today needs user-facing configuration |
 | English instructions in About/README | ✅ Done | `README.md` is the reference (English) version; `README-jp.md` is canonical |
 | README follows Gallery style guide | ✅ Done | `## Usage` opens with "via the `tbl` keyword" phrasing; the Enter action is a `<kbd>` bullet, not a table |
-| Screenshots (full Alfred window, shadow, no background) | ❌ Missing | No `images/` directory exists; needs a real Alfred window capture, which this repository's automation cannot produce. Tracked in [#42](https://github.com/y-marui/alfred-note-table-converter/issues/42) |
+| Screenshots (full Alfred window, shadow, no background) | ✅ Done | `images/tbl.png`, real window capture (rounded corners + drop shadow, transparent background) |
 
 ## Out of scope here
 
