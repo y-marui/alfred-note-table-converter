@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-15
+
 ### Added
 
 - Gallery-style screenshot of the `tbl` keyword entry point in README/README-jp.
