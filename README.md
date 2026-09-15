@@ -45,6 +45,8 @@ alfred-note-table-converter/
 
 Convert a Markdown or LaTeX table on the clipboard via the `tbl` keyword.
 
+![tbl keyword conversion result](images/tbl.png)
+
 * <kbd>↩︎</kbd> Copy and paste the converted table
 
 | Command | Description |

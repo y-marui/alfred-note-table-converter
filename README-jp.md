@@ -45,6 +45,8 @@ alfred-note-table-converter/
 
 `tbl` キーワードで、クリップボード上の Markdown または LaTeX の表を変換します。
 
+![tbl キーワードの変換結果](images/tbl.png)
+
 * <kbd>↩︎</kbd> 変換した表をコピー＆ペースト
 
 | コマンド | 説明 |
