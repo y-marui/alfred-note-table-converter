@@ -42,6 +42,10 @@ jobs:
               - '!.github/copilot-instructions.md'
               - '!.github/workflows/dev-charter-check.yml'
               - '!.github/workflows/auto-assign-self.yml'
+              # dev-charter 配布ファイル（git subtree 更新 PR が持ち込む）
+              - '!.pre-commit-config.yaml'
+              - '!scripts/{check-ai-context-reference,check-charter-ci-template,check-charter-doc-links,check-charter-subtree-edit,check-conventional-commit,check-dotenv-gitignore,check-language-pair-footer,check-language-pair-sync,check-license-exists,check-local-charter-version,check-markdown-heading-language,check-not-on-default-branch,check-powershell-lint,check-python-package-management,check-readme-placeholders,check-version-date,new-branch}.{sh,ps1}'
+              - '!scripts/PSScriptAnalyzerSettings.psd1'
 
   security:
     name: Security scan (pre-commit)
