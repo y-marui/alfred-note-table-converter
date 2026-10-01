@@ -136,6 +136,8 @@ cp docs/dev-charter/scripts/check-language-pair-footer.sh scripts/
 chmod +x scripts/check-language-pair-footer.sh
 cp docs/dev-charter/scripts/check-ai-context-reference.sh scripts/
 chmod +x scripts/check-ai-context-reference.sh
+cp docs/dev-charter/scripts/check-charter-doc-links.sh scripts/
+chmod +x scripts/check-charter-doc-links.sh
 cp docs/dev-charter/scripts/check-python-package-management.sh scripts/
 chmod +x scripts/check-python-package-management.sh
 cp docs/dev-charter/scripts/check-readme-placeholders.sh scripts/
@@ -211,6 +213,7 @@ CI での実行例（GitHub Actions）：
 | `scripts/check-conventional-commit.sh` | コミットメッセージが Conventional Commits 形式でなければブロック（commit-msg ステージ、merge/squash コミットは対象外） |
 | `scripts/check-language-pair-footer.sh` | 日英ペアドキュメントの冒頭宣言・末尾フッターの有無をキーワードベースで検証（ペアが両方存在する場合のみ） |
 | `scripts/check-ai-context-reference.sh` | `AI_CONTEXT.md` があるのに CLAUDE.md 等がそれを参照していなければブロック |
+| `scripts/check-charter-doc-links.sh` | 自分の Markdown が参照する `docs/dev-charter/...` パスが実在しなければブロック（`git subtree pull` 前に参照だけ先行更新するとリンク切れになるケースを検出） |
 | `scripts/check-python-package-management.sh` | `pyproject.toml` があるのに `requirements.txt` が存在する、または `uv.lock` が無ければブロック |
 | `scripts/check-readme-placeholders.sh` | `LICENSE`/`.github/FUNDING.yml`/`README` のプレースホルダ残留を検知（テンプレートリポジトリは対象外） |
 | `scripts/check-not-on-default-branch.sh` | デフォルトブランチ（`main`/`master`、または `origin/HEAD` が指す既定ブランチ）への直接コミットをブロック（CI ではスキップ） |

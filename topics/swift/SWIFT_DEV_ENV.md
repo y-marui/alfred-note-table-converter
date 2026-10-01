@@ -10,7 +10,9 @@ macOS/iOS 向け SwiftUI アプリ（クローズドプロジェクト前提）�
 
 ## Version Policy
 
-- Xcode 自体のバージョンは固定しない。CI は `macos-latest` に同梱された Xcode を使う
+- Xcode 自体のバージョンは固定しない。CI は `macos-latest` に同梱された Xcode を使う。
+  self-hosted runner を使う場合は、hosted の既定の Xcode に合わせて、runner 側で `DEVELOPER_DIR`
+  により固定する（[Runner Billing](https://github.com/y-marui/dev-charter/blob/full/topics/CI_POLICY.md#runner-billing) 参照）
 - Deployment Target は別ファイルで固定せず、`project.yml`（XcodeGen）の
   `options.deploymentTarget` を単一の情報源とする
 - Swift 言語バージョンは対象ごとに管理場所が異なる：
@@ -26,10 +28,10 @@ macOS/iOS 向け SwiftUI アプリ（クローズドプロジェクト前提）�
 
 - プロジェクト生成: **XcodeGen**（`project.yml` を単一の情報源とし、`.xcodeproj` は
   リポジトリにコミットしない。`xcodegen generate` で都度生成する）
-- Linter: **SwiftLint**（`.swiftlint.yml` で設定を管理し、CI では `swiftlint --strict`
-  を実行する）
+- Linter: **SwiftLint**（`.swiftlint.yml` で設定を管理する。ローカルは Homebrew、CI では
+  Linux 上の公式コンテナで `--strict` を実行する）
 - Formatter: **SwiftFormat**（`.swiftformat` で設定を管理する）
-- 上記 3 点はいずれも Homebrew でインストールする（`brew install xcodegen swiftlint
+- 上記 3 点はローカルでは Homebrew でインストールする（`brew install xcodegen swiftlint
   swiftformat`）。バージョンをリポジトリ側で固定する仕組みは持たない
 
 ```yaml
@@ -114,35 +116,46 @@ swift test --package-path Packages/Core
 
 ## CI Integration
 
-`CI_POLICY.md` の job 構成に従いつつ、以下の点は他スタックと異なる:
+`CI_POLICY.md` の job 構成に従いつつ、以下の点は他スタックと異なる。macOS ランナーは Linux の
+実質約 10 倍の単価で、job ごとに分単位で切り上げて課金されるため、macOS で動かす処理は
+最小限にする（[Runner Billing](https://github.com/y-marui/dev-charter/blob/full/topics/CI_POLICY.md#runner-billing) 参照）:
 
-- ビルド・Lint・テスト系の job は `runs-on: macos-latest`（Xcode・`xcodebuild` の
-  ため。`ubuntu-latest` では動かない）
-- ドキュメントのみの変更で `lint`/`test`/`build` を skip できるよう、`changes` job
-  （`dorny/paths-filter`）で Markdown・`docs/**` 等を除外し、`code` フラグが `true`
-  のときだけ後続 job を実行する
-- SwiftLint・XcodeGen はいずれも Homebrew でインストールする（バージョンを pin しない）
+- `lint` は `ubuntu-latest` で、SwiftLint の公式コンテナ（`ghcr.io/realm/swiftlint`）を使って
+  実行する。Linux と macOS で同じ結果になることは、導入時に確認済み（検査ファイル数・違反数が
+  一致）。コンテナの entrypoint は `swiftlint` なので、`swiftlint` を引数に重ねない
+- `test` と `build` は 1 つの macOS job（`Build & Test`）にまとめる。`Packages/Core` は
+  SwiftUI・SwiftData 等の Apple フレームワークに依存するため、Linux ではテストできない。
+  この job は `security`・`lint` の成功後に始める（失敗する PR で macOS を起動しない）
+- ドキュメントのみ・dev-charter 配布ファイルのみの変更で `lint`/`build` を skip できるよう、
+  `changes` job（`dorny/paths-filter`）で Markdown・`docs/**`・dev-charter 配布ファイル等を
+  除外し、`code` フラグが `true` のときだけ後続 job を実行する
+- XcodeGen は Homebrew でインストールする（バージョンを pin しない）。導入済みなら `brew` を呼ばない（self-hosted runner のユーザーは Homebrew に書き込めない）
 - 署名なしビルドで検証する（`CODE_SIGN_IDENTITY=""` / `CODE_SIGNING_REQUIRED=NO` /
   `CODE_SIGNING_ALLOWED=NO`）。配布用の署名付きビルドは CI では行わない
+- private リポジトリでは、リポジトリ変数 `MACOS_RUNNER` で self-hosted macOS runner に
+  切り替えられる（条件は [Runner Billing](https://github.com/y-marui/dev-charter/blob/full/topics/CI_POLICY.md#runner-billing) 参照）
 
 ```yaml
 lint:
   name: Lint
   needs: changes
   if: needs.changes.outputs.code == 'true'
-  runs-on: macos-latest
+  runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v7
-    - name: Install SwiftLint
-      run: brew install swiftlint
     - name: Run SwiftLint
-      run: swiftlint --strict
+      run: |
+        docker run --rm -v "$PWD":/work -w /work \
+          ghcr.io/realm/swiftlint:latest --strict
 
-test:
-  name: Test
-  needs: changes
+build:
+  name: Build & Test
+  needs: [changes, security, lint]
   if: needs.changes.outputs.code == 'true'
-  runs-on: macos-latest
+  # MACOS_RUNNER は private リポジトリでのみ設定する。fork の PR は常に hosted
+  runs-on: ${{ vars.MACOS_RUNNER && !github.event.pull_request.head.repo.fork && vars.MACOS_RUNNER || 'macos-latest' }}
+  env:
+    SCHEME: MyApp
   steps:
     - uses: actions/checkout@v7
     - name: Resolve packages (Core)
@@ -151,18 +164,8 @@ test:
     - name: Run Core unit tests
       run: swift test
       working-directory: Packages/Core
-
-build:
-  name: Build
-  needs: [changes, security, lint, test]
-  if: needs.changes.outputs.code == 'true'
-  runs-on: macos-latest
-  env:
-    SCHEME: MyApp
-  steps:
-    - uses: actions/checkout@v7
     - name: Install XcodeGen
-      run: brew install xcodegen
+      run: command -v xcodegen >/dev/null || brew install xcodegen
     - name: Generate Xcode project
       run: xcodegen generate
     - name: Build
@@ -178,6 +181,9 @@ build:
           SWIFT_STRICT_CONCURRENCY=complete \
           build
 ```
+
+`gate` の `needs` は `[changes, security, lint, build]` にし、結果の検証ループも `lint` と
+`build` だけにする。
 
 iOS ターゲット（Widget Extension を含む）を追加した場合は、上記 `build` job とは
 別に `-destination "generic/platform=iOS Simulator"` を使う iOS 向けビルド job を
