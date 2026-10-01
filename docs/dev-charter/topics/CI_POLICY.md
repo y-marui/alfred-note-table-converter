@@ -25,6 +25,9 @@
 | `build`（任意） | `Build` | ビルド成果物の生成、またはインストール可能性の検証 |
 | `gate` | ワークフロー自身の `name`（例：`CI`、`Dev Charter`） | 全 job の集約ゲート（後述）。必ず存在する |
 
+Swift/Xcode のように高額ランナー（macOS）を使うスタックでは、`test` と `build` を 1 つの job
+（`Build & Test`）にまとめてよい（[Runner Billing](#runner-billing) 参照）。
+
 `gate` は全 job の集約点として必ず最後に配置し、その `name` はワークフロー自身の `name`
 （トップレベルの `name:`）と同じ文字列にする。Branch Protection（Ruleset）の必須ステータス
 チェックには常にこの値（例：`ci.yml` なら `CI`）を登録する（`Build` ではない）。job 名に
@@ -176,6 +179,10 @@ jobs:
               - '!.github/copilot-instructions.md'
               - '!.github/workflows/dev-charter-check.yml'
               - '!.github/workflows/auto-assign-self.yml'
+              # dev-charter 配布ファイル（git subtree 更新 PR が持ち込む）
+              - '!.pre-commit-config.yaml'
+              - '!scripts/{check-ai-context-reference,check-charter-ci-template,check-charter-doc-links,check-charter-subtree-edit,check-conventional-commit,check-dotenv-gitignore,check-language-pair-footer,check-language-pair-sync,check-license-exists,check-local-charter-version,check-markdown-heading-language,check-not-on-default-branch,check-powershell-lint,check-python-package-management,check-readme-placeholders,check-version-date,new-branch}.{sh,ps1}'
+              - '!scripts/PSScriptAnalyzerSettings.psd1'
 
   security:
     name: Security scan (pre-commit)
@@ -229,6 +236,83 @@ jobs:
           done
 ```
 
+dev-charter 配布ファイル（`.pre-commit-config.yaml`、dev-charter の `src/scripts/` が配布する
+スクリプト、`scripts/PSScriptAnalyzerSettings.psd1`）だけの更新は、アプリのコードに影響しない
+ため code 扱いにしない。採用先独自のスクリプトを巻き込まないよう、`scripts/check-*` の
+ワイルドカードではなく、配布されるスクリプトの名前を列挙する。dev-charter が新しいスクリプトを
+配布したときは、この一覧に追加するまで code 扱いになる（CI が走る側＝安全側に倒れる）。`git subtree pull` による更新 PR（`update-charter`）でこれらのファイルが `code` を
+`true` にしてしまい、高額ランナーが毎回走る原因になる。`ci.yml` 自体や `Makefile` の変更は
+CI の挙動を変えうるため、code 扱いのままにする（更新 PR に `ci.yml` が含まれる場合は 1 回だけ
+走る）。
+
+### Runner Billing
+
+private リポジトリでは、GitHub-hosted runner の実行時間が課金対象になり、**各 job の実行時間は
+分単位に切り上げられる**。単価は OS で大きく異なる。現行の公式ドキュメント
+（[Actions minute multipliers / runner pricing](https://docs.github.com/en/billing/reference/actions-minute-multipliers)、
+確認日 2026-10-01）は倍率ではなく分単価で示しており、Linux 標準ランナーが約 $0.006/分、
+macOS が約 $0.062/分で、macOS は実質 **約 10 倍**になる。単価は変わりうるため、設計判断の
+たびに公式ページで確認する。public リポジトリの標準ランナーと self-hosted runner は無料。
+
+job の実行時間が短くても、macOS では切り上げの影響が大きい。ある Swift アプリのテンプレートでの
+実測では、Lint（13 秒）が macOS では 1 分分（Linux 換算 10 分）として課金されていた。
+Actions UI の実行時間だけを見ると、この差は見えない。
+
+**macOS ランナーの利用を最小化する指針：**
+
+- **Linux で動く job は Linux で動かす。** SwiftLint は公式コンテナ（`ghcr.io/realm/swiftlint`）
+  を使えば Linux で動く。移す前に、Linux と macOS で同じ結果（検査ファイル数・違反数）になる
+  ことを確認する。コンテナの entrypoint は `swiftlint` なので、`docker run ... image
+  swiftlint --strict` のようにコマンド名を重ねない（`image --strict` と書く）
+- **macOS の job は、安価な job が通ってから始める。** macOS の job の `needs` に
+  `security` と `lint`（Linux）を含め、失敗する PR で macOS を起動しない
+- **macOS の job は 1 本にまとめてよい。** 各 job の切り上げと起動・checkout の重複を避けるため、
+  Swift/Xcode では `test` と `build` を 1 つの job（`name: Build & Test`）にまとめてよい
+  （標準の job 名 `Test`・`Build` の例外）。効果はリポジトリによって 0〜1 分で、最大の削減は
+  Lint を Linux へ移すこと。Ruleset に登録するのは `gate`（ワークフローの `name`）だけなので、
+  この統合で Ruleset の変更は不要
+- **PR ごとの macOS 実行をやめる（`workflow_dispatch` のみ、マージ時のみ等）ことは標準にしない。**
+  `gate` を必須チェックにしている場合、macOS を PR で走らせないとビルド破損を PR の時点で検知
+  できない。許容する場合は、リスクと復旧手順を記録した上で、リポジトリ単位で判断する
+- **ドキュメントのみ・dev-charter 配布ファイルのみの変更では macOS を起動しない**
+  （[Cost Optimization (Path Filtering)](#cost-optimization-path-filtering) 参照）
+
+**self-hosted macOS runner（任意）：** 自前の Mac を runner にすると、macOS の job は課金されない。
+Docker コンテナの中で macOS は動かないため、Mac にネイティブで runner を導入する
+（Linux 用の Docker runner とは別物）。導入する場合の条件：
+
+- **private リポジトリだけに登録する。** public では fork の PR が runner 上で任意のコードを実行できる
+- `runs-on` はリポジトリ変数で切り替える。変数を設定しなければ GitHub-hosted に戻る。
+  fork の PR は常に GitHub-hosted にする：
+
+  ```yaml
+  runs-on: ${{ vars.MACOS_RUNNER && !github.event.pull_request.head.repo.fork && vars.MACOS_RUNNER || 'macos-latest' }}
+  ```
+
+- runner は専用の macOS ユーザー（管理者権限なし）で動かし、CI に署名鍵やシークレットを渡さない
+  （Swift の CI は署名なしビルドのため不要）
+- 同じラベルの runner を複数の Mac に登録すると、空いている方に自動で割り当てられる。runner が
+  すべて停止していると job は待機のままになり、GitHub-hosted には自動で落ちない。
+  その場合は変数を外す
+- hosted の `macos-latest` の既定の Xcode に合わせて、runner の環境変数 `DEVELOPER_DIR` で Xcode を
+  固定する。OS と Xcode が hosted と違うと、結果が食い違う（実例: Swift 6.3 の SwiftPM は `swift test`
+  で `.xcstrings` を `.lproj` にコンパイルせず、`.lproj` を前提にするテストが Xcode 26.6 で失敗し、
+  Xcode 27 で成功した）。両方の Xcode で通るように書くか、hosted と同じ Xcode に揃える
+- runner ユーザーは Homebrew に書き込めない（`brew install` が `... is not writable` を出す）。
+  ツールは事前に入れておき、CI は `command -v <tool> >/dev/null || brew install <tool>` の形にする
+  （hosted でも同じ動作になる）
+- **private の SwiftPM 依存**（`ssh://git@github.com/<owner>/<repo>.git`）を持つ場合、runner ユーザーに
+  読み取り専用のデプロイキーと、GitHub のホスト鍵を入れた `known_hosts` が要る。ない場合、
+  `swift package resolve` が `Host key verification failed` で失敗する。デプロイキーは 1 つの
+  リポジトリにしか登録できないため、依存先ごとに別の鍵を作る。鍵は runner ユーザーのホームに置くので、
+  その Mac のすべての runner（依存を使う側のすべてのリポジトリ）から使える。
+  デプロイキーを hosted には渡さないため、**この依存を持つリポジトリは self-hosted 専用**になる
+  （hosted に戻すには、デプロイキーを Secrets に置いて ssh-agent で解決する別の設定が要る）
+- 複数のリポジトリが同時にビルドすると、1 台の Mac の負荷が上がり、各 job が遅くなる
+  （課金は発生しない）。更新 PR を複数のアプリに一斉にマージするときに起きやすい
+- 課金ブロック中は Linux の job も起動しないため、self-hosted は課金ブロックの恒久対策にならない
+  （[Bypass Actor](#bypass-actor-repository-admin) 参照）
+
 ### Concurrency (Cancel Superseded Runs)
 
 同じブランチ/PRに素早く連続でpushすると、古いrunが完走するまで新しいrunと並行して
@@ -267,6 +351,19 @@ concurrency:
 `ready_for_review` は更新 PR にも必須である。`gh pr ready` で Draft を解除した時点で
 CI と Dev Charter チェックが再実行され、更新内容を含む状態で Ruleset の判定を受ける。
 テンプレートからこのイベントを除外してはいけない。
+
+**draft を使った運用ルール（無駄な run を避ける）：** PR を開いた後の修正（レビュー対応・バグや
+仕様変更の発覚）のたびに push すると、そのたびに CI が走る。`concurrency` のキャンセルは
+実行中の run を止めるだけで、push ごとに新しい run は始まる。draft の間は CI が走らない
+ことを利用する：
+
+- PR の作成後にバグや仕様変更が判明したら、PR を draft に戻して修正する。修正が揃ったら
+  ready にする（`ready_for_review` で CI が 1 回走る）
+- レビュー指摘への対応は、複数のコミットにまとめてから push する
+- ready にする前に、ローカルで lint・test・build を通す
+- AI エージェントが作る PR は、最初から draft で開く。ローカル検証後に ready にする
+- draft の PR でも、自動レビュー（`@codex review`、`@copilot review`）は動く
+  （2026-10-01 に確認）。レビューのためだけに ready にする必要はない
 
 **依存ロックファイル（`uv.lock` / `package-lock.json` / `Package.resolved` 等）は
 skip 対象に含めない。** ロックファイルの更新は依存パッケージのバージョン変更そのものであり、

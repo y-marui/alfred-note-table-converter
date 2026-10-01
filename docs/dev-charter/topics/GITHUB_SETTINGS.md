@@ -151,9 +151,9 @@ gh api --method PUT repos/{owner}/{repo}/actions/permissions/selected-actions \
   "github_owned_allowed": true,
   "verified_allowed": false,
   "patterns_allowed": [
-    "dorny/paths-filter@v4",
-    "pre-commit/action@v3.0.1",
-    "astral-sh/setup-uv@v10.0.1",
+    "dorny/paths-filter@v4*",
+    "pre-commit/action@v3*",
+    "astral-sh/setup-uv@v10*",
     "y-marui/dev-charter/.github/workflows/check-charter.yml@main"
   ]
 }
@@ -165,12 +165,23 @@ EOF
 `softprops/action-gh-release`・`y-marui/dev-charter` の reusable workflow など、実際に
 使っているものだけ）を集めて列挙する。
 
+許可リストは、ワークフローの `uses:` に書かれた参照（`@` 以降）を文字列として照合する。
+`@v10.0.1` のような完全一致で登録すると、Dependabot 等がバージョンを上げた時点で
+ワークフローが `startup_failure` になるため、タグ参照のアクションは**メジャーバージョンの
+ワイルドカード**（`@v10*`）で登録する。`@` 以降のない `owner/repo` は書式として無効。
+`y-marui/dev-charter/...` の reusable workflow は `@main` のままにする。
+
+SHA 固定で参照するアクション（例: セキュリティ上の理由で固定したもの）は、`@v4*` では
+タグ参照ではないため一致しない。固定を維持するなら、そのアクションに限り `owner/repo@*`
+で登録する（SHA 更新のたびに許可リストを直さずに済む）。
+
 > **重要な運用上の注意:** ワークフローに新しい非 `actions/*` Action を追加したら、**push
 > する前に** `patterns_allowed` へそのAction（`owner/repo@ref` の形）を追加すること。許可
 > リストの更新より先に push すると、そのワークフロー実行全体が `startup_failure`（ジョブの
 > エラーではなく「ワークフローファイルの問題」とだけ報告され、原因が分かりにくい）になる。
 > 既存の失敗した実行は再実行（rerun）できないため、許可リストを直してから空コミット等で
-> 改めて push し直す必要がある。
+> 改めて push し直すか、`workflow_dispatch` を持つワークフローなら `gh workflow run <名前> --ref main`
+> で起動し直す。
 
 ## PR Review Assignment (CODEOWNERS)
 
