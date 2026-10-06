@@ -339,7 +339,13 @@ macOS 版と同じ条件に加えて、次を守る：
   self-hosted に載せず、hosted のままにする
 - runner が止まると job は待機のままになり、hosted には自動で落ちない（必須チェックが pending のままに
   なる。待機は最長 24 時間で、`timeout-minutes` は開始後の実行時間にしか効かない）。その場合は変数を
-  外す。実行中に固まった job が runner を占有し続けないよう、`timeout-minutes` は付けておく
+  外す。実行中に固まった job が runner を占有し続けないよう、また hosted でも固まった job に分単位の
+  課金を続けさせないよう、中断しても問題ない job（`changes`・`gate`・`security`・`lint`・`build`・`test`
+  等）には runner の種類を問わず `timeout-minutes` を付ける。目安は、`changes`・`gate` が 5、
+  `security`・`lint` が 10、`build`・`test` が 30（実測の最長の 3〜5 倍を上限に調整する）。
+  途中で止めると中途半端な状態が残る release・publish 系の job には付けない。
+  再利用ワークフローを呼ぶ job（`uses:`）には job 単位の `timeout-minutes` を付けられないため、
+  呼ばれる側のワークフローで付ける
 - 再利用ワークフロー `check-charter.yml` は `runner` 入力で runs-on を受け取る（既定は `ubuntu-latest`）
 
 ### Concurrency (Cancel Superseded Runs)
