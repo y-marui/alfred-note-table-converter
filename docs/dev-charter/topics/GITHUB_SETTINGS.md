@@ -210,8 +210,9 @@ Ruleset の "Require a review from Code Owners"（`require_code_owner_review`）
 
 ## Issue / PR Auto-assign
 
-リポジトリオーナーが Issue を作成したとき、および誰かが PR を作成したときに、自動で自分に
+リポジトリオーナーが Issue を作成したとき、および他者・bot が PR を作成したときに、自動で自分に
 アサインする。GitHub Dashboard の "Assigned to me" に即座に表示されるようになる。
+オーナー自身が作る PR は対象外（作成者として Dashboard や `author:@me` で追えるため）。
 Dependabot の PR も対象にするため、`pull_request` ではなく `pull_request_target` を使う
 （`pull_request` だと Dependabot 起動の `GITHUB_TOKEN` は読み取り専用になりアサインできない）。
 
@@ -236,11 +237,15 @@ on:
 
 jobs:
   assign:
-    # Issues: only the assignee or bots. PRs: every PR, whoever opened it.
+    # Issues: only the assignee or bots. PRs: every PR except those the assignee
+    # opened themselves (the author already tracks those as their own PRs).
     if: >-
-      github.event_name == 'pull_request_target'
-      || github.actor == (vars.AUTO_ASSIGN_USER || github.repository_owner)
-      || endsWith(github.actor, '[bot]')
+      (github.event_name == 'issues'
+      && (github.actor == (vars.AUTO_ASSIGN_USER || github.repository_owner)
+      || endsWith(github.actor, '[bot]')))
+      || (github.event_name == 'pull_request_target'
+      && github.event.pull_request.user.login
+      != (vars.AUTO_ASSIGN_USER || github.repository_owner))
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -283,7 +288,8 @@ jobs:
   （Free プランの private リポジトリでは CODEOWNERS による自動レビュー依頼が効かず、
   Dashboard の "Needs your review" に載らないため。PR の作成者本人はレビュアーにできないのでスキップする）
 - Issue は assignee 本人または bot が作成した場合のみ対象（他者の Issue では `if` が false）。
-  PR は作成者を問わずアサインする
+  PR は、assignee 本人が作成したものを除いてアサインする（Dependabot などの bot と他者の PR が対象）。
+  オーナー自身の PR は作成者として追えるため、アサインしない
 - この workflow は PR のコードをチェックアウトしないため、`pull_request_target` でも安全。
   チェックアウトするステップを足す場合は、この前提が崩れるため再検討すること
 
