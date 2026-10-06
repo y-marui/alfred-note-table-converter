@@ -7,7 +7,7 @@
 #   <parent>/dev-charter/     a local clone of dev-charter
 #   <parent>/<this-repo>/     this repository
 #
-# - sibling branch newer than installed  -> block (a confirmed, actionable gap: run git subtree pull)
+# - sibling branch newer than installed  -> warn only (update with git subtree pull; not blocking so a growing number of repos doesn't stall development)
 # - sibling branch older than installed  -> warn only (sibling itself may just be un-pulled)
 # - equal, or either VERSION unavailable -> silent
 #
@@ -52,9 +52,9 @@ if ($local -eq $installed) {
 }
 
 if ([string]::CompareOrdinal($local, $installed) -gt 0) {
-    Write-Host "error: ${localCharter} の ${localRef} ブランチの VERSION (${local}) が ${prefix}/VERSION (${installed}) より新しいです。"
-    Write-Host '  git subtree pull で dev-charter を更新してからコミットしてください。'
-    exit 1
+    Write-Host "warning: ${localCharter} の ${localRef} ブランチの VERSION (${local}) が ${prefix}/VERSION (${installed}) より新しいです。"
+    Write-Host '  git subtree pull で dev-charter を更新してください（コミットはブロックしません）。'
+    exit 0
 }
 
 Write-Host "warning: ${localCharter} の ${localRef} ブランチの VERSION (${local}) は ${prefix}/VERSION (${installed}) より古いです。"

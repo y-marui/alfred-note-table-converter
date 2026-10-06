@@ -282,6 +282,11 @@ Docker コンテナの中で macOS は動かないため、Mac にネイティ�
 （Linux 用の Docker runner とは別物）。導入する場合の条件：
 
 - **private リポジトリだけに登録する。** public では fork の PR が runner 上で任意のコードを実行できる
+- **新規の private リポジトリを作るたびに、リポジトリ変数を設定する**
+  （`gh variable set MACOS_RUNNER --body <ラベル> -R <owner>/<repo>`）。設定漏れは
+  GitHub-hosted の macOS で課金され続け、CI の動作確認では気づきにくい
+  （実例: 設定漏れの 1 リポジトリだけが macOS 課金の大半を占めた）。
+  public リポジトリには設定しない
 - `runs-on` はリポジトリ変数で切り替える。変数を設定しなければ GitHub-hosted に戻る。
   fork の PR は常に GitHub-hosted にする：
 
@@ -312,6 +317,30 @@ Docker コンテナの中で macOS は動かないため、Mac にネイティ�
   （課金は発生しない）。更新 PR を複数のアプリに一斉にマージするときに起きやすい
 - 課金ブロック中は Linux の job も起動しないため、self-hosted は課金ブロックの恒久対策にならない
   （[Bypass Actor](#bypass-actor-repository-admin) 参照）
+
+**self-hosted Linux runner（任意）：** private リポジトリの Linux job（`security`・`changes`・`lint`・
+`gate` 等）は、各 job が分単位に切り上げられるため、リポジトリと PR が増えると無料枠
+（GitHub Pro は月 3,000 分）を超える。自前の PC（Docker）に runner を置いて逃がせる。
+macOS 版と同じ条件に加えて、次を守る：
+
+- 変数名は `LINUX_RUNNER`（値は runner のラベル）。**private リポジトリだけ**に設定し、public には設定しない：
+
+  ```yaml
+  runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
+  ```
+
+- 個人アカウントのリポジトリでは runner はリポジトリ単位でしか登録できないため、対象リポジトリごとに
+  runner（コンテナ）を 1 つ登録する。登録済みのホスト・リポジトリは、変数を設定する前に必ず確認する
+  （runner のないリポジトリに変数だけ設定すると、job が待機のままになる）
+- runner のイメージには、hosted の `ubuntu-latest` が持つツールのうち CI が使うもの（git、gh、curl、jq、
+  python3・pip・uv、node、go・gitleaks、shellcheck、zip、SwiftLint 等）を入れる。docker が要る step は、
+  ホストのソケットをマウントせず、イメージ側のツールで置き換えるか DinD にする
+- `pull_request_target` で特権トークンを使う job（assign 等）と、OIDC を使う release job は
+  self-hosted に載せず、hosted のままにする
+- runner が止まると job は待機のままになり、hosted には自動で落ちない（必須チェックが pending のままに
+  なる。待機は最長 24 時間で、`timeout-minutes` は開始後の実行時間にしか効かない）。その場合は変数を
+  外す。実行中に固まった job が runner を占有し続けないよう、`timeout-minutes` は付けておく
+- 再利用ワークフロー `check-charter.yml` は `runner` 入力で runs-on を受け取る（既定は `ubuntu-latest`）
 
 ### Concurrency (Cancel Superseded Runs)
 

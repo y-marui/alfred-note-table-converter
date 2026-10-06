@@ -78,8 +78,6 @@ git subtree pull --prefix=docs/dev-charter dev-charter full --squash
 > ローカルの `scripts/check-charter-subtree-edit.sh` 等が更新前の古い内容のままだと、
 > 取り込もうとしている変更自体に含まれる修正（例: `MERGE_HEAD` 例外）がまだ手元に無いため、
 > マージを完了させる commit がブロックされ、`.git/MERGE_HEAD` が残ったまま失敗することがあります。
-> 新しく別の pre-sync commit を先に作ろうとしても、今度は `docs/dev-charter/VERSION` が
-> まだ古いままなので `check-local-charter-version.sh` にブロックされます。
 > `.git/MERGE_HEAD` が残っている場合は、マージをやり直すのではなく完了させてください
 > （Quick Install のワンライナーで更新する場合はこの手順を自動で行います）：
 > ```bash
@@ -128,6 +126,9 @@ jobs:
     name: Check
     if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+    with:
+      # Set the repository variable LINUX_RUNNER only in PRIVATE repositories (see CI_POLICY Runner Billing).
+      runner: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     permissions:
       contents: write
       pull-requests: write
@@ -136,8 +137,9 @@ jobs:
   gate:
     name: Dev Charter
     needs: [check]
-    if: always()
-    runs-on: ubuntu-latest
+    # Skip on draft PRs too (a draft can't be merged, so no status is awaited).
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Verify dev-charter check did not fail
         run: |
@@ -153,8 +155,10 @@ full はこのワークフローの `branch` 入力の既定値なので、`with
 明示する必要はない。
 
 > **Note:** dependabot が作成した PR や draft PR では `check` 自体がスキップされます
-> （後述）。`gate` はその場合も `skipped` を正常として扱い、必ず `Dev Charter`（ワークフロー
-> 自身の `name:` と同じ値）を報告します。Branch Protection（Ruleset）に必須ステータス
+> （後述）。`gate` は dependabot の場合も `skipped` を正常として扱い、`Dev Charter`（ワークフロー
+> 自身の `name:` と同じ値）を報告します（draft PR は `gate` ごとスキップします。draft は
+> マージできず、必須チェックの報告を待たないためです。1 job ごとに分単位で課金されるのを避ける
+> 目的もあります）。Branch Protection（Ruleset）に必須ステータス
 > チェックとして登録するのは `Check / check` ではなく `Dev Charter` です（[CI_POLICY.md
 > の Ruleset 節](topics/CI_POLICY.md#branch-protection-ruleset)参照）。
 > `check` job だけを直接必須チェックに登録すると、skip 時に `Check / check` という
