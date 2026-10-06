@@ -1,0 +1,561 @@
+# CI Policy
+
+> **TODO（暫定メモ、2026-08-19）:** `swift-closed-template` の `ci.yml` の `on:` に
+> `develop` ブランチへの参照が残っているが、`develop` ブランチ運用は既にやめており
+> （現存せず、`DEVELOPING.md` 等にも記載なし）、設定だけが取り残されている。
+> `swift-closed-template` とそこから派生した各 swift-* リポジトリの `ci.yml` から
+> 削除する。この CI ポリシー更新とは別作業として扱う。
+
+## Naming Convention
+
+| 対象 | 規則 | 例 |
+|---|---|---|
+| ワークフローファイル名 | 機能を表す小文字 + ハイフン | `ci.yml`, `charter-check.yml` |
+| ワークフロー `name` | タイトルケース、短く端的に | `CI`, `Dev Charter` |
+| job ID | 小文字スネークケース | `lint`, `test`, `build` |
+| job `name` | タイトルケース。追加説明が必要な場合は括弧付きで補足 | `Lint`, `Test`, `Test (pytest)`, `Build`, `Security scan (pre-commit)` |
+
+### Standard Job Names
+
+| job ID | `name` | 用途 |
+|---|---|---|
+| `security` | `Security scan (pre-commit)` | pre-commit によるシークレット検知・静的解析 |
+| `lint` | `Lint` | コードスタイル・フォーマット検査 |
+| `test` | `Test` / `Test (pytest)` など | ユニットテスト・インテグレーションテスト |
+| `build`（任意） | `Build` | ビルド成果物の生成、またはインストール可能性の検証 |
+| `gate` | ワークフロー自身の `name`（例：`CI`、`Dev Charter`） | 全 job の集約ゲート（後述）。必ず存在する |
+
+Swift/Xcode のように高額ランナー（macOS）を使うスタックでは、`test` と `build` を 1 つの job
+（`Build & Test`）にまとめてよい（[Runner Billing](#runner-billing) 参照）。
+
+`gate` は全 job の集約点として必ず最後に配置し、その `name` はワークフロー自身の `name`
+（トップレベルの `name:`）と同じ文字列にする。Branch Protection（Ruleset）の必須ステータス
+チェックには常にこの値（例：`ci.yml` なら `CI`）を登録する（`Build` ではない）。job 名に
+`build` を使うのは、実際にビルド成果物を作る job（任意・実体のあるビルドがない場合は省略）だけ。
+
+1リポジトリに複数のワークフローファイルがある場合（`ci.yml` と `dev-charter-check.yml` の
+併用など）、各ワークフローの `name:` は互いに異なる値にする。`gate` の `name` をワークフロー
+自身の `name` と一致させる規則により、複数の `gate` が同じチェック名を報告して Ruleset 上で
+衝突する事態を自然に避けられる。
+
+## Job Design
+
+**CIのjob構成とRuleset設定を分離し、Ruleset管理を最小化する。**
+
+- 集約ゲート `gate` job を必ず最後に配置し、`needs` で全依存を定義する
+- 実体のあるビルド作業がある場合は `build` job を用意し、`gate` の `needs` に含める
+- 単一job（lint/test 相当すら分けない極小プロジェクト）でも `gate` は省略しない。
+  ビルド・検証の実処理をそのまま `gate` の中で行ってよい
+  - **`*-template` リポジトリ（`git subtree pull` の取り込み元ではなく、GitHub の
+    テンプレート機能や単純コピーで他プロジェクトの出発点として使われるリポジトリ）には
+    この単一job省略を適用しない。** 単一jobが許されるのは、それ自体が完結した
+    純粋に極小な**スタンドアロン**プロジェクトの場合のみ。`*-template`
+    リポジトリはそこから実プロジェクトが構築される前提のため、最初から
+    `security`/`lint`/`test`/`build`/`gate` の完全な構成にしておく方が良い出発点になる
+    （単一jobのまま複製されると、後から分割する手間を新プロジェクト側に残してしまう）
+- Ruleset設定：ワークフロー自身の `name`（`gate` job の `name` と一致）のみ指定（全リポジトリ共通）
+
+この方針により、job を増減しても Ruleset の変更が不要になる（`gate` の `name` はワークフロー
+自身の `name` に固定されており、job 構成の変更とは独立しているため）。
+
+### `gate` Is a Gate, Not Just a `needs` Aggregation
+
+> **注意（過去の誤り）:** 以前このドキュメントは、集約 job（当時は `build` という名前
+> だった）について「いずれかの job が失敗すると skip され、マージ不可になる」と説明して
+> いたが、これは誤り。GitHub の Ruleset / Branch Protection の `required_status_checks` は、
+> 必須チェックが **`skipped` で完了した場合はブロックしない**（`failure` の場合のみ
+> ブロックする）。集約 job が `needs: [security, lint, test]` のみで暗黙の `if: success()`
+> に依存していると、依存 job が失敗したときに集約 job 自体は `skipped` として完了し、
+> Ruleset 上は「必須チェックを満たした」と扱われて **失敗したままマージできてしまう**。
+> 2026-08 に実際の運用で発覚した。
+
+正しい実装は、`gate` を **常に実行するゲート job**（`if: always()`）にし、`needs.*.result`
+を明示的に検査して `failure`/`cancelled` があれば自身を `failure` として終了させる。
+
+```yaml
+gate:
+  name: CI   # ワークフロー自身の name: と同じ値にする
+  needs: [security, lint, test]   # build 等があれば追加
+  if: always()
+  runs-on: ubuntu-latest   # ゲートは判定のみなので常に最安ランナーでよい
+  steps:
+    - name: Verify required jobs succeeded
+      run: |
+        for result in "${{ needs.security.result }}" "${{ needs.lint.result }}" "${{ needs.test.result }}"; do
+          if [ "$result" != "success" ]; then
+            echo "::error::a required job did not succeed (got: $result)"
+            exit 1
+          fi
+        done
+```
+
+ビルド成果物の生成やインストール可能性の検証など、実体のあるビルド作業がある場合は、
+それを `build` job に書き、`gate` の `needs` に追加する。`gate` 自体は判定専用に保ち、
+`build`・`lint`・`test` と同じ高コストなランナー（`macos-latest` 等）で起動させない
+（[Cost Optimization](#cost-optimization-path-filtering) 参照）。
+
+```yaml
+build:
+  name: Build
+  needs: [security, lint, test]
+  runs-on: macos-latest
+  steps:
+    - uses: actions/checkout@v7
+    - run: pip install -e .
+    - run: python -c "import mypackage"
+
+gate:
+  name: CI
+  needs: [security, lint, test, build]
+  if: always()
+  runs-on: ubuntu-latest
+  steps:
+    - name: Verify required jobs succeeded
+      run: |
+        for result in "${{ needs.security.result }}" "${{ needs.lint.result }}" "${{ needs.test.result }}" "${{ needs.build.result }}"; do
+          if [ "$result" != "success" ]; then
+            echo "::error::a required job did not succeed (got: $result)"
+            exit 1
+          fi
+        done
+```
+
+**単一job（極小プロジェクト）：** ビルド・検証の実処理を `gate`（`name` はワークフロー自身の
+`name` と同じ値、例：`CI`）の中に直接書く。job を分ける必要がないだけで、Ruleset に登録する
+名前はワークフローの `name` のまま変わらない。**`*-template` リポジトリには適用しない**
+（[Job Design](#job-design)参照）。
+
+### Cost Optimization (Path Filtering)
+
+`docs/**` や `*.md` のみの変更（例：`git subtree pull` による dev-charter 更新、README
+の修正）では、`lint`/`test`/`build` のような高コストな job（特に `macos-latest`
+等の高額ランナー）を実行する必要がない。
+
+**ワークフロー単位の `paths-ignore` は使わない。** ワークフロー自体がトリガーされないと
+必須ステータスチェックが一切報告されず、PR が `Expected — Waiting for status to be
+reported` のまま永久にブロックされる（`gate` の `name`（ワークフロー自身の `name`）が
+Ruleset の必須チェックである場合）。
+
+代わりに [dorny/paths-filter](https://github.com/dorny/paths-filter) で変更内容を判定し、
+**job-level の `if:`** で `lint`/`test`/`build` をスキップする。`security`
+（pre-commit）は ubuntu-latest で安価な上、pre-commit 自身の `files:`/`types:` で
+変更ファイルに応じて各フックが自動的にスキップされるため、job 単位でのフィルタは不要。
+
+```yaml
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  changes:
+    name: Detect changes
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          predicate-quantifier: 'some-with-excludes'
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!LICENSE'
+              - '!.gitignore'
+              - '!.github/FUNDING.yml'
+              - '!.github/CODEOWNERS'
+              - '!.github/ISSUE_TEMPLATE/**'
+              - '!.github/*_TEMPLATE.md'
+              - '!.github/pull_request_template.md'
+              - '!.github/copilot-instructions.md'
+              - '!.github/workflows/dev-charter-check.yml'
+              - '!.github/workflows/auto-assign-self.yml'
+              # dev-charter 配布ファイル（git subtree 更新 PR が持ち込む）
+              - '!.pre-commit-config.yaml'
+              - '!scripts/{check-ai-context-reference,check-charter-ci-template,check-charter-doc-links,check-charter-subtree-edit,check-conventional-commit,check-dotenv-gitignore,check-language-pair-footer,check-language-pair-sync,check-license-exists,check-local-charter-version,check-markdown-heading-language,check-not-on-default-branch,check-powershell-lint,check-python-package-management,check-readme-placeholders,check-version-date,new-branch}.{sh,ps1}'
+              - '!scripts/PSScriptAnalyzerSettings.psd1'
+
+  security:
+    name: Security scan (pre-commit)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    # パスでのフィルタなし。pre-commit 自身が変更ファイルに応じて自動スキップする
+    # ...
+
+  lint:
+    name: Lint
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    # ...
+
+  test:
+    name: Test
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    # ...
+
+  build:
+    name: Build
+    needs: [changes, security, lint, test]
+    if: needs.changes.outputs.code == 'true'
+    # ...
+
+  gate:
+    name: CI
+    needs: [changes, security, lint, test, build]
+    # draft は always() でも実行しない: draft はそもそもマージ不可なので、
+    # チェックが未報告のままでも「詰まる」リスクがない（docs-only スキップとは
+    # 違い、gate 自体を丸ごとスキップしてよい）
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required jobs succeeded
+        run: |
+          if [ "${{ needs.security.result }}" != "success" ]; then
+            echo "::error::security did not succeed (got: ${{ needs.security.result }})"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.code }}" != "true" ]; then
+            echo "docs/config-only change; nothing further to verify"
+            exit 0
+          fi
+          for result in "${{ needs.lint.result }}" "${{ needs.test.result }}" "${{ needs.build.result }}"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::a required job did not succeed (got: $result)"
+              exit 1
+            fi
+          done
+```
+
+dev-charter 配布ファイル（`.pre-commit-config.yaml`、dev-charter の `src/scripts/` が配布する
+スクリプト、`scripts/PSScriptAnalyzerSettings.psd1`）だけの更新は、アプリのコードに影響しない
+ため code 扱いにしない。採用先独自のスクリプトを巻き込まないよう、`scripts/check-*` の
+ワイルドカードではなく、配布されるスクリプトの名前を列挙する。dev-charter が新しいスクリプトを
+配布したときは、この一覧に追加するまで code 扱いになる（CI が走る側＝安全側に倒れる）。`git subtree pull` による更新 PR（`update-charter`）でこれらのファイルが `code` を
+`true` にしてしまい、高額ランナーが毎回走る原因になる。`ci.yml` 自体や `Makefile` の変更は
+CI の挙動を変えうるため、code 扱いのままにする（更新 PR に `ci.yml` が含まれる場合は 1 回だけ
+走る）。
+
+### Runner Billing
+
+private リポジトリでは、GitHub-hosted runner の実行時間が課金対象になり、**各 job の実行時間は
+分単位に切り上げられる**。単価は OS で大きく異なる。現行の公式ドキュメント
+（[Actions minute multipliers / runner pricing](https://docs.github.com/en/billing/reference/actions-minute-multipliers)、
+確認日 2026-10-01）は倍率ではなく分単価で示しており、Linux 標準ランナーが約 $0.006/分、
+macOS が約 $0.062/分で、macOS は実質 **約 10 倍**になる。単価は変わりうるため、設計判断の
+たびに公式ページで確認する。public リポジトリの標準ランナーと self-hosted runner は無料。
+
+job の実行時間が短くても、macOS では切り上げの影響が大きい。ある Swift アプリのテンプレートでの
+実測では、Lint（13 秒）が macOS では 1 分分（Linux 換算 10 分）として課金されていた。
+Actions UI の実行時間だけを見ると、この差は見えない。
+
+**macOS ランナーの利用を最小化する指針：**
+
+- **Linux で動く job は Linux で動かす。** SwiftLint は公式コンテナ（`ghcr.io/realm/swiftlint`）
+  を使えば Linux で動く。移す前に、Linux と macOS で同じ結果（検査ファイル数・違反数）になる
+  ことを確認する。コンテナの entrypoint は `swiftlint` なので、`docker run ... image
+  swiftlint --strict` のようにコマンド名を重ねない（`image --strict` と書く）
+- **macOS の job は、安価な job が通ってから始める。** macOS の job の `needs` に
+  `security` と `lint`（Linux）を含め、失敗する PR で macOS を起動しない
+- **macOS の job は 1 本にまとめてよい。** 各 job の切り上げと起動・checkout の重複を避けるため、
+  Swift/Xcode では `test` と `build` を 1 つの job（`name: Build & Test`）にまとめてよい
+  （標準の job 名 `Test`・`Build` の例外）。効果はリポジトリによって 0〜1 分で、最大の削減は
+  Lint を Linux へ移すこと。Ruleset に登録するのは `gate`（ワークフローの `name`）だけなので、
+  この統合で Ruleset の変更は不要
+- **PR ごとの macOS 実行をやめる（`workflow_dispatch` のみ、マージ時のみ等）ことは標準にしない。**
+  `gate` を必須チェックにしている場合、macOS を PR で走らせないとビルド破損を PR の時点で検知
+  できない。許容する場合は、リスクと復旧手順を記録した上で、リポジトリ単位で判断する
+- **ドキュメントのみ・dev-charter 配布ファイルのみの変更では macOS を起動しない**
+  （[Cost Optimization (Path Filtering)](#cost-optimization-path-filtering) 参照）
+
+**self-hosted macOS runner（任意）：** 自前の Mac を runner にすると、macOS の job は課金されない。
+Docker コンテナの中で macOS は動かないため、Mac にネイティブで runner を導入する
+（Linux 用の Docker runner とは別物）。導入する場合の条件：
+
+- **private リポジトリだけに登録する。** public では fork の PR が runner 上で任意のコードを実行できる
+- **新規の private リポジトリを作るたびに、リポジトリ変数を設定する**
+  （`gh variable set MACOS_RUNNER --body <ラベル> -R <owner>/<repo>`）。設定漏れは
+  GitHub-hosted の macOS で課金され続け、CI の動作確認では気づきにくい
+  （実例: 設定漏れの 1 リポジトリだけが macOS 課金の大半を占めた）。
+  public リポジトリには設定しない
+- `runs-on` はリポジトリ変数で切り替える。変数を設定しなければ GitHub-hosted に戻る。
+  fork の PR は常に GitHub-hosted にする：
+
+  ```yaml
+  runs-on: ${{ vars.MACOS_RUNNER && !github.event.pull_request.head.repo.fork && vars.MACOS_RUNNER || 'macos-latest' }}
+  ```
+
+- runner は専用の macOS ユーザー（管理者権限なし）で動かし、CI に署名鍵やシークレットを渡さない
+  （Swift の CI は署名なしビルドのため不要）
+- 同じラベルの runner を複数の Mac に登録すると、空いている方に自動で割り当てられる。runner が
+  すべて停止していると job は待機のままになり、GitHub-hosted には自動で落ちない。
+  その場合は変数を外す
+- hosted の `macos-latest` の既定の Xcode に合わせて、runner の環境変数 `DEVELOPER_DIR` で Xcode を
+  固定する。OS と Xcode が hosted と違うと、結果が食い違う（実例: Swift 6.3 の SwiftPM は `swift test`
+  で `.xcstrings` を `.lproj` にコンパイルせず、`.lproj` を前提にするテストが Xcode 26.6 で失敗し、
+  Xcode 27 で成功した）。両方の Xcode で通るように書くか、hosted と同じ Xcode に揃える
+- runner ユーザーは Homebrew に書き込めない（`brew install` が `... is not writable` を出す）。
+  ツールは事前に入れておき、CI は `command -v <tool> >/dev/null || brew install <tool>` の形にする
+  （hosted でも同じ動作になる）
+- **private の SwiftPM 依存**（`ssh://git@github.com/<owner>/<repo>.git`）を持つ場合、runner ユーザーに
+  読み取り専用のデプロイキーと、GitHub のホスト鍵を入れた `known_hosts` が要る。ない場合、
+  `swift package resolve` が `Host key verification failed` で失敗する。デプロイキーは 1 つの
+  リポジトリにしか登録できないため、依存先ごとに別の鍵を作る。鍵は runner ユーザーのホームに置くので、
+  その Mac のすべての runner（依存を使う側のすべてのリポジトリ）から使える。
+  デプロイキーを hosted には渡さないため、**この依存を持つリポジトリは self-hosted 専用**になる
+  （hosted に戻すには、デプロイキーを Secrets に置いて ssh-agent で解決する別の設定が要る）
+- 複数のリポジトリが同時にビルドすると、1 台の Mac の負荷が上がり、各 job が遅くなる
+  （課金は発生しない）。更新 PR を複数のアプリに一斉にマージするときに起きやすい
+- 課金ブロック中は Linux の job も起動しないため、self-hosted は課金ブロックの恒久対策にならない
+  （[Bypass Actor](#bypass-actor-repository-admin) 参照）
+
+**self-hosted Linux runner（任意）：** private リポジトリの Linux job（`security`・`changes`・`lint`・
+`gate` 等）は、各 job が分単位に切り上げられるため、リポジトリと PR が増えると無料枠
+（GitHub Pro は月 3,000 分）を超える。自前の PC（Docker）に runner を置いて逃がせる。
+macOS 版と同じ条件に加えて、次を守る：
+
+- 変数名は `LINUX_RUNNER`（値は runner のラベル）。**private リポジトリだけ**に設定し、public には設定しない：
+
+  ```yaml
+  runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
+  ```
+
+- 個人アカウントのリポジトリでは runner はリポジトリ単位でしか登録できないため、対象リポジトリごとに
+  runner（コンテナ）を 1 つ登録する。登録済みのホスト・リポジトリは、変数を設定する前に必ず確認する
+  （runner のないリポジトリに変数だけ設定すると、job が待機のままになる）
+- runner のイメージには、hosted の `ubuntu-latest` が持つツールのうち CI が使うもの（git、gh、curl、jq、
+  python3・pip・uv、node、go・gitleaks、shellcheck、zip、SwiftLint 等）を入れる。docker が要る step は、
+  ホストのソケットをマウントせず、イメージ側のツールで置き換えるか DinD にする
+- `pull_request_target` で特権トークンを使う job（assign 等）と、OIDC を使う release job は
+  self-hosted に載せず、hosted のままにする
+- runner が止まると job は待機のままになり、hosted には自動で落ちない（必須チェックが pending のままに
+  なる。待機は最長 24 時間で、`timeout-minutes` は開始後の実行時間にしか効かない）。その場合は変数を
+  外す。実行中に固まった job が runner を占有し続けないよう、`timeout-minutes` は付けておく
+- 再利用ワークフロー `check-charter.yml` は `runner` 入力で runs-on を受け取る（既定は `ubuntu-latest`）
+
+### Concurrency (Cancel Superseded Runs)
+
+同じブランチ/PRに素早く連続でpushすると、古いrunが完走するまで新しいrunと並行して
+走り続け、Actions分・実時間を無駄に消費する（`macos-latest`・`windows-latest`は
+`ubuntu-latest`より分あたりのコストが高いため特に影響が大きい）。ワークフローの
+トップレベルに以下を追加し、同一ワークフロー・同一refで新しいrunが始まったら
+古いrunを自動キャンセルする：
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+キャンセルされたrunは `cancelled` として終了するが、Ruleset の必須ステータスチェックは
+常に最新commitのrunの結果だけを見るため、マージ可否の判定には影響しない。デメリットが
+ないため、全ワークフローファイル（`ci.yml`・`dev-charter-check.yml` 等）に一律で追加する。
+
+### Draft PRs
+
+`ready_for_review` を `on.pull_request.types` に加えた上で、`changes`・`security`・`gate`
+に draft スキップの `if:` を付ける（`lint`/`test`/`build` は `changes` 経由で連鎖的に
+スキップされる）。デフォルトの `pull_request` トリガーは `opened`/`synchronize`/`reopened`
+のみで `ready_for_review` を含まないため、これを忘れると draft 解除時に再実行されず、
+古い（未評価の）ステータスのまま残ってしまう。
+
+`gate` を `if: always()` のままにせず draft でスキップしてよい理由：docs-only スキップは
+「コードが変わっていないので中身の検証は不要だが、必須チェックとしての合否報告は必要」
+（`gate` 自体は動いて `exit 0` する）。draft は「そもそも GitHub がマージを許可しない」ため、
+必須チェックが一切報告されなくてもブロック待ちにならない。よって `gate` ごとスキップできる。
+
+`.github/workflows/dev-charter-check.yml` も同様に draft をスキップする（[Version Check
+(CI)](../README.md#version-check-ci) 参照）。
+
+`check-charter.yml` が作成する `update-charter` PR も Draft で始まるため、この
+`ready_for_review` は更新 PR にも必須である。`gh pr ready` で Draft を解除した時点で
+CI と Dev Charter チェックが再実行され、更新内容を含む状態で Ruleset の判定を受ける。
+テンプレートからこのイベントを除外してはいけない。
+
+**draft を使った運用ルール（無駄な run を避ける）：** PR を開いた後の修正（レビュー対応・バグや
+仕様変更の発覚）のたびに push すると、そのたびに CI が走る。`concurrency` のキャンセルは
+実行中の run を止めるだけで、push ごとに新しい run は始まる。draft の間は CI が走らない
+ことを利用する：
+
+- PR の作成後にバグや仕様変更が判明したら、PR を draft に戻して修正する。修正が揃ったら
+  ready にする（`ready_for_review` で CI が 1 回走る）
+- レビュー指摘への対応は、複数のコミットにまとめてから push する
+- ready にする前に、ローカルで lint・test・build を通す
+- AI エージェントが作る PR は、最初から draft で開く。ローカル検証後に ready にする
+- draft の PR でも、自動レビュー（`@codex review`、`@copilot review`）は動く
+  （2026-10-01 に確認）。レビューのためだけに ready にする必要はない
+
+**依存ロックファイル（`uv.lock` / `package-lock.json` / `Package.resolved` 等）は
+skip 対象に含めない。** ロックファイルの更新は依存パッケージのバージョン変更そのものであり、
+実際に lint/test/build を回して初めて壊れていないか確認できる。Dependabot の PR を含め、
+これらの変更は常にフル CI を実行する。
+
+`Makefile` はほとんどのプロジェクトで CI から直接呼ばれない（`ci.yml` は各コマンドを直接
+実行する）ため skip 対象に含めてよいが、CI が `make` 経由でビルド・テストを呼んでいる
+プロジェクトでは対象から除外すること。
+
+### Artifact Retention
+
+| 対象 | 保持期間（目安） |
+|---|---|
+| PR | 短期（例：7日） |
+| main | 長期（例：30日） |
+
+## Dependabot
+
+`.github/dependabot.yml` の導入を検討する。依存パッケージがあるプロジェクトでは自動でアップデートPRを作成し、脆弱性対応を省力化できる。ドキュメントのみのリポジトリや依存パッケージが存在しないプロジェクトでは不要。
+
+## Branch Protection (Ruleset)
+
+> **lite 採用先への注意:** このセクションは `full`（PR必須運用）向けの既定値。
+> lite 採用先（`main` への直接pushを許可する運用）は
+> [CI_POLICY.md](https://github.com/y-marui/dev-charter/blob/lite/topics/CI_POLICY.md)（lite）
+> の「Branch Protection (Ruleset)」に専用の設定があるので、そちらに従うこと
+> （以降このセクションを読み替える必要はない）。
+
+この Ruleset はサーバ側で **push** のみを止める。デフォルトブランチにローカルで
+コミットを重ねてしまうこと自体は防げないため、`full` 版では
+`check-not-on-default-branch` フック（`SECURITY_POLICY.md` 参照）がコミット
+時点で同じ制約を機械的に強制する。両者は代替ではなく補完関係にある。
+
+`main` ブランチに以下のRulesetを適用する（`full` 版共通。lite は上記の注意を参照）：
+
+```
+Name: main-protection
+Target: main
+Enforcement: Active
+
+Rules:
+☑ Require a pull request before merging
+  └ Required approvals: 0（個人開発）/ 1以上（複数人）
+☑ Require status checks to pass before merging
+  └ Status checks: CI (GitHub Actions)
+  └ Status checks: Dev Charter (GitHub Actions)
+☑ Require conversation resolution before merging
+☑ Block force pushes
+☑ Restrict deletions
+```
+
+`Dev Charter` は `.github/workflows/dev-charter-check.yml`（[Version Check
+(CI)](../README.md#version-check-ci) 参照）の `gate` job の `name`（ワークフロー自身の
+`name: Dev Charter` と一致させたもの。[§ Naming Convention](#naming-convention)参照）。
+同ワークフローの `check` job は `.github/workflows/dev-charter-check.yml` が呼び出す
+再利用ワークフロー（`check-charter.yml`）で、Dependabot PR・draft PR では job-level の
+`if:` でスキップされる。`ci.yml` とは別ワークフローファイルのため `gate` の `needs` には
+含められない（`needs` は同一ワークフローファイル内でしか機能しない）ので、Ruleset には
+別エントリとして登録する。`ci.yml` 側の `gate`（`name: CI`）と名前が異なるため、複数
+ワークフローの `gate` を同一 Ruleset に登録しても衝突しない。
+
+**`Check / check` を直接 Ruleset に登録してはいけない。** `check` は `uses:` で再利用
+ワークフローを呼ぶ job のため、GitHub は再利用ワークフロー側の job が実際に開始されて
+初めて `Check / check` という複合チェック名を生成する。job-level の `if:` が false（全
+Dependabot PR）になると再利用ワークフローが一度も呼ばれず、`Check / check` というコンテ
+キスト自体が `skipped` としてすら報告されない。Ruleset は `Check / check` が報告される
+のを待ち続け、該当 PR は `Expected — Waiting for status to be reported` のまま永久に
+ブロックされる（`gate` の `needs` を欠いた集約 job が `skipped` を `success` 扱いされる
+[§ `gate` Is a Gate, Not Just a `needs` Aggregation](#gate-is-a-gate-not-just-a-needs-aggregation)
+とは逆に、こちらは「単独 job をそのまま Ruleset に登録すると `skipped` が一切報告されない」
+という別種の罠）。`gate` job（普通の job のため `check` の実行有無に関わらず必ず自身の
+チェック名を報告する）を挟み、`needs.check.result` を検査して `skipped` は成功扱い、
+`failure`/`cancelled` のみ失敗させることで回避する（実装は [Version Check
+(CI)](../README.md#version-check-ci) のテンプレート参照。2026-08 に実際に発覚・修正、
+詳細は [Issue #81](https://github.com/y-marui/dev-charter/issues/81)）。
+
+`check` job（`check-charter.yml`）自体は「dev-charter が最新でない」場合も **意図的に
+失敗する**（`update-charter` の draft PR を自動作成した上で `exit 1`）。schedule トリガー
+が無くなり `pull_request`/`push` イベント駆動のみになったため、成功で終わらせてしまうと
+更新 PR が誰にも気づかれないまま放置され、無関係な PR がどんどんマージされてしまう。失敗
+させることで「今動いている PR/push」の場で必ず対応を迫る。`gate` はこの `failure` を
+そのまま自身の失敗として伝播するため、Ruleset 上のブロック効果は維持される。
+
+それ以外の失敗条件（リモート `VERSION` の取得失敗・ローカル `VERSION` の欠落・push や
+PR 作成時のエラー・GitHub Actions の課金ブロックなど）ももちろん失敗する。
+
+### Epic Branch Ruleset
+
+複数ステップ・sub-issue を持つ大規模な改修用の `epic/<name>` ブランチ（[PROJECT_LIFECYCLE.md](../PROJECT_LIFECYCLE.md) の Branch Strategy 参照）にも、パターンマッチで `main-protection` と同じRulesetを適用する：
+
+```
+Name: epic-protection
+Target: epic/*
+Enforcement: Active
+
+Rules:
+☑ Require a pull request before merging
+  └ Required approvals: 0（個人開発）/ 1以上（複数人）
+☑ Require status checks to pass before merging
+  └ Status checks: CI (GitHub Actions)
+☑ Require conversation resolution before merging
+☑ Block force pushes
+☑ Restrict deletions
+```
+
+`epic/<name>` から `main` へのPRには、通常どおり `main-protection` のRulesetがそのまま適用される。
+
+### Bypass Actor (Repository Admin)
+
+`main-protection` Ruleset には、Public/Private を問わず全リポジトリで **Repository admin
+の bypass（PR 経由のみ）** を登録する（Ruleset の `bypass_actors` に以下を追加）：
+
+```json
+{
+  "actor_id": 5,
+  "actor_type": "RepositoryRole",
+  "bypass_mode": "pull_request"
+}
+```
+
+- `actor_id: 5` は Repository admin ロール（個人リポジトリでは実質オーナー本人）
+- `bypass_mode: "pull_request"` — 直接 push は引き続き禁止。PR 経由でのマージ時のみ
+  必須チェックをバイパスできる（`"always"` にはしない。`"always"` は lite 版専用の
+  設計で、[CI_POLICY.md](https://github.com/y-marui/dev-charter/blob/lite/topics/CI_POLICY.md)（lite）を参照）
+- 用途は、Private リポジトリの課金ブロック（支払い方法・spending limit の問題で CI が
+  丸ごと失敗するケース。`~/.ai/AI_CONTEXT.md` の GitHub セクションに同様の運用メモあり：
+  課金エラーによる CI 失敗はコード側の問題ではないため無視してよい）に限らず、
+  インフラ障害・flaky なランナーなど、コードの問題ではない理由で必須チェックが
+  ブロックされたままになるケース全般への緊急避難とする
+- ローカルで `pre-commit run` 等により変更内容を確認済みの場合のみ使う。CI が本当に
+  コードの問題で落ちているときの緊急回避には使わない
+- 設定は GitHub の Settings → Rules → Rulesets（または `gh api` で既存 Ruleset 全体を
+  取得し、`bypass_actors` だけを差し替えて `PUT` する）から行う。既存フィールドを
+  壊さないよう、必ず現在の Ruleset 定義を取得してから更新すること
+
+### Status Check Configuration
+
+Rulesetの「Require status checks to pass before merging」でチェックを追加する際は、**名前とソースの両方を正しく指定**する。
+
+**チェック名：**
+GitHub Actions のステータスチェック名は、job の **`name` フィールドの値**（`gate` の場合、
+ワークフロー自身の `name:` と同じ値。例：`CI`）で決まる。job ID（`gate`）ではないため注意。
+
+```yaml
+name: CI   # ワークフロー自身の name:
+
+jobs:
+  gate:
+    name: CI   # ← Rulesetに登録する名前はこの値。ワークフローの name: と一致させる
+```
+
+job `name` を省略した場合は job ID がチェック名になる（例：`gate`）。
+
+**ソース（Source）：**
+チェック名を入力後、**ソースを `GitHub Actions` に指定する**（"Any source" のままにしない）。
+"Any source" にすると、他の外部 CI サービスや手動操作でも条件を満たせてしまう。
+
+Rulesetの設定画面では以下のように表示される：
+
+```
+Check name:  CI
+Source:      GitHub Actions
+```
+
+集約ゲート job の `name` は説明を追加せず、常にそのワークフロー自身の `name:` と同じ値にする。個別 job の表示名は必要に応じて説明を追加してよい。

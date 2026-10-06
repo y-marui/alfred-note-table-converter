@@ -1,0 +1,44 @@
+# Charter Index (full)
+
+dev-charter の各ドキュメントへのインデックス。
+憲章を参照する際はこのファイルでトピックを特定し、該当ファイルのみを読む（全ファイル検索不要）。
+
+## How to Use
+
+1. 下のテーブルでキーワードを探す
+2. 対応するファイルのみを読む
+
+## Index
+
+| トピック / キーワード | ファイル |
+|---|---|
+| AI の作業前チェック、エラー対処、AI 役割分担、複数 AI 連携、ローカル LLM、Ollama | `AI_COLLABORATION_RULES.md` |
+| AI コンテキストの優先順位（タスク > プロジェクト > 憲章 > グローバル） | `AI_CONTEXT_HIERARCHY.md` |
+| CLAUDE.md・GEMINI.md・AGENTS.md・AI_CONTEXT.md の構成方法 | `AI_TOOL_SETUP.md` |
+| コードコメントの書き方、スタイルガイド | `CODE_STYLE.md` |
+| docs/ 構成、file-map.md、architecture.md、AI_CONTEXT.md 参照順、CONTRIBUTING.md | `DOCS_STRUCTURE.md` |
+| dev-charter の初回導入手順（full版） | `INSTALL_CHECKLIST.md` |
+| 言語選択（日本語・英語）、ドキュメントの正本、セクションヘッダ言語 | `LANGUAGE_POLICY.md` |
+| ライセンス選択（MIT・GPL・AGPL・CC）、著作権表記 | `LEGAL_POLICY.md` |
+| アプリの対応言語、ローカライズ方針 | `LOCALIZATION_POLICY.md` |
+| 収益化、App Store、GitHub Sponsors、Buy Me a Coffee | `MONETIZATION_POLICY.md` |
+| 変更設計の原則、YAGNI、DRY、既存パターンの踏襲、TODO管理 | `PRINCIPLES.md` |
+| チーム構成、git ワークフロー、Conventional Commits、ブランチ戦略、epic ブランチ、Draft PR、main の安定性 | `PROJECT_LIFECYCLE.md` |
+| シークレット管理、git フック、pre-commit、セキュリティ設定 | `SECURITY_POLICY.md` |
+| UI デザイン、カラーパレット、ダークモード、アイコン（SF Symbols・Material Symbols） | `UI_GUIDELINES.md` |
+| dev-charter の更新手順（subtree pull 後、full版） | `UPDATE_CHECKLIST.md` |
+| GitHub Actions、CI ジョブ設計、ステータスチェック、Branch Protection（full版） | `topics/CI_POLICY.md` |
+| OSS コントリビューション、Issue テンプレート、PR テンプレート、準 CLA | `topics/GITHUB_CONTRIBUTING.md` |
+| issue/PRテンプレート（lite版）、個人開発、チェックリスト | `topics/GITHUB_ISSUE_PR_TEMPLATES.md` |
+| TODO・バックログ・ロードマップ管理、Issues、Sub-issues、Milestones、Projects (v2) | `topics/GITHUB_PROJECT_MANAGEMENT.md` |
+| GitHub リポジトリ設定、Ruleset、Dependabot、FUNDING.yml（full版） | `topics/GITHUB_SETTINGS.md` |
+| README の構成（テンプレートから作成したプロジェクト用） | `topics/PROJECT_README_GUIDELINES.md` |
+| 設計哲学、依存最小化、スモールツール、ローカルファースト、オフライン、UI | `topics/SOFTWARE_DESIGN_PRINCIPLES.md` |
+| README の構成（テンプレートリポジトリ自体の設計） | `topics/TEMPLATE_README_GUIDELINES.md` |
+| Alfred ワークフロー（Go）、cmd/+internal/、ユニバーサルバイナリ、lipo、Configuration Builder、native vs Go、リリースプロセス、タグ push、CHANGELOG からのリリースノート生成 | `topics/alfred/ALFRED_DEV_ENV.md` |
+| Alfred Gallery 提出基準、署名・公証、アイコン・キーワード要件、README スタイルガイド、Gallery readiness チェックリスト | `topics/alfred/ALFRED_GALLERY.md` |
+| Chrome Extension 開発環境、Manifest V3、esbuild、ESLint、node --test、Chrome/Firefox dual build、リリースプロセス、タグ push | `topics/chrome-extension/CHROME_EXTENSION_DEV_ENV.md` |
+| Python CLI、typer、pydantic-settings、XDG 設定ファイル | `topics/python/PYTHON_CLI.md` |
+| Python 開発環境、pyenv、uv、ruff、mypy、pytest、py.typed、PEP 561 | `topics/python/PYTHON_DEV_ENV.md` |
+| Swift 開発環境、XcodeGen、SwiftLint、SwiftFormat、App/+Packages/Core/、swift test、CI | `topics/swift/SWIFT_DEV_ENV.md` |
+| Swift のアプリ内言語設定、AppLanguage、resolvedLocale、App Group、`.environment(\.locale)`、AppleLanguages、String Catalog、文言キーの規則 | `topics/swift/SWIFT_LOCALIZATION.md` |

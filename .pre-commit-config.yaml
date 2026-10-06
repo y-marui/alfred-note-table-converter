@@ -1,0 +1,372 @@
+exclude: |
+  (?x)^(
+    node_modules/|
+    vendor/|
+    \.git/|
+    \.yarn/|
+    dist/|
+    build/|
+    \.next/|
+    __pycache__/|
+    .*\.min\.js$|
+    .*\.min\.css$|
+    go\.sum$|
+    package-lock\.json$|
+    yarn\.lock$|
+    Gemfile\.lock$|
+    Cargo\.lock$|
+    poetry\.lock$
+  )
+
+repos:
+  # ----------------------------------------------------------------
+  # Security (required — verified by global git hook)
+  # ----------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        args: ["--config=.gitleaks.toml"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # Required: SSH private key detection
+      - id: detect-private-key
+
+      # Required: block .env files (.env.example / .env.sample / .env.template are allowed)
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-case-conflict
+
+  # Required: .env file check (hook id contains "detect-dotenv")
+  - repo: local
+    hooks:
+      - id: detect-dotenv
+        name: Block .env files
+        language: fail
+        entry: '.env ファイルはコミット禁止。ダミー値のみの .env.example を使うこと。'
+        files: '(^|/)\.env(\.[^.]+)?$'
+        exclude: '(^|/)\.env\.(example|sample|template)$'
+
+  # ----------------------------------------------------------------
+  # Hardcoded local absolute paths
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: no-hardcoded-local-paths
+        name: Block hardcoded local absolute paths
+        language: pygrep
+        entry: '(/Users/[A-Za-z0-9_.-]+/|/home/[A-Za-z0-9_.-]+/|C:\\Users\\)'
+        types_or: [text]
+        # Note: exclude はファイル「パス」に対するマッチ。
+        # 設定ファイル自身（allowlist パターンを含む）は除外する。
+        exclude: |
+          (?x)(
+            \.md$|
+            docs/|
+            \.github/|
+            \.gitleaks\.toml$|
+            \.pre-commit-config\.yaml$
+          )
+
+  # ----------------------------------------------------------------
+  # Block commits on the default branch
+  # (server-side Ruleset only stops direct pushes; this catches local
+  # commits onto main/master before that point — see CI_POLICY.md
+  # Branch Protection (Ruleset))
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-not-on-default-branch
+        name: Block commits on the default branch
+        language: script
+        entry: scripts/check-not-on-default-branch.sh
+        pass_filenames: false
+        always_run: true
+
+  # BEGIN DEV-CHARTER ONLY
+  # ----------------------------------------------------------------
+  # VERSION date check
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-version-date
+        name: Check VERSION date
+        language: script
+        entry: scripts/check-version-date.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # charter manifest check
+  # (every file listed in src/CHARTER_INDEX.md must be tagged in
+  # scripts/charter-manifest.txt for the distribution branches)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-manifest
+        name: Check charter manifest
+        language: script
+        entry: scripts/check-charter-manifest.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # <name>-<branch>.md variant のペア整合性チェック
+  # (variant が [full-exclude]・対応する基底ファイル・タグ重複無しを満たすか)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-variant-parity
+        name: Check branch variant parity
+        language: script
+        entry: scripts/check-variant-parity.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # lite (等) 配布ブランチからの相対リンク切れチェック
+  # (lite タグ付きファイルが full 限定ファイルへ相対リンクしていないか)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-lite-cross-references
+        name: Check lite cross-references
+        language: script
+        entry: scripts/check-lite-cross-references.sh
+        pass_filenames: false
+        always_run: true
+  # END DEV-CHARTER ONLY
+
+  # ----------------------------------------------------------------
+  # Local dev-charter version check
+  # (blocks if sibling ../dev-charter is newer, warns if older)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-local-charter-version
+        name: Check local dev-charter version
+        language: script
+        entry: scripts/check-local-charter-version.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Block direct edits under the installed dev-charter subtree
+  # (only `git subtree add`/`pull --squash` may touch it; those bypass
+  # commit hooks entirely, so anything this hook sees staged under the
+  # prefix is a direct edit)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-subtree-edit
+        name: Block direct edits under dev-charter subtree
+        language: script
+        entry: scripts/check-charter-subtree-edit.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Charter CI template check
+  # (blocks if .github/workflows/dev-charter-check.yml drifted from the
+  # template documented in the installed dev-charter's README-jp.md)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-ci-template
+        name: Check charter CI template
+        language: script
+        entry: scripts/check-charter-ci-template.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Language pair sync (LANGUAGE_POLICY.md)
+  # (blocks if a <name>-jp.<ext> / <name>.<ext> pair is edited on only
+  # one side while the other side already exists in the repo)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-language-pair-sync
+        name: Check language pair sync
+        language: script
+        entry: scripts/check-language-pair-sync.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # LICENSE file exists (LEGAL_POLICY.md)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-license-exists
+        name: Check LICENSE file exists
+        language: script
+        entry: scripts/check-license-exists.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # .env.example / .gitignore consistency (SECURITY_POLICY.md)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-dotenv-gitignore
+        name: Check .env.example / .gitignore consistency
+        language: script
+        entry: scripts/check-dotenv-gitignore.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Language pair header/footer (LANGUAGE_POLICY.md)
+  # (checks canonical/reference declarations and edit-rule footers on
+  # <name>-jp.<ext> / <name>.<ext> pairs; keyword-based, not exact match)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-language-pair-footer
+        name: Check language pair header/footer
+        language: script
+        entry: scripts/check-language-pair-footer.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # AI_CONTEXT.md reference (AI_TOOL_SETUP.md)
+  # (CLAUDE.md/GEMINI.md/AGENTS.md/.github/copilot-instructions.md must
+  # reference AI_CONTEXT.md when it exists)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-ai-context-reference
+        name: Check AI_CONTEXT.md reference
+        language: script
+        entry: scripts/check-ai-context-reference.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Charter doc links (adopting repos only)
+  # (docs/dev-charter/... paths mentioned in this repo's own Markdown
+  # must actually resolve — catches referencing a not-yet-synced path)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-charter-doc-links
+        name: Check charter doc links
+        language: script
+        entry: scripts/check-charter-doc-links.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Python package management (topics/PYTHON_DEV_ENV.md)
+  # (blocks requirements.txt / missing uv.lock when pyproject.toml exists)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-python-package-management
+        name: Check Python package management
+        language: script
+        entry: scripts/check-python-package-management.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # README/LICENSE/FUNDING placeholders (topics/PROJECT_README_GUIDELINES.md)
+  # (template repos with README_TEMPLATE.md are exempt)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-readme-placeholders
+        name: Check README/LICENSE/FUNDING placeholders
+        language: script
+        entry: scripts/check-readme-placeholders.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Conventional Commits message format (PROJECT_LIFECYCLE.md)
+  # (commit-msg stage: requires `pre-commit install --hook-type
+  # commit-msg` in addition to the default pre-commit stage install —
+  # see SECURITY_POLICY.md Setup Steps for the core.hooksPath caveat)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-conventional-commit
+        name: Check conventional commit message
+        language: script
+        entry: scripts/check-conventional-commit.sh
+        stages: [commit-msg]
+
+  # ----------------------------------------------------------------
+  # Markdown section headings
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-markdown-heading-language
+        name: Check Markdown section heading language
+        language: script
+        entry: scripts/check-markdown-heading-language.sh
+        files: '\.md$'
+
+  # ----------------------------------------------------------------
+  # Shell scripts
+  # (Lints the staged (index) content rather than the working-tree
+  # bytes: on Windows checkouts with core.autocrlf=true, git's clean
+  # filter already normalizes CRLF->LF on `git add`, so the index is
+  # LF even though the working tree shows CRLF. This avoids false
+  # SC1017 hits from the local checkout while still catching real
+  # CRLF committed with core.autocrlf=false.)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: shellcheck
+        language: python
+        additional_dependencies: ["shellcheck-py==0.11.0.1"]
+        entry: >-
+          bash -c 'status=0; for f in "$@"; do
+          git show ":$f" | shellcheck --severity=warning - 2>&1 | sed "s|^In - |In $f |";
+          [ "${PIPESTATUS[1]}" -eq 0 ] || status=1;
+          done; exit $status' --
+        types: [shell]
+        exclude: '\.zsh$'
+        require_serial: true
+
+  # ----------------------------------------------------------------
+  # PowerShell scripts
+  # (PSScriptAnalyzer, installed locally on first run. Skipped in CI —
+  # see ci.yml's SKIP env — it isn't required to gate merges; it exists
+  # for local parity with the Linux/macOS shellcheck coverage above,
+  # for scripts/*.ps1 counterparts of the bash scripts.)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: powershell-lint
+        name: PowerShell script lint (PSScriptAnalyzer)
+        language: system
+        entry: >-
+          bash -c '
+          if ! command -v pwsh >/dev/null 2>&1; then
+          echo "warning: pwsh not found; skipping PowerShell lint" >&2;
+          exit 0;
+          fi;
+          pwsh -NoProfile -NonInteractive -File scripts/check-powershell-lint.ps1 "$@"
+          ' --
+        files: '\.ps1$'
+        # Adopting projects install this subtree read-only (see
+        # check-charter-subtree-edit.sh); its own scripts/*.ps1 aren't
+        # something the adopter can fix, so skip them by default. Assumes
+        # the default CHARTER_PREFIX (docs/dev-charter) — adjust this
+        # pattern if installed elsewhere.
+        exclude: '^docs/dev-charter/'
+        require_serial: true
