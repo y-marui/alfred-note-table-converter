@@ -133,20 +133,27 @@ swift test --package-path Packages/Core
 - 署名なしビルドで検証する（`CODE_SIGN_IDENTITY=""` / `CODE_SIGNING_REQUIRED=NO` /
   `CODE_SIGNING_ALLOWED=NO`）。配布用の署名付きビルドは CI では行わない
 - private リポジトリでは、リポジトリ変数 `MACOS_RUNNER` で self-hosted macOS runner に
-  切り替えられる（条件は [Runner Billing](https://github.com/y-marui/dev-charter/blob/full/topics/CI_POLICY.md#runner-billing) 参照）
+  切り替えられる。**新規リポジトリのセットアップ時に忘れず設定する**（未設定だと
+  `macos-latest` で動き、macOS 分が課金される）（条件は [Runner Billing](https://github.com/y-marui/dev-charter/blob/full/topics/CI_POLICY.md#runner-billing) 参照）
 
 ```yaml
 lint:
   name: Lint
   needs: changes
   if: needs.changes.outputs.code == 'true'
-  runs-on: ubuntu-latest
+  runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
   steps:
     - uses: actions/checkout@v7
     - name: Run SwiftLint
+      # self-hosted runner のイメージには swiftlint を入れ、docker を使わない
+      # （hosted に戻ったときは公式コンテナで同じ検査をする）
       run: |
-        docker run --rm -v "$PWD":/work -w /work \
-          ghcr.io/realm/swiftlint:latest --strict
+        if command -v swiftlint >/dev/null; then
+          swiftlint --strict
+        else
+          docker run --rm -v "$PWD":/work -w /work \
+            ghcr.io/realm/swiftlint:latest --strict
+        fi
 
 build:
   name: Build & Test

@@ -6,8 +6,8 @@
 #   <parent>/dev-charter/     dev-charter のローカルクローン
 #   <parent>/<this-repo>/     このリポジトリ
 #
-# - 隣接リポジトリの対象ブランチが導入済みより新しい -> block
-#   （実行可能な差分が確定しているため: git subtree pull を実行する）
+# - 隣接リポジトリの対象ブランチが導入済みより新しい -> warning のみ
+#   （更新は git subtree pull で行う。リポジトリ数が増えても開発を止めないため block しない）
 # - 隣接リポジトリの対象ブランチが導入済みより古い -> warning のみ
 #   （隣接リポジトリ自体が fetch/pull されていないだけの可能性があるため）
 # - 一致、またはどちらかの VERSION が取得できない -> 何も出力しない
@@ -59,11 +59,9 @@ if [ "$LOCAL" = "$INSTALLED" ]; then
 fi
 
 if [[ "$LOCAL" > "$INSTALLED" ]]; then
-  echo "error: ${LOCAL_CHARTER} の ${LOCAL_REF} ブランチの VERSION (${LOCAL}) が ${PREFIX}/VERSION (${INSTALLED}) より新しいです。"
-  echo "  1. git subtree pull で dev-charter を更新する"
-  echo "  2. ${PREFIX}/UPDATE_CHECKLIST.md の手順を実行し、変更されたファイルの影響を確認・反映する（このコミットの前に行うこと。無視・後回しにしない）"
-  echo "  3. 上記が完了してから、元のコミットをやり直す"
-  exit 1
+  echo "warning: ${LOCAL_CHARTER} の ${LOCAL_REF} ブランチの VERSION (${LOCAL}) が ${PREFIX}/VERSION (${INSTALLED}) より新しいです。"
+  echo "  git subtree pull で dev-charter を更新し、${PREFIX}/UPDATE_CHECKLIST.md の手順で影響を確認・反映してください（コミットはブロックしません）"
+  exit 0
 fi
 
 echo "warning: ${LOCAL_CHARTER} の ${LOCAL_REF} ブランチの VERSION (${LOCAL}) は ${PREFIX}/VERSION (${INSTALLED}) より古いです。"

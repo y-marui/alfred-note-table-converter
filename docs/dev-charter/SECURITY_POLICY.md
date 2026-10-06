@@ -101,6 +101,22 @@ API_KEY=your-api-key-here
 > 版を導入すること。lite のみを導入している場合は、本セクションの
 > 手順は実行できないため、Layer 1 の個人フックと「Manual Compliance Policy」
 > 節の手動遵守で代替する。
+>
+> **lite のまま一部のフックだけ使いたい場合**：必要なスクリプトだけを `full`
+> ブランチから取得して `scripts/` に置き、自分の `.pre-commit-config.yaml` に
+> フックを追加する。取得元は `git subtree` 導入時に追加済みの `dev-charter` リモート
+> である。
+>
+> ~~~bash
+> git fetch dev-charter full
+> git show dev-charter/full:scripts/<name>.sh > scripts/<name>.sh
+> chmod +x scripts/<name>.sh
+> ~~~
+>
+> コピーしたスクリプトは `git subtree pull`（`lite`）では更新されない。dev-charter
+> を更新するたびに、`git diff --no-index <(git show dev-charter/full:scripts/<name>.sh)
+> scripts/<name>.sh` などで `full` の最新と比べ、差分があれば取り込む。採用先で意図的に
+> 変更した箇所は、スクリプト内のコメントに理由を残す。
 
 新規リポジトリに本憲章を適用し、`.pre-commit-config.yaml` がまだ存在しない場合：
 
@@ -204,7 +220,7 @@ CI での実行例（GitHub Actions）：
 | `.pre-commit-config.yaml` | pre-commit フック定義（セキュリティ＋品質） |
 | `.gitleaks.toml` | gitleaks カスタムルール設定 |
 | `scripts/check-markdown-heading-language.sh` | Markdown セクションヘッダの言語検証 |
-| `scripts/check-local-charter-version.sh` | ローカルの `../dev-charter` チェックアウトとの VERSION 差分をチェック（sibling が新しい場合はブロック、古い場合は警告） |
+| `scripts/check-local-charter-version.sh` | ローカルの `../dev-charter` チェックアウトとの VERSION 差分をチェック（sibling が新しい場合も古い場合も警告のみ。ブロックしない） |
 | `scripts/check-charter-ci-template.sh` | `.github/workflows/dev-charter-check.yml` を README-jp.md の CI テンプレートと比較（不一致ならブロック） |
 | `scripts/check-charter-subtree-edit.sh` | `docs/dev-charter/` 配下がステージされていればブロック。ただし `MERGE_HEAD` が `git-subtree-dir` トレーラーを持つ場合（`git subtree add`/`pull`/`merge` が競合し手動コミットで完了させる場合）は誤検知しないよう除外する |
 | `scripts/check-language-pair-sync.sh` | `<name>-jp.<ext>` / `<name>.<ext>` ペアが片側のみステージされていればブロック |

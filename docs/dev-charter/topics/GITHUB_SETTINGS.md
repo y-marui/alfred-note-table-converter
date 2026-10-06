@@ -208,40 +208,84 @@ Ruleset の "Require a review from Code Owners"（`require_code_owner_review`）
 
 個人開発リポジトリでは **OFF のまま**使う。
 
-## Issue Auto-assign
+## Issue / PR Auto-assign
 
-リポジトリオーナーが Issue を作成したときに自動で自分にアサインする。
-GitHub Dashboard の "Assigned to me" に即座に表示されるようになる。
+リポジトリオーナーが Issue を作成したとき、および誰かが PR を作成したときに、自動で自分に
+アサインする。GitHub Dashboard の "Assigned to me" に即座に表示されるようになる。
+Dependabot の PR も対象にするため、`pull_request` ではなく `pull_request_target` を使う
+（`pull_request` だと Dependabot 起動の `GITHUB_TOKEN` は読み取り専用になりアサインできない）。
 
 **ファイルパス:** `.github/workflows/auto-assign-self.yml`
 
 ```yaml
-name: Assign self when I create an issue
+name: Assign maintainer when an issue or a PR is created
+
+# Assignee: repository variable AUTO_ASSIGN_USER if set, otherwise the repository
+# owner. A fork therefore assigns its own owner by default, while an org-owned
+# upstream (where repository_owner is the org, not a person) sets
+# AUTO_ASSIGN_USER in Settings > Secrets and variables > Actions > Variables.
+# When AUTO_ASSIGN_USER is set, that user is also requested as a PR reviewer.
 
 on:
   issues:
     types: [opened, reopened]
+  # pull_request_target (not pull_request) so Dependabot PRs get a write token.
+  # This workflow never checks out PR code, so it is safe to run this way.
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
 
 jobs:
   assign:
-    if: github.actor == github.repository_owner || endsWith(github.actor, '[bot]')
+    # Issues: only the assignee or bots. PRs: every PR, whoever opened it.
+    if: >-
+      github.event_name == 'pull_request_target'
+      || github.actor == (vars.AUTO_ASSIGN_USER || github.repository_owner)
+      || endsWith(github.actor, '[bot]')
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      pull-requests: write
     steps:
       - uses: actions/github-script@v9
+        env:
+          ASSIGNEE: ${{ vars.AUTO_ASSIGN_USER || github.repository_owner }}
+          # CODEOWNERS only requests reviews on paid plans for private repos, so
+          # when AUTO_ASSIGN_USER is set (org upstream) request the review here.
+          REQUEST_REVIEW: ${{ vars.AUTO_ASSIGN_USER != '' }}
         with:
           script: |
+            const assignee = process.env.ASSIGNEE
             await github.rest.issues.addAssignees({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              assignees: [context.repo.owner],
+              assignees: [assignee],
             })
+            // GitHub rejects a review request to the PR's own author.
+            const pr = context.payload.pull_request
+            if (process.env.REQUEST_REVIEW === 'true' && pr && pr.user.login !== assignee) {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                reviewers: [assignee],
+              })
+            }
 ```
 
-`github.repository_owner` を使うことでユーザー名のハードコードが不要。
-他者が Issue を作成した場合は `if` 条件が false になりスキップされる。
+アサイン先は、リポジトリ変数 `AUTO_ASSIGN_USER` があればその値、なければ
+`github.repository_owner`。ユーザー名のハードコードは不要。
+
+- 個人リポジトリ・fork: 変数は不要。オーナー自身がアサインされる。レビュー依頼は CODEOWNERS が担当する
+- 組織所有の upstream: `repository_owner` が組織名になりユーザーとして成立しないため、
+  Settings → Secrets and variables → Actions → Variables に `AUTO_ASSIGN_USER`
+  （例: maintainer のユーザー名）を設定する。変数が設定されている場合は、PR のレビュアーとしても依頼する
+  （Free プランの private リポジトリでは CODEOWNERS による自動レビュー依頼が効かず、
+  Dashboard の "Needs your review" に載らないため。PR の作成者本人はレビュアーにできないのでスキップする）
+- Issue は assignee 本人または bot が作成した場合のみ対象（他者の Issue では `if` が false）。
+  PR は作成者を問わずアサインする
+- この workflow は PR のコードをチェックアウトしないため、`pull_request_target` でも安全。
+  チェックアウトするステップを足す場合は、この前提が崩れるため再検討すること
 
 ## Security & Analysis
 
