@@ -16,11 +16,15 @@ on:
 
 jobs:
   assign:
-    # Issues: only the assignee or bots. PRs: every PR, whoever opened it.
+    # Issues: only the assignee or bots. PRs: every PR except those the assignee
+    # opened themselves (the author already tracks those as their own PRs).
     if: >-
-      github.event_name == 'pull_request_target'
-      || github.actor == (vars.AUTO_ASSIGN_USER || github.repository_owner)
-      || endsWith(github.actor, '[bot]')
+      (github.event_name == 'issues'
+      && (github.actor == (vars.AUTO_ASSIGN_USER || github.repository_owner)
+      || endsWith(github.actor, '[bot]')))
+      || (github.event_name == 'pull_request_target'
+      && github.event.pull_request.user.login
+      != (vars.AUTO_ASSIGN_USER || github.repository_owner))
     runs-on: ubuntu-latest
     permissions:
       issues: write
