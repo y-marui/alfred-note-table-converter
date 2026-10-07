@@ -172,7 +172,7 @@ OSS プロジェクトのため、**公開面は英語を主言語**とする。
 - `main` に到達するコミットは可能な限り他の開発者がレビューする（個人開発の場合は PR を経由してセルフレビューする）
 - 認証・認可・暗号化・データアクセスに関わる変更はセキュリティレビューを必須とする
 
-詳細: `SECURITY.md`、`docs/dev-charter/SECURITY_POLICY.md`
+詳細: `DEVELOPING.md`（Security 節）、`SECURITY.md`（報告方法）、`docs/dev-charter/SECURITY_POLICY.md`
 
 ### UI Guidelines (UI_GUIDELINES)
 
