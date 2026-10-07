@@ -141,3 +141,31 @@ Example:
 gemini "Update README.md based on the current source code in internal/"
 gemini "Generate CHANGELOG entry for commits since v1.0.0"
 ```
+
+## Security
+
+### Scope
+
+Common areas of concern:
+
+- **Credential handling** — never store secrets in `workflow/info.plist` or
+  committed files; use Alfred's built-in encrypted keychain instead.
+- **Input sanitization** — Alfred query strings are passed to
+  `cmd/note-table-converter-alfred`; they must not be interpolated into shell
+  commands without sanitization.
+- **Dependency security** — this project has no third-party Go dependencies;
+  dependabot monitors `.github/workflows/` automatically.
+
+### Automated security checks
+
+| Hook | What it detects |
+|---|---|
+| `gitleaks` (`.gitleaks.toml`) | Hardcoded secrets, API keys, local absolute paths |
+| `detect-private-key` | SSH/TLS private key headers |
+| `no-commit-dotenv` | `.env` files accidentally staged |
+| `check-added-large-files` | Files over 500 KB |
+| `check-markdown-heading-language` | Japanese text in Markdown H2-H6 section headings |
+
+These hooks run on every commit (pre-commit) and in CI (`security` job).
+
+For vulnerability reporting, see [SECURITY.md](SECURITY.md).
