@@ -330,6 +330,19 @@ gh api -X PATCH repos/{owner}/{repo} \
 ```
 
 > **注意:** プライベートリポジトリでの secret scanning は GitHub Advanced Security が必要（有料）。パブリックリポジトリは無料で使用できる。
+> 有効化できないプライベートリポジトリ（API が "not available" を返す場合）は既知の制約として許容し、pre-commit の gitleaks と CI のセキュリティスキャンで補う。
+
+### Private Vulnerability Reporting
+
+**設定値: 公開リポジトリは ON（private は対象外）**
+
+外部の発見者が、脆弱性を公開 Issue に書かず、非公開でメンテナーに報告できるようにする。リポジトリの `SECURITY.md`（[GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) の「SECURITY.md」）の文面が、報告フォームの上に表示される。
+
+PVR は公開リポジトリ専用の機能で、private リポジトリでは使えない。private では `SECURITY.md` を置くだけにする。テンプレートから生成したリポジトリには、この設定はコピーされない。公開リポジトリを生成するたびに有効化する。
+
+```bash
+gh api -X PUT repos/{owner}/{repo}/private-vulnerability-reporting
+```
 
 ## Sponsors (FUNDING.yml)
 
@@ -390,3 +403,10 @@ buy_me_a_coffee: your-buymeacoffee-username
 **Settings の Sponsorships と FUNDING.yml の両方が必要。** どちらか片方だけでは Sponsor ボタンが表示されない。
 
 FUNDING.yml の詳細は [MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) を参照。
+
+## Exemptions from the Baseline
+
+本ドキュメントの設定は、現在も更新・PR が発生するリポジトリに適用する。次のリポジトリは意図的に適用対象外とする。
+
+- レガシー・メンテナンス終了の個人リポジトリ（更新も PR も発生しないため、設定を維持する意味がない）
+- CI ワークフローを持たないリポジトリ（プロフィールリポジトリ、ステータスダッシュボード等）は `main-protection` Ruleset の対象外とする。標準の必須チェック（`CI`・`Dev Charter`）が報告されず、すべての PR・push をブロックするため
