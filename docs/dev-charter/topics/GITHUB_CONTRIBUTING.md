@@ -107,6 +107,43 @@ modify, distribute, sublicense, and relicense your contributions under any licen
 
 `[AGPL v3 / GPL v3 / LGPL v3]` はプロジェクトのライセンスに合わせて置き換えること。
 
+## SECURITY.md
+
+脆弱性の報告先を示すファイル。他の節と異なり、外部コントリビューターの有無や公開・private を問わず、**すべてのリポジトリのルートに置く**。同じ定型文を全リポジトリに置くことで、テンプレートから生成したリポジトリが公開か private かを気にせず済み、後から公開に切り替えてもそのまま使える。
+
+- 置き場所はリポジトリ直下の `SECURITY.md`。アカウント共通の `.github` リポジトリによる既定値には頼らない（憲章を取り込む他の採用先やローカルの clone でも成り立たせるため）
+- 文面は次の定型文をそのまま使う。プロジェクトごとに書き換えない（文面を変えるときは、この節を直してから各リポジトリに反映する）
+- プロジェクト固有のセキュリティ設計・保証・脅威モデル（例: 「テレメトリやネットワーク送信を行わない」「信頼境界と許可リスト」）や、開発側のセキュリティチェックの一覧は、`docs/` の既存の文書（設計・仕様の文書、`DEVELOPING.md` 等）に置き、`SECURITY.md` には書かない。`SECURITY.md` は報告方法の定型文だけにする
+- 数値の SLA は書かない。守れない約束を載せないため
+- メールアドレスなどの個人の連絡先は載せない。報告経路は GitHub の Private vulnerability reporting（以下 PVR）にする
+- PVR は公開リポジトリでのみ使える。有効化の手順は [GITHUB_SETTINGS-full.md](GITHUB_SETTINGS-full.md) / [GITHUB_SETTINGS-lite.md](GITHUB_SETTINGS-lite.md) の「Private Vulnerability Reporting」を参照する。PVR が使えない private リポジトリや、有効化し忘れたリポジトリでは、文面の後半（脆弱性の詳細を含めずに連絡手段を尋ねる Issue）が代わりの経路になる
+- リポジトリ自身の脆弱性報告の受付を定めるもので、シークレット管理（[SECURITY_POLICY.md](../SECURITY_POLICY.md)）とは別の話
+
+```markdown
+# Security Policy
+
+## Supported Versions
+
+Only the latest release (or the default branch, if there are no releases)
+receives security fixes.
+
+## Reporting a Vulnerability
+
+Please do not report security vulnerabilities in public issues, pull
+requests, or discussions.
+
+If private vulnerability reporting is enabled for this repository, use
+"Report a vulnerability" on the Security tab. Otherwise, open an issue
+asking for a private contact channel, without including any details of
+the vulnerability.
+
+## What to Expect
+
+Reports are handled on a best-effort basis. No response time is guaranteed.
+```
+
+`CODE_OF_CONDUCT.md` は憲章では定めない。個人開発・小規模 OSS には通報を受ける運用主体がいないため。外部コントリビューターを積極的に募る段階になったら、別途検討する。
+
 ## .github/PULL_REQUEST_TEMPLATE.md
 
 PR チェックリストはこのファイルを正本とする。

@@ -161,7 +161,7 @@ README のライセンスセクション・ライセンスバッジは選択し�
 
 `{user}` / `{repo}` をこのプロジェクトのリポジトリ情報に置き換える。
 
-**サポートバッジ（GitHub で公開しているプロジェクトの場合）:**
+**サポートバッジ（すべてのプロジェクト。public / private を問わない）:**
 
 dev-charter バッジの後に、GitHub Sponsors と Buy Me a Coffee のバッジを追加する。
 サポートセクションは README に設けず、バッジで代替する。
@@ -210,6 +210,7 @@ README 作成・更新後に確認する。⚠️ は人間による確認が必
 [ ] CI バッジの URL がこのプロジェクトリポジトリを指しているか（テンプレートの URL のままになっていないか）
 [ ] dev-charter を導入済みの場合、charter-check バッジが存在するか（§7 参照）
 [ ] ライセンスバッジ・READMEライセンスセクション・LICENSE ファイルが三者一致しているか
+[ ] GitHub Sponsors・Buy Me a Coffee のサポートバッジが存在するか（public / private を問わない。§7 参照）
 [ ] ⚠️ 一行概要がテンプレートの説明ではなくプロジェクト固有の説明になっているか
 [ ] ⚠️ セットアップ手順でプロジェクトが実際に動作するか（人間による動作確認）
 [ ] プレースホルダが全て置換されているか（§6 参照）: [YEAR]・[AUTHOR]（LICENSE）、[USERNAME]・[BMC_USERNAME]（FUNDING.yml・サポートバッジ）、{user}/{repo}/{workflow}（CI バッジ）

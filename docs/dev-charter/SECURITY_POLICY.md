@@ -1,5 +1,9 @@
 # Security Policy
 
+> このファイルはシークレット管理・git フック・pre-commit など、開発者側の予防策を定める。
+> リポジトリ自身の脆弱性報告の受付（`SECURITY.md`）は別の話で、
+> [topics/GITHUB_CONTRIBUTING.md](https://github.com/y-marui/dev-charter/blob/full/topics/GITHUB_CONTRIBUTING.md) の「SECURITY.md」を参照する。
+
 ## Two-Layer Security Architecture
 
 このプロジェクトのセキュリティは以下の二層で構成される。

@@ -118,7 +118,7 @@ AGPL/GPL/LGPL を採用する場合の準 CLA 設定（`CONTRIBUTING.md` + PR �
 | `AGENTS.md` | Codex 使用時 | `AI_CONTEXT.md` を読む指示を記載 |
 | `.github/copilot-instructions.md` | Copilot 使用時 | `AI_CONTEXT.md` を参照する旨を記載 |
 | `.github/workflows/ci.yml` | CI 使用時 | テスト・ビルド・リントの自動実行 |
-| `.github/FUNDING.yml` | GitHub 公開プロジェクト | GitHub Sponsors・Buy Me a Coffee の設定（[MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) 参照） |
+| `.github/FUNDING.yml` | すべてのプロジェクト（public / private を問わない） | GitHub Sponsors・Buy Me a Coffee の設定（[MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) 参照） |
 | `CONTRIBUTING.md` | OSS で外部 PR を受け付ける場合 | Issues first ルール・コードスタイル・コミット形式・PR チェックリスト・準 CLA 条項（[GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) 参照） |
 | `.github/ISSUE_TEMPLATE/` | OSS で外部 Issue を受け付ける場合 | バグ報告・機能要望テンプレート |
 | `.github/PULL_REQUEST_TEMPLATE.md` | OSS で外部 PR を受け付ける場合 | AGPL/GPL/LGPL プロジェクトは [GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) に従い CLA 同意チェックボックスを末尾に追加する |
@@ -202,7 +202,7 @@ README 作成後、以下を確認する。
     [ ] ドキュメント索引のリンクが実在するファイルを指しているか（ドキュメントのない規模のプロジェクトはセクションごと省略）
     [ ] LICENSE ファイルが存在し、README からリンクされているか
     [ ] AGPL/GPL/LGPL を採用した場合、`CONTRIBUTING.md` に準 CLA 条項があり、`.github/PULL_REQUEST_TEMPLATE.md` に同意チェックボックスがあるか（[GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) 参照）
-    [ ] GitHub 公開プロジェクトの場合、`.github/FUNDING.yml` が存在するか
+    [ ] `.github/FUNDING.yml` が存在するか（public / private を問わない）
     [ ] 日本語版・英語版が同一コミットで更新されているか
     [ ] bilingual 文書の末尾に編集ルールフッターがあるか
     [ ] 変数の置換漏れ（[user]、[repo]、[YEAR]、[AUTHOR] 等）がないか
@@ -233,7 +233,7 @@ README 作成後、以下を確認する。
    - `README_TEMPLATE.md` → `README.md` にリネーム（旧 `README.md` を削除）
    - プレースホルダ（`{user}`・`{repo}` 等）の置換（CI バッジ・dev-charter バッジを含む）
 9. `.github/copilot-instructions.md` を作成する（Copilot 使用時）
-10. GitHub 公開プロジェクトの場合は `.github/FUNDING.yml` を作成する（[MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) 参照）
+10. `.github/FUNDING.yml` を作成する（public / private を問わない）（[MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) 参照）
 
 > **Note（dev-charter を含むテンプレートの場合）:**
 > GitHub テンプレートはファイルのみコピーし git 履歴を引き継がないため、
