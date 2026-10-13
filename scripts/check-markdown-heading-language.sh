@@ -24,9 +24,24 @@ for file in "$@"; do
   line_number=0
   previous_line=""
   previous_line_number=0
+  in_frontmatter=0
 
   while IFS= read -r line || [[ -n "$line" ]]; do
     line_number=$((line_number + 1))
+
+    # Skip YAML frontmatter (a leading --- on line 1 through the closing ---),
+    # otherwise the closing --- reads as a setext underline for the last
+    # frontmatter line.
+    if [[ $line_number -eq 1 && "$line" =~ ^---[[:space:]]*$ ]]; then
+      in_frontmatter=1
+      continue
+    fi
+    if [[ $in_frontmatter -eq 1 ]]; then
+      if [[ "$line" =~ ^(---|\.\.\.)[[:space:]]*$ ]]; then
+        in_frontmatter=0
+      fi
+      continue
+    fi
 
     if [[ -z "$fence_character" && "$line" =~ $opening_fence_pattern ]]; then
       fence_marker="${BASH_REMATCH[1]}"
