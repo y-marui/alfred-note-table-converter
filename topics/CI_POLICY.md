@@ -348,6 +348,38 @@ macOS 版と同じ条件に加えて、次を守る：
   呼ばれる側のワークフローで付ける
 - 再利用ワークフロー `check-charter.yml` は `runner` 入力で runs-on を受け取る（既定は `ubuntu-latest`）
 
+**self-hosted Windows runner（任意）：** .NET の WinForms/WPF のように Windows でしかビルドできないスタック
+（`net8.0-windows` 等）は、`lint`・`build` が Windows job になる。Linux runner に載せられないため、
+課金ブロックや無料枠の超過の影響を受け続ける。自前の Windows PC にネイティブの runner を置いて逃がせる。
+Linux 版と同じ条件に加えて、次を守る：
+
+- 変数名は `WINDOWS_RUNNER`（値は runner のラベル）。**private リポジトリだけ**に設定し、public には設定しない。
+  式は `LINUX_RUNNER` と同じ形にする：
+
+  ```yaml
+  runs-on: ${{ vars.WINDOWS_RUNNER && !github.event.pull_request.head.repo.fork && vars.WINDOWS_RUNNER || 'windows-latest' }}
+  ```
+
+- **Docker ではなくネイティブにする。** Windows コンテナは Windows ネイティブのコンテナエンジンが要り、
+  Linux コンテナ（WSL2 上の Docker 等）の runner とは同居できない。コンテナの OS ビルドをホストに
+  合わせる必要もあり、イメージも大きい。runner は専用の標準ユーザー（管理者権限なし）の
+  Windows サービスとして動かし、展開先は MAX_PATH を避ける短い絶対パスにして、その ACL は
+  runner ユーザー・管理者・SYSTEM だけにする
+- 同じホストに他 OS の runner（Linux コンテナ等）を置く場合、**runner 名を同名にしない**
+  （`config` の `--replace` が、同名の別 runner を置き換えてしまう）
+- `actions/setup-dotnet` は、既定で共有の `C:\Program Files\dotnet` にインストールしようとして、
+  標準ユーザーでは失敗する。runner の `.env` で `DOTNET_INSTALL_DIR` を runner 専用のディレクトリに
+  向ける。変更は runner の再起動後に有効になる
+- runner のサービス名は、長いと切り詰められる。名前ではなく、サービスの実行ファイルのパスで特定する
+- 標準ユーザーの runner は、Windows Installer サービスに触れない。MSI を作る job（WiX 等）は、検証（ICE）が
+  `WIX0217` で失敗するので、self-hosted のときだけ検証を省く（`-p:SuppressValidation=true`）。
+  hosted の runner とローカルでは検証する
+- release job（タグの push で GitHub Releases に添付する）が `gh` を使う場合は、`gh` もシステム全体の PATH に入れる
+- `git` と `dotnet`（SDK）は、システム全体の PATH に入れておく（サービスが見られるように、
+  ユーザー単位ではなくマシン単位でインストールする）
+- 課金ブロック中は hosted の Linux job も起動しない。self-hosted で逃がすには、Linux と Windows の
+  **両方**の job を self-hosted に載せる。片方だけでは、`gate` が失敗したままになる
+
 ### Concurrency (Cancel Superseded Runs)
 
 同じブランチ/PRに素早く連続でpushすると、古いrunが完走するまで新しいrunと並行して

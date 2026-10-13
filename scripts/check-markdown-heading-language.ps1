@@ -33,9 +33,20 @@ foreach ($file in $Files) {
     $lineNumber = 0
     $previousLine = ''
     $previousLineNumber = 0
+    $inFrontmatter = $false
 
     foreach ($line in Get-Content -Path $file) {
         $lineNumber++
+
+        # Skip YAML frontmatter (a leading --- on line 1 through the closing ---).
+        if ($lineNumber -eq 1 -and $line -match '^---[ \t]*$') {
+            $inFrontmatter = $true
+            continue
+        }
+        if ($inFrontmatter) {
+            if ($line -match '^(---|\.\.\.)[ \t]*$') { $inFrontmatter = $false }
+            continue
+        }
 
         if (-not $fenceChar -and $line -match $openingFencePattern) {
             $marker = $Matches[1]

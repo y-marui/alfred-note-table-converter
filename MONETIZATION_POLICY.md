@@ -26,7 +26,7 @@ Swift で開発し、Apple App Store で配布する macOS・iOS アプリには
 
 ### Free Trial
 
-- 無料試用期間は初回利用日時から 1 か月とする
+- 無料試用期間は初回利用日時から 6 か月とする
 - 試用期間中はすべての機能を利用可能にし、機能制限を設けない
 - 試用期間終了後は、月間サブスクリプション・年間サブスクリプション・買い切りのいずれかを購入しなければ継続利用できない
 
@@ -46,9 +46,9 @@ Swift で開発し、Apple App Store で配布する macOS・iOS アプリには
 - いずれか一方で購入した利用者は、もう一方でも購入を復元して同じ権利を利用できるようにする
 - 月間・年間サブスクリプションと買い切りのすべてで、macOS・iOS 間の購入権利を共有する
 
-## GitHub Published Projects
+## GitHub Projects
 
-GitHub 上で公開するプロジェクトは、Open/Closed にかかわらず、プラットフォーム別の方式に加えて **GitHub Sponsors** を追加する。
+GitHub 上のすべてのプロジェクトは、public / private および Open/Closed にかかわらず、プラットフォーム別の方式に加えて **GitHub Sponsors** を追加する。
 
 ### .github/FUNDING.yml
 

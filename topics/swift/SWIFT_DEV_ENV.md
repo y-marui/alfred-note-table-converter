@@ -196,6 +196,36 @@ iOS ターゲット（Widget Extension を含む）を追加した場合は、�
 別に `-destination "generic/platform=iOS Simulator"` を使う iOS 向けビルド job を
 追加する。
 
+## Privacy Manifest
+
+App Store Connect へアップロードするアプリは、プライバシーマニフェスト
+（`PrivacyInfo.xcprivacy`）を含める。`UserDefaults` などの「理由の申告が必要な API」を
+使うのにマニフェストがないと、アップロード時に警告や拒否の原因になる。
+
+- 置き場所は `App/PrivacyInfo.xcprivacy` の 1 ファイル。アプリと、Widget・Intents・
+  Keyboard などの拡張機能の**全ターゲットで共有**し、ターゲットごとに複製しない。
+  `project.yml` の各ターゲットの `sources` に `- path: App/PrivacyInfo.xcprivacy` を足す
+- 申告する内容は、トラッキングなし（`NSPrivacyTracking: false`）、収集するデータ種別なし
+  （App Store Connect の「アプリのプライバシー」の回答と一致させる）、使っている API ごとの
+  理由コード
+- 理由コードは、コードの実際の使い方に合うものを選ぶ。よく使うものは次のとおり（全一覧と最新の
+  定義は Apple の公式ドキュメントで確認する）
+
+| API カテゴリ | 理由コード | 使い方 |
+|---|---|---|
+| `NSPrivacyAccessedAPICategoryUserDefaults` | `CA92.1` | アプリ自身が読み書きする設定 |
+| 同上 | `1C8F.1` | 同じ App Group のアプリ・拡張機能が共有する設定（`UserDefaults(suiteName:)`） |
+| `NSPrivacyAccessedAPICategoryFileTimestamp` | `C617.1` | アプリ・App Group のコンテナ内のファイルの日時 |
+| `NSPrivacyAccessedAPICategorySystemBootTime` | `35F9.1` | `systemUptime` などで、アプリ内のイベント間の経過時間を測る |
+
+- 使用の有無は、`UserDefaults`・`modificationDate` / `attributesOfItem`・`systemUptime` /
+  `mach_absolute_time`・`volumeAvailableCapacity`・`activeInputModes` をコードから検索して確認する。
+  新しい API を使うようになったら、マニフェストにも追記する
+- 自前の Swift Package が該当する API を使う場合は、パッケージの `Resources` にもマニフェストを置く。
+  ただし静的にリンクされるパッケージの使用もアプリの申告に含まれるため、アプリ側のマニフェストでも申告する
+- 確認は、署名なしでビルドして、成果物の `.app` と埋め込まれた `.appex` の両方に
+  `PrivacyInfo.xcprivacy` が入っていることを見る（`find <DerivedData>/Build/Products -name PrivacyInfo.xcprivacy`）
+
 ## Dependency Policy
 
 - 既定でサードパーティ依存ゼロ（外部パッケージを追加しない）
