@@ -59,7 +59,7 @@ git config hooks.skip-policy-check true
 | `.env.example`/`.env.sample`/`.env.template` があるのに `.gitignore` が `.env` を無視していない | 層2 | `.env` 誤コミットの一次防御 |
 | コミットメッセージが Conventional Commits 形式でない | 層2（commit-msg ステージ。`core.hooksPath` 使用時は個人の dotfiles 側の追加対応が無い限り機能しない） | PROJECT_LIFECYCLE.md の遵守 |
 | 日英ペアドキュメントの冒頭宣言・末尾フッターの欠如 | 層2 | LANGUAGE_POLICY.md の遵守 |
-| `AI_CONTEXT.md` があるのに `CLAUDE.md`/`GEMINI.md`/`AGENTS.md`/`.github/copilot-instructions.md` がそれを参照していない | 層2 | AI_TOOL_SETUP.md の遵守 |
+| `AI_CONTEXT.md` があるのに `CLAUDE.md`/`AGENTS.md`/`.github/copilot-instructions.md` がそれを参照していない | 層2 | AI_TOOL_SETUP.md の遵守 |
 | `pyproject.toml` があるのに `requirements.txt` が存在する、または `uv.lock` が無い | 層2 | topics/python/PYTHON_DEV_ENV.md の遵守 |
 | `LICENSE`/`.github/FUNDING.yml`/`README` にプレースホルダ（`[YEAR]` 等）が残っている | 層2（テンプレートリポジトリ自体は対象外） | topics/PROJECT_README_GUIDELINES.md の遵守 |
 | デフォルトブランチ（`main`/`master`）へ直接コミット | 層2（CI 上ではスキップ。detached HEAD/PR ref でブランチ名を持たないため） | サーバ側 Ruleset は push のみ止めるため、コミット時点で検知する（topics/CI_POLICY.md「Branch Protection (Ruleset)」参照） |
@@ -232,7 +232,7 @@ CI での実行例（GitHub Actions）：
 | `scripts/check-markdown-heading-language.sh` | Markdown セクションヘッダの言語検証 |
 | `scripts/check-local-charter-version.sh` | ローカルの `../dev-charter` チェックアウトとの VERSION 差分をチェック（sibling が新しい場合も古い場合も警告のみ。ブロックしない） |
 | `scripts/check-charter-ci-template.sh` | `.github/workflows/dev-charter-check.yml` を README-jp.md の CI テンプレートと比較（不一致ならブロック） |
-| `scripts/check-charter-subtree-edit.sh` | `docs/dev-charter/` 配下がステージされていればブロック。ただし `MERGE_HEAD` が `git-subtree-dir` トレーラーを持つ場合（`git subtree add`/`pull`/`merge` が競合し手動コミットで完了させる場合）は誤検知しないよう除外する |
+| `scripts/check-charter-subtree-edit.sh` | `docs/dev-charter/` 配下がステージされていればブロック。ただし `MERGE_HEAD` が `git-subtree-dir` トレーラーを持つ場合（`git subtree add`/`pull`/`merge` が競合し手動コミットで完了させる場合）は誤検知しないよう除外する。別の subtree も守る場合は `CHARTER_PREFIX` を変えてもう1回呼び、`SUBTREE_UPSTREAM`・`SUBTREE_UPDATE_HINT` で案内文だけ差し替えられる |
 | `scripts/check-update-checklist.sh` | `docs/dev-charter/` のみを変更する差分（`origin/<default>` との差分全体）に、`Update-Checklist: done` trailer の commit も `docs/dev-charter/` 以外の変更も無ければブロック（pre-push ステージ。`pre-commit install --hook-type pre-push` が必要。commit 時は `git subtree pull` を止めないため検査しない。CI は `check-charter.yml` が同じ判定を行う） |
 | `scripts/check-language-pair-sync.sh` | `<name>-jp.<ext>` / `<name>.<ext>` ペアが片側のみステージされていればブロック |
 | `scripts/check-license-exists.sh` | リポジトリルートに `LICENSE*` が無ければブロック |
