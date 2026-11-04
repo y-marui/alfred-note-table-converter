@@ -27,11 +27,17 @@ jobs:
   gate:
     name: Dev Charter
     needs: [check]
-    # Skip on draft PRs too (a draft can't be merged, so no status is awaited).
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # Always run, even on draft PRs: a skipped required check counts as passing,
+    # so a stale draft run must fail instead (see CI_POLICY "Draft PRs").
+    if: always()
     runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
+      - name: Fail on draft PRs
+        if: github.event_name == 'pull_request' && github.event.pull_request.draft
+        run: |
+          echo "::error::draft PR: checks were skipped. Mark the PR ready for review."
+          exit 1
       - name: Verify dev-charter check did not fail
         run: |
           result="${{ needs.check.result }}"

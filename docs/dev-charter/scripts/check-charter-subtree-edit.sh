@@ -37,7 +37,8 @@ PREFIX="${CHARTER_PREFIX:-docs/dev-charter}"
 MERGE_HEAD_PATH=$(git rev-parse --git-path MERGE_HEAD 2>/dev/null || true)
 if [ -n "$MERGE_HEAD_PATH" ] && [ -f "$MERGE_HEAD_PATH" ]; then
   MERGE_HEAD_SHA=$(cat "$MERGE_HEAD_PATH")
-  if git log -1 --format=%B "$MERGE_HEAD_SHA" 2>/dev/null | grep -qx "git-subtree-dir: ${PREFIX}"; then
+  MERGE_HEAD_MSG=$(git log -1 --format=%B "$MERGE_HEAD_SHA" 2>/dev/null || true)
+  if grep -qx "git-subtree-dir: ${PREFIX}" <<<"$MERGE_HEAD_MSG"; then
     exit 0
   fi
 fi

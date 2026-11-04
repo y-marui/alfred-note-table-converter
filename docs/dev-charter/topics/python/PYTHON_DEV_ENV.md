@@ -140,7 +140,7 @@ lint:
     - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v10.0.1
       with:
-        enable-cache: true
+        enable-cache: ${{ !(vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork) }}
     - run: uv sync --frozen
     - run: uv run ruff check .
     - run: uv run ruff format --check .
@@ -155,10 +155,21 @@ test:
     - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v10.0.1
       with:
-        enable-cache: true
+        enable-cache: ${{ !(vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork) }}
         python-version: ${{ matrix.python-version }}
     - run: uv sync --frozen
     - run: uv run pytest
+```
+
+`enable-cache` は `runs-on` と同じ条件で切り替える。self-hosted runner では `UV_CACHE_DIR` がローカルに
+永続するため、リモートへ数GB規模のキャッシュを保存・復元しても得るものがなく、`Post Run setup-uv`
+が job の実処理より長くなる。self-hosted で実行したときは、各 job の末尾で
+`uv cache prune --ci` を実行してローカルキャッシュの肥大化を防ぐ（容量の小さい runner 向け）。
+
+```yaml
+    - name: Prune local uv cache
+      if: ${{ always() && vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork }}
+      run: uv cache prune --ci
 ```
 
 ### `build` Job
@@ -177,7 +188,7 @@ build:
     - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v10.0.1
       with:
-        enable-cache: true
+        enable-cache: ${{ !(vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork) }}
     - run: uv sync --frozen
     - run: uv build   # 配布パッケージの場合。非配布アプリでは import チェックでも可
 ```

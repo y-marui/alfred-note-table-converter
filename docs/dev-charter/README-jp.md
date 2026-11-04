@@ -137,11 +137,17 @@ jobs:
   gate:
     name: Dev Charter
     needs: [check]
-    # Skip on draft PRs too (a draft can't be merged, so no status is awaited).
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # Always run, even on draft PRs: a skipped required check counts as passing,
+    # so a stale draft run must fail instead (see CI_POLICY "Draft PRs").
+    if: always()
     runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
+      - name: Fail on draft PRs
+        if: github.event_name == 'pull_request' && github.event.pull_request.draft
+        run: |
+          echo "::error::draft PR: checks were skipped. Mark the PR ready for review."
+          exit 1
       - name: Verify dev-charter check did not fail
         run: |
           result="${{ needs.check.result }}"
@@ -157,9 +163,9 @@ full はこのワークフローの `branch` 入力の既定値なので、`with
 
 > **Note:** dependabot が作成した PR や draft PR では `check` 自体がスキップされます
 > （後述）。`gate` は dependabot の場合も `skipped` を正常として扱い、`Dev Charter`（ワークフロー
-> 自身の `name:` と同じ値）を報告します（draft PR は `gate` ごとスキップします。draft は
-> マージできず、必須チェックの報告を待たないためです。1 job ごとに分単位で課金されるのを避ける
-> 目的もあります）。Branch Protection（Ruleset）に必須ステータス
+> 自身の `name:` と同じ値）を報告します（draft PR では `gate` を実行して意図的に
+> 失敗させます。skipped の必須チェックは合格と同じに扱われ、draft への push と ready 化が重なると
+> draft 時の skipped が残ってマージ可能に見えてしまうためです。`ready_for_review` 後の実行が結果を上書きします）。Branch Protection（Ruleset）に必須ステータス
 > チェックとして登録するのは `Check / check` ではなく `Dev Charter` です（[CI_POLICY.md
 > の Ruleset 節](topics/CI_POLICY.md#branch-protection-ruleset)参照）。
 > `check` job だけを直接必須チェックに登録すると、skip 時に `Check / check` という
@@ -170,9 +176,10 @@ full はこのワークフローの `branch` 入力の既定値なので、`with
 > repo が完全に静止している間はチェックが走らないため、活動に関わらず定期的に確認したい場合は
 > 上記に加えて低頻度の `schedule`（例：月1回）を併用してください。
 
-> **Note:** Draft PR ではスキップされます（draft はそもそもマージできないため、チェックが
-> 未報告のままでもリスクがない）。`on.pull_request.types` の `ready_for_review` により、
-> draft を解除した際は改めて実行されます。
+> **Note:** Draft PR では `check` はスキップされ、`gate` は意図的に失敗します。skipped の
+> 必須チェックは合格と同じに扱われるため、draft への push と `gh pr ready` が重なると、
+> 古い skipped の `gate` でマージ可能に見えるおそれがあるためです。
+> `on.pull_request.types` の `ready_for_review` により、draft を解除した際は改めて実行されます。
 
 > **Note:** Branch Protection で direct push が禁止されている場合は、
 > GitHub Actions bot の bypass rule を追加してください
