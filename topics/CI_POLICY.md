@@ -181,7 +181,7 @@ jobs:
               - '!.github/workflows/auto-assign-self.yml'
               # dev-charter 配布ファイル（git subtree 更新 PR が持ち込む）
               - '!.pre-commit-config.yaml'
-              - '!scripts/{check-ai-context-reference,check-charter-ci-template,check-charter-doc-links,check-charter-subtree-edit,check-conventional-commit,check-dotenv-gitignore,check-language-pair-footer,check-language-pair-sync,check-license-exists,check-local-charter-version,check-markdown-heading-language,check-not-on-default-branch,check-powershell-lint,check-python-package-management,check-readme-placeholders,check-version-date,new-branch}.{sh,ps1}'
+              - '!scripts/{check-ai-context-reference,check-charter-ci-template,check-charter-doc-links,check-charter-subtree-edit,check-conventional-commit,check-dotenv-gitignore,check-hook-scripts,check-language-pair-footer,check-language-pair-sync,check-license-exists,check-local-charter-version,check-markdown-heading-language,check-not-on-default-branch,check-powershell-lint,check-python-package-management,check-readme-placeholders,check-version-date,new-branch}.{sh,ps1}'
               - '!scripts/PSScriptAnalyzerSettings.psd1'
 
   security:
@@ -212,12 +212,17 @@ jobs:
   gate:
     name: CI
     needs: [changes, security, lint, test, build]
-    # draft は always() でも実行しない: draft はそもそもマージ不可なので、
-    # チェックが未報告のままでも「詰まる」リスクがない（docs-only スキップとは
-    # 違い、gate 自体を丸ごとスキップしてよい）
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # draft でも実行する（スキップしない）: skipped の必須チェックは合格と同じに
+    # 扱われるため、draft 時の skipped が最新の判定として残ると、実際のテスト前に
+    # マージ可能に見えてしまう（Draft PRs 節参照）。draft では意図的に失敗させる
+    if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: Fail on draft PRs
+        if: github.event_name == 'pull_request' && github.event.pull_request.draft
+        run: |
+          echo "::error::draft PR: tests were not run. Mark the PR ready for review."
+          exit 1
       - name: Verify required jobs succeeded
         run: |
           if [ "${{ needs.security.result }}" != "success" ]; then
@@ -348,6 +353,55 @@ macOS 版と同じ条件に加えて、次を守る：
   呼ばれる側のワークフローで付ける
 - 再利用ワークフロー `check-charter.yml` は `runner` 入力で runs-on を受け取る（既定は `ubuntu-latest`）
 
+**self-hosted runner のキャッシュ・容量・並列度：** runner のローカルディスクは job をまたいで残る
+（コンテナの永続ボリュームに `~/.cache` 相当を置く）。hosted 向けの定番設定をそのまま使うと、ローカルに
+同じものがあるのにリモートへ数 GB を保存・復元するだけになり、`Post Run` のキャッシュ保存が実処理より
+長くなる（実測：uv のキャッシュ約 2.9 GB の保存に 1 job あたり 6〜11 分）。
+
+- **キャッシュは runs-on と同じ条件で切り替える：** self-hosted ではローカルの永続キャッシュ（uv、
+  npm/pnpm、pip、Cargo、Gradle、NuGet、SwiftPM、pre-commit 等）を直接使い、リモートへの保存・復元は
+  無効にする。hosted（public リポジトリ、fork PR、`LINUX_RUNNER` 未設定）では有効のままにする。
+  `runs-on` の条件式から `!( ... )` で導くと、変数の設定だけで両方が正しく切り替わる：
+
+  ```yaml
+  - uses: astral-sh/setup-uv@vX.Y.Z
+    with:
+      enable-cache: ${{ !(vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork) }}
+  ```
+
+  対象は `setup-uv` の `enable-cache` のほか、`actions/setup-node` の `cache:`、`Swatinem/rust-cache`、
+  `actions/cache`、Docker の `cache-to: type=gha` 等、リモートへ保存する設定すべて。ツールの既定が
+  自動で切り替わる場合も、明示して揃える（読み手が runner の種類で挙動が変わると推測しなくて済む）
+- **ローカルキャッシュは増え続ける：** 特にディスクの小さい runner（Raspberry Pi 等）では、job の末尾で
+  掃除する。self-hosted のときだけ実行し、失敗時も走らせる：
+
+  ```yaml
+  - name: Prune local uv cache
+    if: ${{ always() && vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork }}
+    run: uv cache prune --ci
+  ```
+
+  掃除用のコマンドがないツール（pre-commit、Playwright、toolcache 等）は、runner 側の定期掃除で
+  上限を決める。空き容量は runner の登録時に確認する
+- **同一 runner 上の並列 job はキャッシュを共有する：** uv は排他ロックするので共有してよい。
+  ただし、キャッシュ内に実行ファイルを展開するツール（pre-commit が入れる shellcheck 等）は、同時に
+  更新すると `Text file busy` で失敗することがある。その場合は失敗した job を再実行する。繰り返すなら、
+  そのツールを runner のイメージに入れて `language: system` にする
+- **言語バージョンの matrix：** uv のキャッシュはホイールのタグ単位で共有できるが、インタープリタ本体
+  の既定の置き場所（`~/.local/share/uv/python`）はコンテナの書き込み層にあり、キャッシュ用の永続
+  ボリュームの外になる。コンテナごとに別のコピーを持ち、イメージ更新でコンテナを作り直すたびに
+  取得し直す。runner のイメージで `UV_PYTHON_INSTALL_DIR` を永続ボリューム内（例:
+  `<キャッシュのマウント先>/uv-python`）に向けると、同じホストの全コンテナで 1 つを共有でき、
+  作り直しても残る（3.11〜3.14 の取得が 6.6 秒から 1.1 秒に短縮、約 400MB。デスクトップでの実測）。
+  runner は 1 台あたり同時に 1 job なので、matrix の要素数 × 実行時間が、runner が空いていなければ
+  そのまま待ち時間になる。private リポジトリでは、サポート範囲を満たす最小の matrix にする
+- **runner の台数と性能差：** runner が少ないと、job が runner を占有する時間（キャッシュ保存を含む）が
+  そのまま後続 job の待ち時間になる。runner ごとに性能が違う（Raspberry Pi は x86 の PC の 2 倍以上遅い
+  ことがある）ので、`timeout-minutes` は最も遅い runner の実測で決める。重い job が遅い runner に
+  偏る場合は、重い job 用のラベルを分けるか、その job だけ hosted に戻す
+- **止まっている runner は異常とは限らない：** アイドルの runner を止め、job が溜まったら起動する運用
+  では、オフラインは通常の状態。待機が長いときは、起動の仕組みが動いているかを確認する
+
 **self-hosted Windows runner（任意）：** .NET の WinForms/WPF のように Windows でしかビルドできないスタック
 （`net8.0-windows` 等）は、`lint`・`build` が Windows job になる。Linux runner に載せられないため、
 課金ブロックや無料枠の超過の影響を受け続ける。自前の Windows PC にネイティブの runner を置いて逃がせる。
@@ -402,17 +456,30 @@ concurrency:
 
 `ready_for_review` を `on.pull_request.types` に加えた上で、`changes`・`security`・`gate`
 に draft スキップの `if:` を付ける（`lint`/`test`/`build` は `changes` 経由で連鎖的に
-スキップされる）。デフォルトの `pull_request` トリガーは `opened`/`synchronize`/`reopened`
+スキップされる）。**`gate` だけはスキップせず、draft では実行して失敗させる**（後述）。デフォルトの `pull_request` トリガーは `opened`/`synchronize`/`reopened`
 のみで `ready_for_review` を含まないため、これを忘れると draft 解除時に再実行されず、
 古い（未評価の）ステータスのまま残ってしまう。
 
-`gate` を `if: always()` のままにせず draft でスキップしてよい理由：docs-only スキップは
-「コードが変わっていないので中身の検証は不要だが、必須チェックとしての合否報告は必要」
-（`gate` 自体は動いて `exit 0` する）。draft は「そもそも GitHub がマージを許可しない」ため、
-必須チェックが一切報告されなくてもブロック待ちにならない。よって `gate` ごとスキップできる。
+**`gate` を draft でスキップしてはいけない理由：** GitHub は skipped の必須チェックを合格と
+同じに扱う。draft のままなら PR はそもそもマージできないが、draft への push と `gh pr ready`
+が同じ秒に重なると、`synchronize`（draft）と `ready_for_review` の 2 つの実行が同じ
+`concurrency` グループで競合し、片方が取り消される。このとき draft 時の実行で `gate` が
+skipped のまま最新の判定として残ると、実際のテスト（取り消された実行の再実行分）がまだ
+待機中でも、必須チェックが「合格」になり、マージのボタンが有効になる
+（2026-11 に `python-preprint-publish-tracker` の PR で実際に発生。[Issue #209](https://github.com/y-marui/dev-charter/issues/209)）。
+[§ `gate` Is a Gate, Not Just a `needs` Aggregation](#gate-is-a-gate-not-just-a-needs-aggregation)
+と同じ種類の問題である。
 
-`.github/workflows/dev-charter-check.yml` も同様に draft をスキップする（[Version Check
-(CI)](../README.md#version-check-ci) 参照）。
+そのため `gate` は `if: always()` で draft でも実行し、draft では先頭の step で `exit 1` して
+**失敗させる**。ready 後の新しい実行の `gate` が、その失敗を上書きする。draft の間は `gate` が
+失敗するが、draft はマージ不可なので実害はない。`changes`・`security`・`lint`/`test`/`build`
+は従来どおり draft でスキップする（課金される job は `gate`（ubuntu の 1 job）だけ）。
+
+draft への push と ready 化が重なって ready 側の実行が取り消された場合は、`gate` が失敗の
+まま残る。安全側の挙動で、`gh run rerun` か draft に戻して再度 ready にすると解消する。
+
+`.github/workflows/dev-charter-check.yml` も同様に、`check` は draft でスキップし、`gate`
+は draft で失敗させる（[Version Check (CI)](../README.md#version-check-ci) 参照）。
 
 `check-charter.yml` が作成する `update-charter` PR も Draft で始まるため、この
 `ready_for_review` は更新 PR にも必須である。`gh pr ready` で Draft を解除した時点で
@@ -450,7 +517,66 @@ skip 対象に含めない。** ロックファイルの更新は依存パッケ
 
 ## Dependabot
 
-`.github/dependabot.yml` の導入を検討する。依存パッケージがあるプロジェクトでは自動でアップデートPRを作成し、脆弱性対応を省力化できる。ドキュメントのみのリポジトリや依存パッケージが存在しないプロジェクトでは不要。
+依存マニフェスト・Dockerfile・GitHub Actions の workflow のいずれかを持つリポジトリは、
+`.github/dependabot.yml` を**必須**とする。ドキュメントのみのリポジトリ、および依存を一切持たない
+リポジトリは対象外。
+
+**version updates と security updates は別機能。** セキュリティ更新（Settings → Security &
+analysis の Dependabot security updates）は脆弱性アラートが出たときだけ PR を作る。定期的な
+バージョン更新は `dependabot.yml` がなければ動かないため、security updates を ON にしていても
+`dependabot.yml` の代わりにはならない。
+
+### Ecosystems
+
+| 検出するファイル | `package-ecosystem` |
+|---|---|
+| `.github/workflows/*.yml` | `github-actions` |
+| `uv.lock`（無ければ `pyproject.toml`・`requirements*.txt`） | `uv`（無ければ `pip`） |
+| `Dockerfile` | `docker` |
+| `package.json` | `npm` |
+| `Package.swift` | `swift` |
+| `*.csproj` | `nuget` |
+| `go.mod` | `gomod` |
+
+マニフェストが置かれているディレクトリごとに `directory` を指定する（サブディレクトリにある場合は
+`/` では検出されない）。
+
+### Defaults
+
+- 頻度（`schedule.interval`）は `weekly` を既定とする
+- `open-pull-requests-limit` は ecosystem ごとに 5 前後を目安とする（既定の 5 のままでよい。
+  PR が溜まりやすい ecosystem だけ下げる）
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+### Out of Scope for Dependabot
+
+次は Dependabot が上げられないため、運用側が手動で更新する。
+
+- digest 固定のコンテナイメージ（cloudflared、Caddy 等）
+- ホストの OS・Docker・ランタイム本体
+
+### Verification
+
+`check-charter.yml` が、マニフェストがあるのに対応する `package-ecosystem` が
+`dependabot.yml` に無い場合（`dependabot.yml` 自体が無い場合を含む）に警告する。現在は警告のみで、
+既存リポジトリへの影響を確認してから失敗扱いにする。`directory` の過不足は検査しない。
 
 ## Branch Protection (Ruleset)
 
@@ -488,7 +614,8 @@ Rules:
 `name: Dev Charter` と一致させたもの。[§ Naming Convention](#naming-convention)参照）。
 同ワークフローの `check` job は `.github/workflows/dev-charter-check.yml` が呼び出す
 再利用ワークフロー（`check-charter.yml`）で、Dependabot PR・draft PR では job-level の
-`if:` でスキップされる。`ci.yml` とは別ワークフローファイルのため `gate` の `needs` には
+`if:` でスキップされる（`gate` は draft では実行して失敗させる。Dependabot PR では
+`skipped` を成功扱いする）。`ci.yml` とは別ワークフローファイルのため `gate` の `needs` には
 含められない（`needs` は同一ワークフローファイル内でしか機能しない）ので、Ruleset には
 別エントリとして登録する。`ci.yml` 側の `gate`（`name: CI`）と名前が異なるため、複数
 ワークフローの `gate` を同一 Ruleset に登録しても衝突しない。

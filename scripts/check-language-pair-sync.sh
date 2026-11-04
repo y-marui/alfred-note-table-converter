@@ -27,7 +27,7 @@ while IFS= read -r file; do
 
   [ "$pair" != "$file" ] || continue
   git ls-files --error-unmatch "$pair" >/dev/null 2>&1 || continue
-  echo "$CHANGED" | grep -qxF "$pair" && continue
+  grep -qxF "$pair" <<<"$CHANGED" && continue
 
   echo "error: ${file} を変更していますが、対になる ${pair} が同一コミットで更新されていません。"
   echo "  (LANGUAGE_POLICY.md: 日本語版と英語版は同一コミットで更新する)"

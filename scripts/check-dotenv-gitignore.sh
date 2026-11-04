@@ -17,7 +17,9 @@ done
 [ "$found_example" -eq 1 ] || exit 0
 
 GITIGNORE="${REPO_ROOT}/.gitignore"
-if [ -f "$GITIGNORE" ] && grep -vE '^\s*#' "$GITIGNORE" | grep -q '\.env'; then
+GITIGNORE_RULES=""
+[ ! -f "$GITIGNORE" ] || GITIGNORE_RULES=$(grep -vE '^\s*#' "$GITIGNORE" || true)
+if grep -q '\.env' <<<"$GITIGNORE_RULES"; then
   exit 0
 fi
 
