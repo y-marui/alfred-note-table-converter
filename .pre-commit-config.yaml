@@ -101,13 +101,13 @@ repos:
       - id: check-charter-subtree-edit
         name: Block direct edits under dev-charter subtree
         language: script
-        entry: scripts/check-subtree-edit.sh
+        entry: scripts/check-charter-subtree-edit.sh
         pass_filenames: false
         always_run: true
       - id: check-workflow-notes-subtree-edit
         name: Block direct edits under alfred-workflow-notes subtree
         language: system
-        entry: env SUBTREE_PREFIX=docs/alfred-workflow-notes SUBTREE_UPSTREAM=alfred-workflow-template SUBTREE_UPDATE_HINT='make update-workflow-notes' scripts/check-subtree-edit.sh
+        entry: env CHARTER_PREFIX=docs/alfred-workflow-notes SUBTREE_UPSTREAM=alfred-workflow-template SUBTREE_UPDATE_HINT='make update-workflow-notes' scripts/check-charter-subtree-edit.sh
         pass_filenames: false
         always_run: true
 
@@ -225,7 +225,7 @@ repos:
 
   # ----------------------------------------------------------------
   # AI_CONTEXT.md reference (AI_TOOL_SETUP.md)
-  # (CLAUDE.md/GEMINI.md/AGENTS.md/.github/copilot-instructions.md must
+  # (CLAUDE.md/AGENTS.md/.github/copilot-instructions.md must
   # reference AI_CONTEXT.md when it exists)
   # ----------------------------------------------------------------
   - repo: local
@@ -348,7 +348,7 @@ repos:
           ' --
         files: '\.ps1$'
         # Adopting projects install this subtree read-only (see
-        # check-subtree-edit.sh); its own scripts/*.ps1 aren't
+        # check-charter-subtree-edit.sh); its own scripts/*.ps1 aren't
         # something the adopter can fix, so skip them by default. Assumes
         # the default SUBTREE_PREFIX (docs/dev-charter) — adjust this
         # pattern if installed elsewhere.

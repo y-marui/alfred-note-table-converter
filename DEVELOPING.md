@@ -129,19 +129,6 @@ Copilot works best for:
 - Completing repetitive boilerplate
 - Suggesting struct/function signatures
 
-### Gemini CLI (documentation)
-
-Use Gemini CLI for:
-- Generating/updating `README.md`
-- Writing `CHANGELOG.md` entries from git log
-- Creating usage examples in `docs/specification.md`
-
-Example:
-```bash
-gemini "Update README.md based on the current source code in internal/"
-gemini "Generate CHANGELOG entry for commits since v1.0.0"
-```
-
 ## Security
 
 ### Scope
