@@ -181,7 +181,7 @@ jobs:
               - '!.github/workflows/auto-assign-self.yml'
               # dev-charter 配布ファイル（git subtree 更新 PR が持ち込む）
               - '!.pre-commit-config.yaml'
-              - '!scripts/{check-ai-context-reference,check-charter-ci-template,check-charter-doc-links,check-charter-subtree-edit,check-conventional-commit,check-dotenv-gitignore,check-hook-scripts,check-language-pair-footer,check-language-pair-sync,check-license-exists,check-local-charter-version,check-markdown-heading-language,check-not-on-default-branch,check-powershell-lint,check-python-package-management,check-readme-placeholders,check-version-date,new-branch}.{sh,ps1}'
+              - '!scripts/{check-ai-context-reference,check-charter-ci-template,check-charter-doc-links,check-charter-subtree-edit,check-conventional-commit,check-dotenv-gitignore,check-hook-scripts,check-language-pair-footer,check-language-pair-sync,check-license-exists,check-local-charter-version,check-markdown-heading-language,check-not-on-default-branch,check-powershell-lint,check-python-package-management,check-readme-placeholders,check-update-checklist,check-version-date,new-branch}.{sh,ps1}'
               - '!scripts/PSScriptAnalyzerSettings.psd1'
 
   security:
@@ -393,6 +393,9 @@ macOS 版と同じ条件に加えて、次を守る：
   取得し直す。runner のイメージで `UV_PYTHON_INSTALL_DIR` を永続ボリューム内（例:
   `<キャッシュのマウント先>/uv-python`）に向けると、同じホストの全コンテナで 1 つを共有でき、
   作り直しても残る（3.11〜3.14 の取得が 6.6 秒から 1.1 秒に短縮、約 400MB。デスクトップでの実測）。
+  Raspberry Pi の runner では、イメージが `UV_PYTHON_INSTALL_DIR=/runner/.cache/uv-python` を設定済みで、
+  `/runner/.cache` は共有ボリューム `ar-cache` にマウントされており、永続を確認した。matrix で
+  その版を初めて使う run は `uv sync` が 150〜170 秒かかり、2 回目以降は 6〜9 秒に下がる
   runner は 1 台あたり同時に 1 job なので、matrix の要素数 × 実行時間が、runner が空いていなければ
   そのまま待ち時間になる。private リポジトリでは、サポート範囲を満たす最小の matrix にする
 - **runner の台数と性能差：** runner が少ないと、job が runner を占有する時間（キャッシュ保存を含む）が

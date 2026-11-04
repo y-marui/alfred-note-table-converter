@@ -41,6 +41,19 @@
 
 > 変更ファイルに限らず全ファイルを精査したい場合は [インストールチェックリスト](INSTALL_CHECKLIST.md) を使用してください。
 
+### Step 2 — Mark the Checklist as Done
+
+`docs/dev-charter/` だけを変更する差分は、`UPDATE_CHECKLIST` 実施の印がないと push 前フック
+（`check-update-checklist`、pre-push）と CI（`check-charter.yml` の `Update checklist`）が失敗する。
+
+- Step 1 で AI_CONTEXT・README 等を直した場合は、`docs/dev-charter/` 以外のファイルが差分に入るため、
+  追加の作業は要らない
+- 何も直す必要がなかった場合は、次の空 commit を同じブランチに足して push する
+
+```
+git commit --allow-empty -m "chore: confirm UPDATE_CHECKLIST" -m "Update-Checklist: done"
+```
+
 ## English
 
 After running `git subtree pull` to update dev-charter in your project, paste the following prompt into your AI tool.
@@ -78,3 +91,16 @@ Common areas affected by file:
 ```
 
 > For a full review of all charter files (not just changed ones), use the [Install Checklist](INSTALL_CHECKLIST.md).
+
+### Step 2 — Mark the checklist as done
+
+A diff that only changes `docs/dev-charter/` fails the pre-push hook (`check-update-checklist`) and
+CI (the `Update checklist` job of `check-charter.yml`) unless it carries a sign that `UPDATE_CHECKLIST` was run.
+
+- If Step 1 changed AI_CONTEXT, README, etc., the diff already contains files outside `docs/dev-charter/`;
+  nothing more to do
+- If nothing needed fixing, add this empty commit to the same branch and push
+
+```
+git commit --allow-empty -m "chore: confirm UPDATE_CHECKLIST" -m "Update-Checklist: done"
+```
