@@ -24,9 +24,9 @@ dev-charter の各ドキュメントへのインデックス。
 | 収益化、App Store、GitHub Sponsors、Buy Me a Coffee | `MONETIZATION_POLICY.md` |
 | 変更設計の原則、YAGNI、DRY、既存パターンの踏襲、TODO管理 | `PRINCIPLES.md` |
 | チーム構成、git ワークフロー、Conventional Commits、ブランチ戦略、epic ブランチ、Draft PR、main の安定性 | `PROJECT_LIFECYCLE.md` |
-| シークレット管理、git フック、pre-commit、セキュリティ設定 | `SECURITY_POLICY.md` |
+| シークレット管理、git フック、pre-commit、pre-push、セキュリティ設定 | `SECURITY_POLICY.md` |
 | UI デザイン、カラーパレット、ダークモード、アイコン（SF Symbols・Material Symbols） | `UI_GUIDELINES.md` |
-| dev-charter の更新手順（subtree pull 後、full版） | `UPDATE_CHECKLIST.md` |
+| dev-charter の更新手順（subtree pull 後、full版）、Update-Checklist trailer | `UPDATE_CHECKLIST.md` |
 | GitHub Actions、CI ジョブ設計、ステータスチェック、Branch Protection（full版） | `topics/CI_POLICY.md` |
 | OSS コントリビューション、Issue テンプレート、PR テンプレート、準 CLA、SECURITY.md | `topics/GITHUB_CONTRIBUTING.md` |
 | issue/PRテンプレート（lite版）、個人開発、チェックリスト | `topics/GITHUB_ISSUE_PR_TEMPLATES.md` |

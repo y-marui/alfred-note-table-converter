@@ -188,9 +188,13 @@ awk '
 #    `pre-commit run --hook-stage commit-msg --commit-msg-filename "$1"`
 #    を呼ぶよう個人の dotfiles 側に別途実装しない限り機能しない
 #    （本リポジトリのスコープ外）。
+#    pre-push ステージ（check-update-checklist）も同様に
+#    `pre-commit install --hook-type pre-push` が要り、core.hooksPath 設定時は
+#    グローバルフック側の pre-push から `pre-commit run --hook-stage pre-push` を
+#    呼ぶ必要がある。未設定でも CI（check-charter.yml）が同じ判定をする。
 git config core.hooksPath 2>/dev/null \
   && echo "core.hooksPath が設定されています。pre-commit ステージは手順 5 で確認します。commit-msg ステージは上記コメント参照。" \
-  || { pre-commit install; pre-commit install --hook-type commit-msg; }
+  || { pre-commit install; pre-commit install --hook-type commit-msg; pre-commit install --hook-type pre-push; }
 
 # 5. 動作確認（core.hooksPath の有無にかかわらず必須）
 pre-commit run --all-files
@@ -229,6 +233,7 @@ CI での実行例（GitHub Actions）：
 | `scripts/check-local-charter-version.sh` | ローカルの `../dev-charter` チェックアウトとの VERSION 差分をチェック（sibling が新しい場合も古い場合も警告のみ。ブロックしない） |
 | `scripts/check-charter-ci-template.sh` | `.github/workflows/dev-charter-check.yml` を README-jp.md の CI テンプレートと比較（不一致ならブロック） |
 | `scripts/check-charter-subtree-edit.sh` | `docs/dev-charter/` 配下がステージされていればブロック。ただし `MERGE_HEAD` が `git-subtree-dir` トレーラーを持つ場合（`git subtree add`/`pull`/`merge` が競合し手動コミットで完了させる場合）は誤検知しないよう除外する |
+| `scripts/check-update-checklist.sh` | `docs/dev-charter/` のみを変更する差分（`origin/<default>` との差分全体）に、`Update-Checklist: done` trailer の commit も `docs/dev-charter/` 以外の変更も無ければブロック（pre-push ステージ。`pre-commit install --hook-type pre-push` が必要。commit 時は `git subtree pull` を止めないため検査しない。CI は `check-charter.yml` が同じ判定を行う） |
 | `scripts/check-language-pair-sync.sh` | `<name>-jp.<ext>` / `<name>.<ext>` ペアが片側のみステージされていればブロック |
 | `scripts/check-license-exists.sh` | リポジトリルートに `LICENSE*` が無ければブロック |
 | `scripts/check-dotenv-gitignore.sh` | `.env.example` 等があるのに `.gitignore` が `.env` を無視していなければブロック |
