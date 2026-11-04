@@ -58,6 +58,39 @@ Manifest V3 で実装する Chrome（および Firefox 同時対応）拡張機�
   単体テストを可能にし、将来 Firefox（`browser.*`）等へ移植する際の変更箇所を
   ラッパー層に閉じ込めるため）
 
+## Extension Naming
+
+拡張機能の名前とヘッダー表示は次の規約にそろえる。詳細（レイアウト・表示規則）は採用している
+テンプレートのヘッダー仕様（popup 仕様書の Header 節等。具体的なパスは各プロジェクトの
+`AI_CONTEXT.md` で管理する）を正本とし、ここでは要点だけを定める（内容を二重管理しない）。
+
+- 正規の名前（`manifest.json` の `name`。`_locales` を使う場合は `appName`）は
+  `<アプリ名> – <タグライン>` とする。区切りは en dash（U+2013）の前後に半角スペース。
+  英語固定とし、全ロケールで同一にする（翻訳しない）
+- `short_name`（`_locales` を使う場合は `appShortName`）はアプリ名のみとする
+- popup と options サイドバーのヘッダーは、上段にアプリ名、下段にタグラインを置く。
+  タグラインは英語固定で i18n せず、popup と options で同一にする
+- タグラインは 2〜3 語とする
+
+## Store Name Length Limits
+
+`name` の文字数上限はストアごとに異なる。根拠はそれぞれの manifest ドキュメント
+（[Chrome: manifest `name`](https://developer.chrome.com/docs/extensions/reference/manifest/name)、
+[MDN: manifest.json `name`](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/name)）と
+各ストアの掲載ポリシーによる。
+
+| ストア | `name` の上限 |
+|---|---|
+| Chrome Web Store | 75 文字 |
+| Firefox（addons.mozilla.org） | 45 文字 |
+| Microsoft Edge Add-ons | 45 文字 |
+
+- Firefox または Edge にも出す場合は、全体（`<アプリ名> – <タグライン>`）を **45 文字以内**にする。
+  Chrome Web Store のみに出す場合は 75 文字以内とする
+- `short_name` は Chrome が 12 文字以内を推奨している（強制ではない）
+- `_locales` を使う場合は、全ロケールの展開後の文字列で上限を満たす
+- 文字数の検証は、ストア掲載素材の検証（`npm run validate:store` 等）に含めてよい
+
 ## Store Submission Assets
 
 - ストア掲載素材（説明文・パーミッション説明・スクリーンショット等）は
@@ -66,6 +99,23 @@ Manifest V3 で実装する Chrome（および Firefox 同時対応）拡張機�
   スクリプト（`npm run validate:store` 等）で機械チェックする
 - `permissions`/`host_permissions` を追加する前に、審査で求められる説明を
   想定して必要性を確認する
+
+## Runtime Assets (No External Requests)
+
+拡張機能のページ（popup・options 等）は、フォント・アイコン・画像・スクリプトを外部（CDN・
+Google Fonts 等）から読み込まず、パッケージに同梱する。ストアの審査と privacy policy で
+「外部通信をしない」「リモートコードを使わない」と説明できる状態を保ち、開くたびに利用者の
+IP アドレスが第三者へ渡ることを避けるため。
+
+- Material Symbols は、Google Fonts の CSS API で `icon_names` に使用中のアイコンだけを指定した
+  サブセット（woff2、数 KB）を `public/fonts/` に置き、`@font-face` で参照する。アイコンを
+  追加したら作り直す。全アイコンの可変フォント（数 MB）は同梱しない
+- Buy Me a Coffee 等のボタン画像も `public/images/` に同梱する
+- 同梱するフォント・画像のライセンス（Material Symbols は Apache License 2.0）を確認する
+- 例外として外部へ通信する場合（祝日 API 等、機能上必要なもの）は、通信先と送る内容を
+  privacy policy と `docs/store/<platform>/permissions.md` に記載する
+- 提出前に、popup・options を開いて外部ドメインへのリクエストが無いことを DevTools の
+  Network で確認する
 
 ## Testing
 

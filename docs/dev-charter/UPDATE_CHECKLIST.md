@@ -29,6 +29,8 @@
 - docs/dev-charter/scripts/*.sh（SECURITY_POLICY.md の Setup Steps に従って
   scripts/ へコピー済みの場合）→ 変更されたファイルを再コピーして同期する
   （`cp docs/dev-charter/scripts/<ファイル名>.sh scripts/`）
+  新しいフックが追加された場合は、`check-hook-scripts` が `.pre-commit-config.yaml` の
+  参照先と対で導入するスクリプト（`new-branch.sh` 等）の抜けを検出する
 - LEGAL_POLICY.md                          → ライセンスファイルを確認
 - その他のポリシーファイル                  → 内容に変更があれば AI コンテキストを更新
 
@@ -65,6 +67,8 @@ Common areas affected by file:
 - docs/dev-charter/scripts/*.sh (if copied into your own scripts/ per
   SECURITY_POLICY.md Setup Steps) → re-copy the changed file(s) to keep your
   scripts/ in sync (`cp docs/dev-charter/scripts/<file>.sh scripts/`)
+  When a new hook is added, `check-hook-scripts` detects missing scripts referenced from
+  `.pre-commit-config.yaml` and missing paired helpers (such as `new-branch.sh`)
 - LEGAL_POLICY.md                           → verify license files
 - Other policy files                        → update AI context if the policy changed meaningfully
 
