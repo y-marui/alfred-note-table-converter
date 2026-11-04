@@ -18,19 +18,19 @@ check_pair() {
   head_en=$(head -5 "$en")
   tail_en=$(tail -5 "$en")
 
-  if ! echo "$head_jp" | grep -q '正本'; then
+  if ! grep -q '正本' <<<"$head_jp"; then
     echo "error: ${jp} の冒頭に正本宣言がありません（LANGUAGE_POLICY.md）"
     status=1
   fi
-  if ! { echo "$head_tail_jp" | grep -q '英語版' && echo "$head_tail_jp" | grep -qE '同一コミット|同じコミット'; }; then
+  if ! { grep -q '英語版' <<<"$head_tail_jp" && grep -qE '同一コミット|同じコミット' <<<"$head_tail_jp"; }; then
     echo "error: ${jp} の末尾に編集ルールフッター（英語版があり同一コミットで更新する旨）がありません（LANGUAGE_POLICY.md）"
     status=1
   fi
-  if ! echo "$head_en" | grep -qiE 'canonical|reference'; then
+  if ! grep -qiE 'canonical|reference' <<<"$head_en"; then
     echo "error: ${en} の冒頭に参照宣言がありません（LANGUAGE_POLICY.md）"
     status=1
   fi
-  if ! { echo "$tail_en" | grep -qi 'canonical' && echo "$tail_en" | grep -qiE 'same commit'; }; then
+  if ! { grep -qi 'canonical' <<<"$tail_en" && grep -qiE 'same commit' <<<"$tail_en"; }; then
     echo "error: ${en} の末尾に編集ルールフッター（正本があり同一コミットで更新する旨）がありません（LANGUAGE_POLICY.md）"
     status=1
   fi

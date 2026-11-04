@@ -254,6 +254,20 @@ repos:
         always_run: true
 
   # ----------------------------------------------------------------
+  # Hook script existence (SECURITY_POLICY.md)
+  # (scripts referenced by entry: must exist and be executable, and
+  # helper scripts installed as a pair with a hook must be present)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-hook-scripts
+        name: Check hook scripts exist
+        language: script
+        entry: scripts/check-hook-scripts.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
   # Charter doc links (adopting repos only)
   # (docs/dev-charter/... paths mentioned in this repo's own Markdown
   # must actually resolve — catches referencing a not-yet-synced path)

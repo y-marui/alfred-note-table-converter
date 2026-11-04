@@ -139,11 +139,17 @@ jobs:
   gate:
     name: Dev Charter
     needs: [check]
-    # Skip on draft PRs too (a draft can't be merged, so no status is awaited).
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # Always run, even on draft PRs: a skipped required check counts as passing,
+    # so a stale draft run must fail instead (see CI_POLICY "Draft PRs").
+    if: always()
     runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
+      - name: Fail on draft PRs
+        if: github.event_name == 'pull_request' && github.event.pull_request.draft
+        run: |
+          echo "::error::draft PR: checks were skipped. Mark the PR ready for review."
+          exit 1
       - name: Verify dev-charter check did not fail
         run: |
           result="${{ needs.check.result }}"
@@ -159,8 +165,9 @@ full is this workflow's default `branch` input, so you don't need to set
 
 > **Note:** `check` is skipped for Dependabot PRs and draft PRs (see below). `gate`
 > treats a `skipped` result as fine for Dependabot PRs and reports a `Dev Charter`
-> status (matching this workflow's own `name:`); on draft PRs `gate` itself is skipped
-> too (a draft can't be merged, so no status is awaited, and it avoids a billed minute). Register `Dev Charter` — not `Check /
+> status (matching this workflow's own `name:`); on draft PRs `gate` runs and
+> fails on purpose (a skipped required check counts as passing, so a stale draft run could
+> otherwise satisfy the Ruleset; the run after `ready_for_review` overwrites it). Register `Dev Charter` — not `Check /
 > check` — as the required status check in Branch Protection (Ruleset); see
 > [CI_POLICY.md's Ruleset section](topics/CI_POLICY.md#branch-protection-ruleset).
 > Registering the `check` job itself is unsafe: when it's skipped, the `Check / check`
@@ -172,9 +179,10 @@ full is this workflow's default `branch` input, so you don't need to set
 > guaranteed periodic check regardless of activity, add a low-frequency `schedule`
 > (e.g. monthly) alongside this.
 
-> **Note:** Draft PRs are skipped (a draft can't be merged anyway, so there's no risk
-> in leaving the check unreported). `ready_for_review` in `on.pull_request.types` makes
-> sure taking a PR out of draft re-triggers a real run.
+> **Note:** On draft PRs `check` is skipped and `gate` fails on purpose. A skipped
+> required check counts as passing, so if a draft push and `gh pr ready` overlap, a
+> stale skipped `gate` could make the PR look mergeable. `ready_for_review` in
+> `on.pull_request.types` makes sure taking a PR out of draft re-triggers a real run.
 
 > **Note:** If your repository has Branch Protection rules that prevent direct pushes,
 > add a bypass rule for the GitHub Actions bot

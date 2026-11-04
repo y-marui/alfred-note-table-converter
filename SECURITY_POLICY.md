@@ -166,6 +166,8 @@ cp docs/dev-charter/scripts/check-not-on-default-branch.sh scripts/
 chmod +x scripts/check-not-on-default-branch.sh
 cp docs/dev-charter/scripts/new-branch.sh scripts/
 chmod +x scripts/new-branch.sh
+cp docs/dev-charter/scripts/check-hook-scripts.sh scripts/
+chmod +x scripts/check-hook-scripts.sh
 
 # 3. dev-charter 固有のフックを除いた設定を生成する
 awk '
@@ -238,6 +240,7 @@ CI での実行例（GitHub Actions）：
 | `scripts/check-readme-placeholders.sh` | `LICENSE`/`.github/FUNDING.yml`/`README` のプレースホルダ残留を検知（テンプレートリポジトリは対象外） |
 | `scripts/check-not-on-default-branch.sh` | デフォルトブランチ（`main`/`master`、または `origin/HEAD` が指す既定ブランチ）への直接コミットをブロック（CI ではスキップ） |
 | `scripts/new-branch.sh` | `check-not-on-default-branch.sh` にブロックされた際に使う補助スクリプト。ブランチを作成してそちらに移動する（ステージ済み・未ステージの変更は引き継がれる） |
+| `scripts/check-hook-scripts.sh` | `.pre-commit-config.yaml` の `entry` が指すスクリプトが実在し実行可能か、`check-not-on-default-branch.sh` と `new-branch.sh` のように対で導入する補助スクリプトが揃っているかを検証（欠けていればブロック） |
 | `SECURITY_POLICY.md` | このドキュメント |
 
 ---
