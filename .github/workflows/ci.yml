@@ -136,10 +136,17 @@ jobs:
   gate:
     name: CI
     needs: [changes, security, lint, test, build]
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # draft でも実行して失敗させる: skipped の必須チェックは合格扱いになるため
+    # （dev-charter CI_POLICY の Draft PRs 参照）
+    if: always()
     runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
+      - name: Fail on draft PRs
+        if: github.event_name == 'pull_request' && github.event.pull_request.draft
+        run: |
+          echo "::error::draft PR: tests were not run. Mark the PR ready for review."
+          exit 1
       - name: Verify required jobs succeeded
         run: |
           if [ "${{ needs.security.result }}" != "success" ]; then
