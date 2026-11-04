@@ -127,6 +127,37 @@ repos:
         always_run: true
 
   # ----------------------------------------------------------------
+  # UPDATE_CHECKLIST sign check (pre-push only)
+  # (a diff that only touches the dev-charter subtree must carry a
+  # `Update-Checklist: done` trailer commit, or also change a file outside
+  # the subtree. Not run at commit time: `git subtree pull` commits only
+  # touch the subtree. Needs `pre-commit install --hook-type pre-push`)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-update-checklist
+        name: Check UPDATE_CHECKLIST was run
+        language: script
+        entry: scripts/check-update-checklist.sh
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # Hook script existence (SECURITY_POLICY.md)
+  # (scripts referenced by entry: must exist and be executable, and
+  # helper scripts installed as a pair with a hook must be present)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-hook-scripts
+        name: Check hook scripts exist
+        language: script
+        entry: scripts/check-hook-scripts.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
   # Charter CI template check
   # (blocks if .github/workflows/dev-charter-check.yml drifted from the
   # template documented in the installed dev-charter's README-jp.md)

@@ -143,6 +143,18 @@ repos:
         entry: scripts/check-lite-cross-references.sh
         pass_filenames: false
         always_run: true
+
+  # ----------------------------------------------------------------
+  # Tests for check-update-checklist.sh
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: test-check-update-checklist
+        name: Test check-update-checklist
+        language: script
+        entry: scripts/test-check-update-checklist.sh
+        files: '^(scripts/test-check-update-checklist\.sh|src/scripts/check-update-checklist\.sh)$'
+        pass_filenames: false
   # END DEV-CHARTER ONLY
 
   # ----------------------------------------------------------------
@@ -170,6 +182,23 @@ repos:
         name: Block direct edits under dev-charter subtree
         language: script
         entry: scripts/check-charter-subtree-edit.sh
+        pass_filenames: false
+        always_run: true
+
+  # ----------------------------------------------------------------
+  # UPDATE_CHECKLIST sign check (pre-push only)
+  # (a diff that only touches the dev-charter subtree must carry a
+  # `Update-Checklist: done` trailer commit, or also change a file outside
+  # the subtree. Not run at commit time: `git subtree pull` commits only
+  # touch the subtree. Needs `pre-commit install --hook-type pre-push`)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-update-checklist
+        name: Check UPDATE_CHECKLIST was run
+        language: script
+        entry: scripts/check-update-checklist.sh
+        stages: [pre-push]
         pass_filenames: false
         always_run: true
 
