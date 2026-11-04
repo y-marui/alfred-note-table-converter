@@ -23,11 +23,14 @@
 # directly).
 #
 # Override the subtree path with CHARTER_PREFIX if it was installed
-# somewhere other than the default.
+# somewhere other than the default. SUBTREE_UPSTREAM / SUBTREE_UPDATE_HINT change only
+# the wording of the error message (see check-charter-subtree-edit.sh).
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $prefix = if ($env:CHARTER_PREFIX) { $env:CHARTER_PREFIX } else { 'docs/dev-charter' }
+$upstream = if ($env:SUBTREE_UPSTREAM) { $env:SUBTREE_UPSTREAM } else { 'dev-charter' }
+$updateHint = if ($env:SUBTREE_UPDATE_HINT) { $env:SUBTREE_UPDATE_HINT } else { 'git subtree pull' }
 
 $mergeHeadPath = git rev-parse --git-path MERGE_HEAD 2>$null
 if ($LASTEXITCODE -eq 0 -and $mergeHeadPath -and (Test-Path $mergeHeadPath)) {
@@ -42,5 +45,5 @@ $changed = git diff --cached --name-only -- $prefix
 if ([string]::IsNullOrEmpty($changed)) { exit 0 }
 
 Write-Host "error: ${prefix}/ 配下は直接編集禁止です。"
-Write-Host '  変更が必要な場合は dev-charter リポジトリに Issue を立て、git subtree pull で取り込んでください。'
+Write-Host "  変更が必要な場合は ${upstream} リポジトリに Issue を立て、${updateHint} で取り込んでください。"
 exit 1

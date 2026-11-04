@@ -270,7 +270,7 @@ repos:
 
   # ----------------------------------------------------------------
   # AI_CONTEXT.md reference (AI_TOOL_SETUP.md)
-  # (CLAUDE.md/GEMINI.md/AGENTS.md/.github/copilot-instructions.md must
+  # (CLAUDE.md/AGENTS.md/.github/copilot-instructions.md must
   # reference AI_CONTEXT.md when it exists)
   # ----------------------------------------------------------------
   - repo: local

@@ -11,7 +11,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 [ -f "${REPO_ROOT}/AI_CONTEXT.md" ] || exit 0
 
 status=0
-for f in CLAUDE.md GEMINI.md AGENTS.md .github/copilot-instructions.md; do
+for f in CLAUDE.md AGENTS.md .github/copilot-instructions.md; do
   path="${REPO_ROOT}/${f}"
   [ -f "$path" ] || continue
   grep -q 'AI_CONTEXT\.md' "$path" || {

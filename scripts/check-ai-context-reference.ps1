@@ -13,7 +13,7 @@ $repoRoot = (git rev-parse --show-toplevel).Trim()
 if (-not (Test-Path (Join-Path $repoRoot 'AI_CONTEXT.md') -PathType Leaf)) { exit 0 }
 
 $status = 0
-foreach ($f in 'CLAUDE.md', 'GEMINI.md', 'AGENTS.md', '.github/copilot-instructions.md') {
+foreach ($f in 'CLAUDE.md', 'AGENTS.md', '.github/copilot-instructions.md') {
     $path = Join-Path $repoRoot $f
     if (-not (Test-Path $path -PathType Leaf)) { continue }
     $content = Get-Content $path -Raw

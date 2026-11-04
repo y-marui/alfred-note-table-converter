@@ -114,7 +114,6 @@ AGPL/GPL/LGPL を採用する場合の準 CLA 設定（`CONTRIBUTING.md` + PR �
 | `.gitignore` | ✅ | 言語・OS・IDE に合わせた無視パターン |
 | `AI_CONTEXT.md` | AI 対応時 | AI ツール向けコンテキスト（プロジェクト化後の初期セットアップ手順を含む） |
 | `CLAUDE.md` | Claude Code 使用時 | `@AI_CONTEXT.md` を記載 |
-| `GEMINI.md` | Gemini CLI 使用時 | `@AI_CONTEXT.md` を記載 |
 | `AGENTS.md` | Codex 使用時 | `AI_CONTEXT.md` を読む指示を記載 |
 | `.github/copilot-instructions.md` | Copilot 使用時 | `AI_CONTEXT.md` を参照する旨を記載 |
 | `.github/workflows/ci.yml` | CI 使用時 | テスト・ビルド・リントの自動実行 |
@@ -180,7 +179,7 @@ README 生成に必要な情報を教えてください:
 4. リポジトリ名: [例: swift-app-template]
 5. 技術スタック: [例: Swift 5.9 / iOS 17 / SwiftUI]
 6. ビルド成果物: [あり(.app / .ipa / .whl / .alfredworkflow / .zip 等) / なし]
-7. AI 対応: [Claude Code / Codex / GitHub Copilot / Gemini CLI / なし]
+7. AI 対応: [Claude Code / Codex / GitHub Copilot / なし]
 ```
 
 ### 5.6 Validation Checklist
@@ -227,7 +226,7 @@ README 作成後、以下を確認する。
 5. [LEGAL_POLICY.md](../LEGAL_POLICY.md) に従い `LICENSE` ファイルを作成する。AGPL/GPL/LGPL を採用する場合は [GITHUB_CONTRIBUTING.md](GITHUB_CONTRIBUTING.md) の準 CLA 設定（`CONTRIBUTING.md` + PR テンプレートへの同意チェックボックス）も行う
 6. §5.2 に従い `README-jp.md`（日本語正本）と `README.md`（英語版）を作成する（template repo 自体の説明）
 7. §5.2a に従い `README_TEMPLATE-jp.md`（日本語正本）と `README_TEMPLATE.md`（英語版）を作成する（プロジェクト用雛形）
-8. AI 対応の場合は `AI_CONTEXT.md` と、使用するツールに対応する `CLAUDE.md`・`GEMINI.md`・`AGENTS.md` を作成する。`AI_CONTEXT.md` には以下の初期セットアップ手順を含めること:
+8. AI 対応の場合は `AI_CONTEXT.md` と、使用するツールに対応する `CLAUDE.md`・`AGENTS.md` を作成する。`AI_CONTEXT.md` には以下の初期セットアップ手順を含めること:
    - GitHub リポジトリ設定を最優先で適用する（テンプレートからの作成時はすべての設定が初期化されるため）
    - `README_TEMPLATE-jp.md` → `README-jp.md` にリネーム（旧 `README-jp.md` を削除）
    - `README_TEMPLATE.md` → `README.md` にリネーム（旧 `README.md` を削除）
