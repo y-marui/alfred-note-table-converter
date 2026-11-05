@@ -23,7 +23,6 @@ project-root/
 ├── Makefile                         # 開発タスク統一インターフェース
 ├── AI_CONTEXT.md                    # AI エントリーポイント
 ├── CLAUDE.md                        # @AI_CONTEXT.md + Claude Code 固有設定
-├── GEMINI.md                        # @AI_CONTEXT.md + Gemini CLI 固有設定
 ├── AGENTS.md                        # AI_CONTEXT.md 読み込み指示 + Codex 固有設定
 ├── .github/
 │   └── copilot-instructions.md      # AI_CONTEXT.md 参照 + Copilot 固有設定
@@ -51,7 +50,6 @@ project-root/
 | `Makefile` | 開発タスクの統一インターフェース（ビルド・テスト・lint 等）。プロジェクト固有のツール（npm scripts 等）で代替可能な場合を除き必須 |
 | `AI_CONTEXT.md` | AI エントリーポイント（後述） |
 | `CLAUDE.md` | `@AI_CONTEXT.md` + Claude Code 固有設定 |
-| `GEMINI.md` | `@AI_CONTEXT.md` + Gemini CLI 固有設定 |
 | `AGENTS.md` | `AI_CONTEXT.md` 読み込み指示 + Codex 固有設定 |
 | `.github/copilot-instructions.md` | `AI_CONTEXT.md` 参照 + Copilot 固有設定 |
 

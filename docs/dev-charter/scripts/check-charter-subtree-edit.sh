@@ -22,7 +22,11 @@
 # directly).
 #
 # Override the subtree path with CHARTER_PREFIX if it was installed
-# somewhere other than the default.
+# somewhere other than the default. To guard a second subtree, run the hook
+# once more with its own CHARTER_PREFIX; SUBTREE_UPSTREAM (repository to
+# point contributors at, default: dev-charter) and SUBTREE_UPDATE_HINT
+# (command suggested for pulling the update, default: git subtree pull)
+# change only the wording of the error message.
 #
 # Local-only safety net: this checks the staged diff (`git diff --cached`),
 # which is what a real `git commit` sees. CI's `pre-commit run --all-files`
@@ -33,6 +37,8 @@
 set -euo pipefail
 
 PREFIX="${CHARTER_PREFIX:-docs/dev-charter}"
+UPSTREAM="${SUBTREE_UPSTREAM:-dev-charter}"
+UPDATE_HINT="${SUBTREE_UPDATE_HINT:-git subtree pull}"
 
 MERGE_HEAD_PATH=$(git rev-parse --git-path MERGE_HEAD 2>/dev/null || true)
 if [ -n "$MERGE_HEAD_PATH" ] && [ -f "$MERGE_HEAD_PATH" ]; then
@@ -47,5 +53,5 @@ CHANGED=$(git diff --cached --name-only -- "$PREFIX" || true)
 [ -n "$CHANGED" ] || exit 0
 
 echo "error: ${PREFIX}/ 配下は直接編集禁止です。"
-echo "  変更が必要な場合は dev-charter リポジトリに Issue を立て、git subtree pull で取り込んでください。"
+echo "  変更が必要な場合は ${UPSTREAM} リポジトリに Issue を立て、${UPDATE_HINT} で取り込んでください。"
 exit 1

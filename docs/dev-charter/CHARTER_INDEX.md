@@ -14,7 +14,7 @@ dev-charter の各ドキュメントへのインデックス。
 |---|---|
 | AI の作業前チェック、エラー対処、AI 役割分担、複数 AI 連携、ローカル LLM、Ollama | `AI_COLLABORATION_RULES.md` |
 | AI コンテキストの優先順位（タスク > プロジェクト > 憲章 > グローバル） | `AI_CONTEXT_HIERARCHY.md` |
-| CLAUDE.md・GEMINI.md・AGENTS.md・AI_CONTEXT.md の構成方法 | `AI_TOOL_SETUP.md` |
+| CLAUDE.md・AGENTS.md・AI_CONTEXT.md の構成方法 | `AI_TOOL_SETUP.md` |
 | コードコメントの書き方、スタイルガイド | `CODE_STYLE.md` |
 | docs/ 構成、file-map.md、architecture.md、AI_CONTEXT.md 参照順、CONTRIBUTING.md | `DOCS_STRUCTURE.md` |
 | dev-charter の初回導入手順（full版） | `INSTALL_CHECKLIST.md` |

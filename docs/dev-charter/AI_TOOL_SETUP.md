@@ -58,7 +58,7 @@ dev-charter を導入したプロジェクトで AI コンテキストファイ�
 以下の形式で記載する：
 
 ```
-- **使用ツール**：Claude Code、Codex、GitHub Copilot、Gemini CLI、ローカル LLM（Ollama）
+- **使用ツール**：Claude Code、Codex、GitHub Copilot、ローカル LLM（Ollama）
 - **標準担当の正本**：`docs/dev-charter/AI_COLLABORATION_RULES.md` の「AI Tool Responsibilities」と「Rules for Multi-AI Usage」
 - **プロジェクト固有の上書き**：なし
 ```
@@ -77,12 +77,6 @@ AI ツールごとの設定ファイルは `AI_CONTEXT.md` への参照のみを
 ツール固有の設定がない場合は、以下の最小構成だけを記載する。
 
 ### CLAUDE.md
-
-```
-@AI_CONTEXT.md
-```
-
-### GEMINI.md
 
 ```
 @AI_CONTEXT.md
