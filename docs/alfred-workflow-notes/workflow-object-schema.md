@@ -42,9 +42,28 @@ Every workflow's `info.plist` is a dict with (at minimum):
 - `objects` — an array of objects, each `{config: {...}, type: "alfred.workflow.…", uid: "<UUID>", version: <int>}`. Order in the array is cosmetic only; Alfred re-sorts it on every save. Never rely on array position — always match by `uid`.
 - `connections` — a dict keyed by a source object's `uid`, each value an array of `{destinationuid, modifiers, modifiersubtext, vitoclose}` (one entry per outgoing wire, `modifiers` distinguishing plain vs. modifier-key connections).
 - `uidata` — a dict keyed by `uid`, each value `{xpos, ypos}`: purely the canvas layout, never functional.
-- `bundleid`, `name`, `description`, `createdby`, `webaddress`, `readme`, `version`, `disabled`, `userconfigurationconfig`, `variablesdontexport` — workflow-level metadata, not object-level.
+- `bundleid`, `name`, `description`, `category`, `createdby`, `webaddress`, `readme`, `version`, `disabled`, `userconfigurationconfig`, `variablesdontexport` — workflow-level metadata, not object-level.
 
 A `uid` is a stable identifier for that object for as long as the workflow exists — reconnecting objects doesn't change it, but deleting and re-adding one does. When hand-authoring a plist, invent your own UUIDs; Alfred accepts any well-formed UUID string.
+
+## `category`
+
+A single string, one of the values Alfred Preferences → Workflows' own
+"Category" dropdown offers (confirmed against a real export — see "How
+this reference was generated" above):
+
+`Tools & Utilities`, `Internet`, `Files & Folders`, `Productivity`,
+`Communication`, `Music & Audio`, `System`, `Games`, `Academic`,
+`Development`
+
+The key is entirely absent from a freshly-exported blank workflow's
+`info.plist` until the Category dropdown is touched at least once (same
+absent-until-touched behavior as `keyword` on Script Filter, noted above)
+— when hand-authoring or scripting this key (e.g. via `PlistBuddy -c "Add
+:category string <value>"` when absent, `Set` when present), pick a value
+from this exact list rather than inventing a new category string, since
+Alfred does not validate it against the list and a mismatched value simply
+never surfaces the workflow under any category filter.
 
 ## Connection graph gotchas
 
@@ -400,6 +419,16 @@ This object **can** be committed to `workflow/info.plist` and works immediately 
 
 [Copy to Clipboard](https://www.alfredapp.com/help/workflows/outputs/)
 
+`clipboardtext` is the only content key, and it's a string — there is no key
+for image or file data. A project needing to put an image on the general
+pasteboard (e.g. pasting a screenshot into a note-taking app) cannot do it
+with this node, and `pbcopy` has no image-type equivalent either (it writes
+`public.utf8-plain-text`/rtf/ps only). The workaround seen in this ecosystem
+is shelling out to `osascript`'s `set the clipboard to (read (POSIX file
+...) as TIFF picture)` from Go — see `alfred-note-md-template`'s
+`internal/clipboard.WriteImage`. Plain text writes are unaffected: this node
+or `pbcopy` both handle them natively.
+
 ```xml
 <dict>
     <key>config</key>
@@ -418,6 +447,17 @@ This object **can** be committed to `workflow/info.plist` and works immediately 
 ### `alfred.workflow.output.dispatchkeycombo`
 
 [Dispatch Key Combo](https://www.alfredapp.com/help/workflows/outputs/)
+
+A candidate for replacing an `osascript`/System Events `keystroke`/`key
+code` call (e.g. simulating ⌘V or Return) with a native node instead of
+shelling out from Go — **untested in this ecosystem**.
+`alfred-note-md-template`'s `internal/keystroke` still uses `osascript`
+because it needs different settle delays between keystrokes depending on
+what was just pasted (plain text vs. image vs. a caption needing two
+Returns). Whether chaining this node with `alfred.workflow.utility.delay`
+nodes reproduces that timing, or whether `count`/`keymod` alone are
+expressive enough for a real editor's needs, has not been tried. If tried,
+record the result here.
 
 ```xml
 <dict>
@@ -462,6 +502,18 @@ This object **can** be committed to `workflow/info.plist` and works immediately 
 ### `alfred.workflow.output.notification`
 
 [Post Notification](https://www.alfredapp.com/help/workflows/outputs/)
+
+Like any node, it cannot be wired to fire only when an upstream Run
+Script/Script Filter exited non-zero (see "Connection graph gotchas" above)
+— placed unconditionally after a script step, it fires every time that step
+is reached, regardless of that script's own success or failure.
+
+`text`/`title` accept `{variable}` placeholders, though. A script that needs
+to show different outcomes (success/empty/failure) can set one variable
+(e.g. `message`) to the right string in every case via Alfred's
+workflow-variables JSON envelope, and a single, always-reached instance of
+this node can display `{message}` — no branching node needed. See the Run
+Script entry above for the mechanism and its current verification status.
 
 ```xml
 <dict>
@@ -517,6 +569,17 @@ This object **can** be committed to `workflow/info.plist` and works immediately 
 
 [Write File](https://www.alfredapp.com/help/workflows/outputs/)
 
+**Unverified constraint**, recorded from one project's own investigation
+rather than independently re-confirmed here: Alfred's documentation for this
+node does not confirm whether `filename` can point to an arbitrary absolute
+path outside the three workflow-scoped folders (data/cache/workflow) shown
+in its UI picker. A project needing to write to a user-configured directory
+anywhere on disk (e.g. a Config Builder `filepicker` variable, not
+necessarily under one of those three folders) chose to write the file from
+Go instead of trusting this node, without first building a throwaway "Write
+File → point `filename` at e.g. `~/Desktop/test.txt`" test to check. If you
+run that test, replace this paragraph with the actual result.
+
 ```xml
 <dict>
     <key>config</key>
@@ -558,6 +621,25 @@ This object **can** be committed to `workflow/info.plist` and works immediately 
 ### `alfred.workflow.action.applescript`
 
 [Run NSAppleScript](https://www.alfredapp.com/help/workflows/actions/)
+
+**Not used by any project in this ecosystem as of this writing.** Every
+AppleScript need seen so far — posting notifications, coercing a file to an
+image class for the clipboard, simulating keystrokes — instead shells out to
+`osascript` *from inside* the Go/Python binary via `exec.Command`/`subprocess`,
+rather than using this node. The reasons observed:
+
+1. The script body or its target is often computed at runtime from data the
+   calling program already holds in memory (a resolved file path, a message
+   string assembled from an error) — not just from `{query}`/set variables.
+2. Whether to run the script at all is a decision the calling program's own
+   control flow makes; like Run Script, this node can't be reached
+   conditionally except via a variable-driven Conditional node (see Run
+   Script above).
+
+If a use case needs neither of those — a fixed script body, always run — this
+node is untested territory here: whether `cachescript` measurably matters,
+and whether it blocks Alfred's UI while running, have not been checked
+against a real export/run.
 
 ```xml
 <dict>
@@ -719,7 +801,28 @@ end alfred_script</string>
 
 [Run Script](https://www.alfredapp.com/help/workflows/actions/)
 
-A plain "Run Script" step with no result list of its own.
+A plain "Run Script" step with no result list of its own. Like every node, its
+outgoing connection cannot branch on this script's own exit code — see
+"Connection graph gotchas" above; a downstream node fires every time this one
+is reached, whether the script exited 0 or not.
+
+That said, exit code is not the only channel out of this node. If its stdout
+is *exactly* Alfred's [workflow-variables JSON
+envelope](https://www.alfredapp.com/help/workflows/advanced/variables/) —
+`{"alfredworkflow":{"variables":{...}}}` — every variable it sets becomes
+available downstream as a `{name}` placeholder, regardless of whether the
+script exited non-zero. That turns some cases that look like they need
+conditional branching into cases that only need a shared variable: a script
+can decide *what a static-looking downstream node says* even though it can't
+decide *whether that node runs*. `alfred-quick-txt-save`'s `write` step uses
+this — it sets a `message` variable to "Saved to X" / "Clipboard is empty." /
+"Failed to save X" depending on outcome, and an unconditional native Post
+Notification node downstream displays `{message}` — eliminating what used to
+be a Go-side `osascript display notification` call entirely.
+**Unverified**: that specific change has not yet been confirmed against a
+real Alfred run (see "How this reference was generated" for the verification
+bar the rest of this file holds to) — if you test it, correct or confirm this
+note.
 
 ```xml
 <dict>
@@ -795,6 +898,12 @@ A plain "Run Script" step with no result list of its own.
 
 [Arguments and Variables](https://www.alfredapp.com/help/workflows/utilities/)
 
+Useful for injecting one of Alfred's own placeholders — e.g. `{clipboard}` —
+as a named variable without the downstream script needing to read that
+source itself. `alfred-quick-txt-save` sets `text` to `{clipboard}` here so
+its Go binary never calls `pbpaste`; the binary only reads `$text` from the
+environment, keeping clipboard access entirely on Alfred's side.
+
 ```xml
 <dict>
     <key>config</key>
@@ -811,6 +920,18 @@ A plain "Run Script" step with no result list of its own.
 ### `alfred.workflow.utility.conditional`
 
 [Conditional](https://www.alfredapp.com/help/workflows/utilities/)
+
+The native mechanism for branching on a *value* — as opposed to branching on
+a modifier key (see "Connection graph gotchas" above) or on a script's exit
+code (which nothing can do — see Run Script above). A script that needs
+different downstream nodes to run (not just different text on the same
+unconditional node) sets a variable describing the outcome, and this node
+routes on it. Not yet used to replace an existing Go-side branch in this
+ecosystem; several existing Go-side notification calls avoid needing this
+node entirely because they can drive an *unconditional* downstream node's
+text via a variable instead (again see Run Script above) — reach for this
+node when the outcome needs to change which node runs next, not just what
+one node displays.
 
 ```xml
 <dict>
@@ -1231,3 +1352,16 @@ directly from Alfred's own output. The connection graph gotchas were added
 after bugs found while working on
 [`alfred-clean-invisible-text#31`](https://github.com/y-marui/alfred-clean-invisible-text/issues/31)/[`#32`](https://github.com/y-marui/alfred-clean-invisible-text/issues/32).
 Corrections belong here, not back in the originating project.
+
+The "native vs. Go" notes on Run Script, Run NSAppleScript, Copy to
+Clipboard, Post Notification, Write File, Dispatch Key Combo, Arguments and
+Variables, and Conditional (2026-09-05) came from comparing how
+`alfred-quick-txt-save`, `alfred-markdown-ref`, `alfred-note-md-template`,
+and `alfred-clean-invisible-text` each independently decided what stays in
+Go versus what a native object can do, during the `alfred-workflow-template`
+Go migration effort. One of those notes — Run Script's/Post Notification's
+workflow-variables mechanism — reflects a change made on
+`alfred-quick-txt-save`'s `work/native-notification` branch that had not yet
+been confirmed against a real Alfred run at the time of writing; it's
+flagged inline. If you confirm or refute it, update both this file and that
+note instead of leaving them to drift apart.
