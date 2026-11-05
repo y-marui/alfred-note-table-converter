@@ -94,8 +94,10 @@ gh api -X PATCH repos/{owner}/{repo} -F allow_auto_merge=true
 > 制限が強い環境（例：private Organization が所有する private リポジトリの fork）
 > では、この設定が API 経由で `true` にならないことがある（エラーは返らず黙って
 > `false` のまま）。[main-protection Ruleset](#branch-protection-ruleset)と同様の
-> プラン・権限制限が疑われるが未確認。該当する場合は無理に追わず、既知の制限として
-> 記録だけして先送りしてよい。
+> 制限で、fork 元が Free プランの Organization の private リポジトリである場合に、
+> 個人アカウントが GitHub Pro でも fork が制限を引き継ぐと見られる（Ruleset の API は
+> 403 `Upgrade to GitHub Pro`、Wikis も反映されない。fork 関係と挙動の一致は確認済みで、
+> 因果は未確認）。該当する場合は無理に追わず、既知の制限として記録だけして先送りしてよい。
 
 ## Actions: Workflow permissions
 
@@ -409,4 +411,5 @@ FUNDING.yml の詳細は [MONETIZATION_POLICY.md](../MONETIZATION_POLICY.md) を
 本ドキュメントの設定は、現在も更新・PR が発生するリポジトリに適用する。次のリポジトリは意図的に適用対象外とする。
 
 - レガシー・メンテナンス終了の個人リポジトリ（更新も PR も発生しないため、設定を維持する意味がない）
-- CI ワークフローを持たないリポジトリ（プロフィールリポジトリ、ステータスダッシュボード等）は `main-protection` Ruleset の対象外とする。標準の必須チェック（`CI`・`Dev Charter`）が報告されず、すべての PR・push をブロックするため
+- `CI` ジョブを報告するワークフロー（`ci.yml`）を持たないリポジトリ（プロフィールリポジトリ、ステータスダッシュボード、公開サイトなど）は `main-protection` Ruleset の対象外とする。標準の必須チェック（`CI`・`Dev Charter`）が報告されず、すべての PR・push をブロックするため。`dev-charter-check.yml` だけを持つリポジトリも同様に対象外で、この場合 `Dev Charter` チェックは動くが必須チェックにはならない（`Dev Charter` だけを必須にする変則の Ruleset は作らない）。`CI` を足す場合は、`ci.yml` と `main-protection` を一緒に導入して標準の型に戻す
+- 制限が強い環境（Free プランの Organization の private リポジトリを fork した private リポジトリなど）で Ruleset・Wikis・auto-merge が使えないリポジトリは、使えない項目を既知の制限として記録し、API や UI で何度も試さない
