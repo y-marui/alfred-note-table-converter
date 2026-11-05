@@ -24,7 +24,7 @@ This directory lives at `docs/alfred-workflow-notes/` *inside* the
 plain `git subtree add`/`pull` against `alfred-workflow-template` pulls in
 that repo's entire root — `.github/`, `pyproject.toml`, `uv.lock`, everything
 — not just this subdirectory.
-[`scripts/install-workflow-notes.sh`](../../scripts/install-workflow-notes.sh)
+[`scripts/install-workflow-notes.sh`](https://github.com/y-marui/alfred-workflow-template/blob/main/scripts/install-workflow-notes.sh)
 handles that correctly: it splits this subdirectory's history out first
 (`git subtree split`, which — without `--branch` — prints the split commit's
 SHA directly, with no throwaway ref to collide with or clean up), then
